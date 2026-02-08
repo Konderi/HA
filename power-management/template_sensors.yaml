@@ -1,0 +1,212 @@
+# Migrated template sensors with modern syntax
+template:
+  - sensor:
+      # ====================
+      # DEPRECATED - Use sensor.electricity_total_price_now instead
+      # ====================
+      - name: "Sähkön hinta EnergyDashBoard"
+        unique_id: sahkon_hinta_energydashboard_legacy
+        unit_of_measurement: "EUR/kWh"
+        device_class: monetary
+        state: >
+          {{ states('sensor.electricity_total_price_now') | float(0) }}
+        icon: mdi:currency-eur
+        attributes:
+          deprecated: true
+          use_instead: "sensor.electricity_total_price_now"
+          migration_note: "This sensor is kept for compatibility. Please update your dashboards to use sensor.electricity_total_price_now"
+
+      # ====================
+      # DEPRECATED - Use sensor.shf_electricity_price_now instead
+      # ====================
+      - name: "Sähkön myyntihinta c/kWh"
+        unique_id: sahkon_myyntihinta_c_kwh_legacy
+        unit_of_measurement: "c/kWh"
+        device_class: monetary
+        state: >
+          {{ (states('sensor.shf_electricity_price_now') | float(0) * 100) | round(2) }}
+        icon: mdi:cash
+        attributes:
+          deprecated: true
+          use_instead: "sensor.shf_electricity_price_now"
+
+      # ====================
+      # DEPRECATED - Use sensor.transfer_tariff_now instead
+      # ====================
+      - name: "Sähkön siirtohinta"
+        unique_id: sahko_siirtohinta_legacy
+        unit_of_measurement: "c/kWh"
+        device_class: monetary
+        state: >
+          {{ (states('sensor.transfer_tariff_now') | float(0) * 100) | round(2) }}
+        icon: mdi:transmission-tower
+        attributes:
+          deprecated: true
+          use_instead: "sensor.transfer_tariff_now"
+          note: "Modern sensor has day/night detection"
+
+      # ====================
+      # DEPRECATED - Use sensor.electricity_total_price_now instead
+      # ====================
+      - name: "Sähkön kokonaishinta"
+        unique_id: sahko_kokonaishinta_legacy
+        unit_of_measurement: "€/kWh"
+        device_class: monetary
+        state: >
+          {{ states('sensor.electricity_total_price_now') | float(0) }}
+        icon: mdi:currency-eur
+        attributes:
+          deprecated: true
+          use_instead: "sensor.electricity_total_price_now"
+
+      # ====================
+      # DEPRECATED - Use sensor.electricity_total_price_cents instead
+      # ====================
+      - name: "Sähkön kokonaishinta c/kWh"
+        unique_id: sahko_kokonaishinta_c_legacy
+        unit_of_measurement: "c/kWh"
+        device_class: monetary
+        state: >
+          {{ states('sensor.electricity_total_price_cents') | float(0) }}
+        icon: mdi:cash-100
+        attributes:
+          deprecated: true
+          use_instead: "sensor.electricity_total_price_cents"
+
+      # ====================
+      # DEPRECATED - Use sensor.electricity_total_price_cents instead
+      # ====================
+      - name: "Sähkön kokonaishinta SHF/Charts"
+        unique_id: shf_electricity_full_price_charts_legacy
+        unit_of_measurement: "c/kWh"
+        device_class: monetary
+        state: >
+          {{ states('sensor.electricity_total_price_cents') | float(0) }}
+        icon: mdi:chart-line
+        attributes:
+          deprecated: true
+          use_instead: "sensor.electricity_total_price_cents"
+
+      # ====================
+      # DEPRECATED - Use sensor.electricity_total_price_cents instead
+      # ====================
+      - name: "Sähkön kokonaishinta SHF/Cent"
+        unique_id: shf_electricity_full_price_now_legacy
+        unit_of_measurement: "c/kWh"
+        device_class: monetary
+        state: >
+          {{ states('sensor.electricity_total_price_cents') | float(0) }}
+        icon: mdi:cash
+        attributes:
+          deprecated: true
+          use_instead: "sensor.electricity_total_price_cents"
+
+      # ====================
+      # WATER CONSUMPTION PRICE
+      # (Kept - not related to electricity)
+      # ====================
+      - name: "Veden kokonaishinta"
+        unique_id: vedenkulutuksen_hinta
+        unit_of_measurement: "€"
+        device_class: monetary
+        state: >
+          {% set vesimaksu = 1.45 %}
+          {% set jatevesimaksu = 2.32 %}
+          {% set alv = 1.24 %}
+          {% set kulutus_litraa = states('sensor.veden_kulutus_litroina') | float(0) %}
+          {{ ((kulutus_litraa / 1000) * ((vesimaksu + jatevesimaksu) * alv)) | round(2) }}
+        icon: mdi:water
+        attributes:
+          water_fee_eur_per_m3: 1.45
+          wastewater_fee_eur_per_m3: 2.32
+          vat_multiplier: 1.24
+          consumption_liters: "{{ states('sensor.veden_kulutus_litroina') | float(0) }}"
+          consumption_m3: "{{ (states('sensor.veden_kulutus_litroina') | float(0) / 1000) | round(2) }}"
+
+      # ====================
+      # CHEAPEST HOURS TOMORROW
+      # (Kept - useful for planning)
+      # ====================
+      - name: "Cheapest sequential hours tomorrow"
+        unique_id: cheapest_hours_energy_tomorrow
+        device_class: timestamp
+        state: >
+          {% set numberOfSequentialHours = 5 %}
+          {% set lastHour = 23 %}
+          {% set firstHour = 0 %}
+          {% if state_attr('sensor.nordpool_kwh_fi_eur_4_10_0', 'tomorrow_valid') == true %}
+            {% set ns = namespace(counter=0, list=[], cheapestHour=today_at("00:00") + timedelta(hours=24), cheapestPrice=999.00) %}
+            {% for i in range(firstHour + numberOfSequentialHours, lastHour + 1) %}
+              {% set ns.counter = 0.0 %}
+              {% for j in range(i - numberOfSequentialHours, i) %}
+                {% set ns.counter = ns.counter + state_attr('sensor.nordpool_kwh_fi_eur_4_10_0', 'tomorrow')[j] %}
+              {% endfor %}
+              {% set ns.list = ns.list + [ns.counter] %}
+              {% if ns.counter < ns.cheapestPrice %}
+                {% set ns.cheapestPrice = ns.counter %}
+                {% set ns.cheapestHour = today_at("00:00") + timedelta(hours=(24 + i - numberOfSequentialHours)) %}
+              {% endif %}
+            {% endfor %}
+            {{ ns.cheapestHour }}
+          {% else %}
+            {{ today_at("00:00") + timedelta(hours=24) }}
+          {% endif %}
+        icon: mdi:clock-start
+        attributes:
+          sequential_hours: 5
+          description: "Best 5-hour window for high-power consumption tomorrow"
+
+      # ====================
+      # TOTAL POWER & ENERGY
+      # (Kept - useful monitoring sensors)
+      # ====================
+      - name: "Sähkön kokonaisenergia"
+        unique_id: sahko_kokonaiskulutus_energia
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: total_increasing
+        state: >
+          {% set a = states('sensor.shellyem3_channel_a_energy') | float(0) %}
+          {% set b = states('sensor.shellyem3_channel_b_energy') | float(0) %}
+          {% set c = states('sensor.shellyem3_channel_c_energy') | float(0) %}
+          {{ (a + b + c) | round(2) }}
+        icon: mdi:lightning-bolt
+        attributes:
+          channel_a: "{{ states('sensor.shellyem3_channel_a_energy') | float(0) }}"
+          channel_b: "{{ states('sensor.shellyem3_channel_b_energy') | float(0) }}"
+          channel_c: "{{ states('sensor.shellyem3_channel_c_energy') | float(0) }}"
+
+      - name: "Sähkön kokonaisteho"
+        unique_id: sahko_kokonaiskulutus_teho
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        state: >
+          {% set a = states('sensor.shellyem3_channel_a_power') | float(0) %}
+          {% set b = states('sensor.shellyem3_channel_b_power') | float(0) %}
+          {% set c = states('sensor.shellyem3_channel_c_power') | float(0) %}
+          {{ (a + b + c) | round(2) }}
+        icon: mdi:flash
+        attributes:
+          channel_a: "{{ states('sensor.shellyem3_channel_a_power') | float(0) }}"
+          channel_b: "{{ states('sensor.shellyem3_channel_b_power') | float(0) }}"
+          channel_c: "{{ states('sensor.shellyem3_channel_c_power') | float(0) }}"
+          phase_a_amps: "{{ (states('sensor.shellyem3_channel_a_power') | float(0) / 230) | round(1) }}"
+          phase_b_amps: "{{ (states('sensor.shellyem3_channel_b_power') | float(0) / 230) | round(1) }}"
+          phase_c_amps: "{{ (states('sensor.shellyem3_channel_c_power') | float(0) / 230) | round(1) }}"
+
+      # ====================
+      # DEPRECATED - Use sensor.total_power_consumption instead
+      # ====================
+      - name: "Sähkön kokonaiskulutus kWh"
+        unique_id: sahkon_kokonaiskulutus_kwh_legacy
+        unit_of_measurement: "kW"
+        device_class: power
+        state_class: measurement
+        state: >
+          {{ states('sensor.total_power_consumption') | float(0) }}
+        icon: mdi:lightning-bolt
+        attributes:
+          deprecated: true
+          use_instead: "sensor.total_power_consumption"
+          note: "Unit is actually kW, not kWh (misnamed in legacy config)"
