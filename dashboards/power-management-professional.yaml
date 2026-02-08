@@ -32,7 +32,7 @@ views:
               red: 14
           
           - type: gauge
-            entity: sensor.current_electricity_cost_rate
+            entity: sensor.electricity_total_price_cents
             name: Current Price
             min: 0
             max: 50
@@ -113,7 +113,7 @@ views:
             group_by:
               func: last
               duration: 1hour
-          - entity: sensor.current_electricity_cost_rate
+          - entity: sensor.electricity_total_price_cents
             yaxis_id: price
             name: Price (c/kWh)
             type: line
@@ -211,7 +211,7 @@ views:
             labels:
               format: 'HH:mm'
         series:
-          - entity: sensor.current_electricity_cost_rate
+          - entity: sensor.electricity_total_price_cents
             name: Total Price
             type: column
             group_by:
@@ -240,7 +240,7 @@ views:
           
           ## Current State
           - **Power:** {{ states('sensor.total_power_kw') }} kW / 17.25 kW ({{ (states('sensor.total_power_kw')|float / 17.25 * 100) | round(1) }}%)
-          - **Price:** {{ states('sensor.current_electricity_cost_rate') }} c/kWh
+          - **Price:** {{ states('sensor.electricity_total_price_cents') }} c/kWh
           - **Kids Home:** {{ 'YES ✅' if is_state('input_boolean.kids_home', 'on') else 'NO ❌' }}
           - **Active Radiators:** {{ states.switch | selectattr('entity_id', 'in', ['switch.mh1', 'switch.shellypro4pm_ec62609fd3dc_switch_0', 'switch.shellypro4pm_ec62609fd3dc_switch_1']) | selectattr('state', 'eq', 'on') | list | count }} / 3
           
@@ -520,7 +520,7 @@ views:
           | 🏠 Temperature Control | {{ '✅ Active' if states('input_boolean.kids_home') else '✅ Active' }} | Every 5 min | Controls 3 radiators based on temp/schedule |
           | ⚖️ Priority Balancer | {{ '✅ Active' if states('sensor.total_power_kw') else '❌ Error' }} | Real-time | Manages device priority & Tesla amps |
           | ⚡ Peak Limiter | {{ '✅ Active' if states('sensor.total_power_kw') else '❌ Error' }} | Every 30s | Prevents >8kW 60-min average |
-          | 💰 Price Optimizer | {{ '✅ Active' if states('sensor.current_electricity_cost_rate') else '❌ Error' }} | Hourly | Heat pump scheduling |
+          | 💰 Price Optimizer | {{ '✅ Active' if states('sensor.electricity_total_price_cents') else '❌ Error' }} | Hourly | Heat pump scheduling |
           | 📡 Phase Monitor | {{ '✅ Active' if states('sensor.shellyem3_channel_a_current') else '❌ Error' }} | Continuous | Voltage & alerts |
           
           **Last Updated:** {{ now().strftime('%H:%M:%S') }}
@@ -639,8 +639,8 @@ views:
           ## 💰 Price-Based Optimizer
           
           ```
-          Current Price: {{ states('sensor.current_electricity_cost_rate') }} c/kWh
-          Category: {% set price = states('sensor.current_electricity_cost_rate')|float %}{% if price < 12 %}💚 VERY CHEAP{% elif price < 16 %}💛 CHEAP{% elif price < 20 %}🟠 MODERATE{% elif price < 25 %}🔴 EXPENSIVE{% else %}⛔ VERY EXPENSIVE{% endif %}
+          Current Price: {{ states('sensor.electricity_total_price_cents') }} c/kWh
+          Category: {% set price = states('sensor.electricity_total_price_cents')|float %}{% if price < 12 %}💚 VERY CHEAP{% elif price < 16 %}💛 CHEAP{% elif price < 20 %}🟠 MODERATE{% elif price < 25 %}🔴 EXPENSIVE{% else %}⛔ VERY EXPENSIVE{% endif %}
                ↓
           Heat Pump Action:
           {% if price < 12 %}

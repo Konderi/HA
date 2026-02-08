@@ -125,7 +125,7 @@ views:
                   yellow: 10
                   red: 14
               - type: gauge
-                entity: sensor.current_electricity_cost_rate
+                entity: sensor.electricity_total_price_cents
                 name: Hinta nyt
                 min: 0
                 max: 50
@@ -194,7 +194,7 @@ views:
                 show:
                   legend_value: false
                   in_header: true
-              - entity: sensor.current_electricity_cost_rate
+              - entity: sensor.electricity_total_price_cents
                 yaxis_id: price
                 name: Kokonaishinta c/kWh
                 type: line
@@ -250,7 +250,7 @@ views:
                 labels:
                   format: 'HH:mm'
             series:
-              - entity: sensor.current_electricity_cost_rate
+              - entity: sensor.electricity_total_price_cents
                 name: Kokonaishinta
                 type: column
                 group_by:

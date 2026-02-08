@@ -61,12 +61,12 @@ views:
           
           - type: custom:mushroom-template-card
             primary: Current Price
-            secondary: '{{ states("sensor.current_electricity_cost_rate") }} c/kWh'
+            secondary: '{{ states("sensor.electricity_total_price_cents") }} c/kWh'
             icon: mdi:currency-eur
             icon_color: |-
-              {% if states('sensor.current_electricity_cost_rate')|float < 15 %}
+              {% if states('sensor.electricity_total_price_cents')|float < 15 %}
                 green
-              {% elif states('sensor.current_electricity_cost_rate')|float < 25 %}
+              {% elif states('sensor.electricity_total_price_cents')|float < 25 %}
                 amber
               {% else %}
                 red
@@ -231,7 +231,7 @@ views:
             group_by:
               func: last
               duration: 1hour
-          - entity: sensor.current_electricity_cost_rate
+          - entity: sensor.electricity_total_price_cents
             yaxis_id: price
             name: c/kWh
             type: line
@@ -503,7 +503,7 @@ views:
             group_by:
               func: last
               duration: 1hour
-          - entity: sensor.current_electricity_cost_rate
+          - entity: sensor.electricity_total_price_cents
             yaxis_id: price
             name: Price (c/kWh)
             type: line
@@ -571,7 +571,7 @@ views:
         chips:
           - type: back
           - type: entity
-            entity: sensor.current_electricity_cost_rate
+            entity: sensor.electricity_total_price_cents
             content_info: state
             icon_color: amber
         alignment: center
@@ -604,7 +604,7 @@ views:
             labels:
               format: 'HH:mm'
         series:
-          - entity: sensor.current_electricity_cost_rate
+          - entity: sensor.electricity_total_price_cents
             name: Total Price
             type: column
             group_by:

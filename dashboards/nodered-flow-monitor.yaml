@@ -42,7 +42,7 @@ views:
           | 🏠 Temperature Control | {{ '✅ Active' if is_state('input_boolean.kids_home', 'on') or is_state('input_boolean.kids_home', 'off') else '❌ Error' }} | Kids room heating automation |
           | ⚖️ Priority Balancer | {{ '✅ Active' if states('sensor.total_power_kw') else '❌ Error' }} | Load management & Tesla control |
           | ⚡ Peak Limiter | {{ '✅ Active' if states('sensor.total_power_kw') else '❌ Error' }} | Tehomaksu prevention (<8kW) |
-          | 💰 Price Optimizer | {{ '✅ Active' if states('sensor.current_electricity_cost_rate') else '❌ Error' }} | Heat pump scheduling |
+          | 💰 Price Optimizer | {{ '✅ Active' if states('sensor.electricity_total_price_cents') else '❌ Error' }} | Heat pump scheduling |
           | 📡 Phase Monitor | {{ '✅ Active' if states('sensor.shellyem3_channel_a_current') else '❌ Error' }} | Voltage & battery alerts |
           
           **Last Updated:** {{ now().strftime('%H:%M:%S') }}
@@ -128,7 +128,7 @@ views:
           - entity: sensor.total_power_kw
             name: Power Sensor
             icon: mdi:lightning-bolt
-          - entity: sensor.current_electricity_cost_rate
+          - entity: sensor.electricity_total_price_cents
             name: Price Sensor
             icon: mdi:currency-eur
           - entity: input_boolean.kids_home
@@ -530,14 +530,14 @@ views:
                ↓
           ┌─────────────────────┐
           │ Get current price   │
-          │ {{ states('sensor.current_electricity_cost_rate') }} c/kWh     │
+          │ {{ states('sensor.electricity_total_price_cents') }} c/kWh     │
           └─────────────────────┘
                ↓
           ┌─────────────────────────────────────────────────┐
           │  PRICE CLASSIFICATION                          │
           └─────────────────────────────────────────────────┘
           
-          {% set price = states('sensor.current_electricity_cost_rate')|float %}
+          {% set price = states('sensor.electricity_total_price_cents')|float %}
           Current: {{ price }} c/kWh
           
           {% if price < 12 %}
@@ -590,10 +590,10 @@ views:
         cards:
           - type: custom:mushroom-template-card
             primary: Current Price
-            secondary: '{{ states("sensor.current_electricity_cost_rate") }} c/kWh'
+            secondary: '{{ states("sensor.electricity_total_price_cents") }} c/kWh'
             icon: mdi:currency-eur
             icon_color: |-
-              {% set price = states('sensor.current_electricity_cost_rate')|float %}
+              {% set price = states('sensor.electricity_total_price_cents')|float %}
               {% if price < 12 %}green
               {% elif price < 16 %}light-green
               {% elif price < 20 %}amber
