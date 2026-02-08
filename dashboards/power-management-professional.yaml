@@ -1,0 +1,571 @@
+# ============================================================================
+# PROFESSIONAL POWER MANAGEMENT DASHBOARD - Phase 2
+# ============================================================================
+# Complete control and monitoring for your intelligent power management system
+# Includes: Radiator control, Power monitoring, Price optimization, Device status
+# ============================================================================
+
+title: Power Management
+path: power-management
+icon: mdi:lightning-bolt
+theme: default
+badges: []
+cards:
+  # ========================================================================
+  # ROW 1: OVERVIEW & KEY METRICS
+  # ========================================================================
+  - type: horizontal-stack
+    cards:
+      - type: gauge
+        entity: sensor.total_power_kw
+        name: Current Power
+        min: 0
+        max: 17.25
+        needle: true
+        segments:
+          - from: 0
+            color: '#4ECDC4'
+          - from: 8
+            color: '#FFE66D'
+          - from: 12
+            color: '#FF6B6B'
+          - from: 15
+            color: '#FF0000'
+      
+      - type: gauge
+        entity: sensor.current_electricity_cost_rate
+        name: Current Price
+        min: 0
+        max: 50
+        needle: true
+        unit: c/kWh
+        segments:
+          - from: 0
+            color: '#4ECDC4'
+          - from: 15
+            color: '#FFE66D'
+          - from: 25
+            color: '#FF9A76'
+          - from: 35
+            color: '#FF6B6B'
+      
+      - type: gauge
+        entity: sensor.talon_kokonaiskulutus_paiva_kwh
+        name: Today's Consumption
+        min: 0
+        max: 120
+        needle: true
+        unit: kWh
+        segments:
+          - from: 0
+            color: '#4ECDC4'
+          - from: 40
+            color: '#95E1D3'
+          - from: 60
+            color: '#FFE66D'
+          - from: 80
+            color: '#FF9A76'
+          - from: 100
+            color: '#FF6B6B'
+      
+      - type: gauge
+        entity: sensor.average_power_factor
+        name: Power Factor
+        min: 0
+        max: 1
+        needle: true
+        segments:
+          - from: 0
+            color: '#FF6B6B'
+          - from: 0.85
+            color: '#FFE66D'
+          - from: 0.95
+            color: '#4ECDC4'
+
+  # ========================================================================
+  # ROW 2: 7-DAY CONSUMPTION VS PRICE (KEY CHART)
+  # ========================================================================
+  - type: custom:apexcharts-card
+    header:
+      show: true
+      title: ⚡💰 Consumption vs Price - 7 Days (See automation impact!)
+      show_states: true
+      colorize_states: true
+    experimental:
+      color_threshold: true
+    graph_span: 7d
+    span:
+      start: day
+      offset: '-7d'
+    yaxis:
+      - id: consumption
+        min: 0
+        decimals: 1
+        opposite: false
+      - id: price
+        min: 0
+        max: 60
+        decimals: 0
+        opposite: true
+    apex_config:
+      chart:
+        height: 350
+      legend:
+        show: true
+        position: top
+        fontSize: 14px
+      dataLabels:
+        enabled: false
+      stroke:
+        width: [1, 3]
+        curve: smooth
+      tooltip:
+        shared: true
+        x:
+          format: 'dd.MM HH:mm'
+      xaxis:
+        labels:
+          format: 'dd.M'
+    series:
+      - entity: sensor.talon_kokonaiskulutus_tunti_kwh
+        yaxis_id: consumption
+        name: Hourly Consumption (kWh)
+        type: area
+        stroke_width: 1
+        float_precision: 2
+        color: '#EA8043'
+        opacity: 0.7
+        group_by:
+          func: last
+          duration: 1hour
+        show:
+          legend_value: false
+          in_header: true
+      - entity: sensor.electricity_total_price_cents
+        yaxis_id: price
+        name: Total Price (c/kWh)
+        type: line
+        float_precision: 1
+        stroke_width: 3
+        group_by:
+          func: last
+          duration: 1hour
+        show:
+          legend_value: false
+          in_header: true
+        color_threshold:
+          - value: 0
+            color: '#4ECDC4'
+          - value: 15
+            color: '#FFE66D'
+          - value: 25
+            color: '#FF9A76'
+          - value: 35
+            color: '#FF0000'
+
+  # ========================================================================
+  # ROW 3: RADIATOR CONTROL - PHASE 2
+  # ========================================================================
+  - type: vertical-stack
+    cards:
+      - type: markdown
+        content: |
+          # 🏠 INTELLIGENT HEATING CONTROL
+          
+          **System Status:** {{ 'Active ✅' if is_state('input_boolean.kids_home', 'on') or is_state('switch.mh1', 'on') else 'Standby 💤' }}
+          
+          ---
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: white;
+              font-size: 16px;
+            }
+      
+      # Kids Home Toggle
+      - type: entities
+        title: 👨‍👩‍👧‍👦 Kids Status
+        show_header_toggle: false
+        card_mod:
+          style: |
+            ha-card {
+              border: 3px solid #667eea;
+            }
+        entities:
+          - entity: input_boolean.kids_home
+            name: Kids at Home (Toggle every other week)
+            icon: mdi:human-child
+          - type: divider
+          - entity: input_number.kids_rooms_min_temp
+            name: Minimum Temperature
+          - entity: input_number.kids_rooms_target_temp
+            name: Target Temperature
+
+      # Kids Rooms Status
+      - type: horizontal-stack
+        cards:
+          - type: vertical-stack
+            cards:
+              - type: sensor
+                entity: sensor.aqara_poikienhuone_temperature
+                name: 👦 Tuomas
+                graph: line
+                detail: 2
+              - type: button
+                entity: switch.shellypro4pm_ec62609fd3dc_switch_1
+                name: Tuomas Radiator
+                icon: mdi:radiator
+                show_state: true
+                tap_action:
+                  action: toggle
+          
+          - type: vertical-stack
+            cards:
+              - type: sensor
+                entity: sensor.aqara_saranhuone_temperature
+                name: 👧 Sara
+                graph: line
+                detail: 2
+              - type: button
+                entity: switch.shellypro4pm_ec62609fd3dc_switch_0
+                name: Sara Radiator
+                icon: mdi:radiator
+                show_state: true
+                tap_action:
+                  action: toggle
+
+      # Master Bedroom Control
+      - type: entities
+        title: 🛏️ Master Bedroom (MH1) - Night Only
+        show_header_toggle: false
+        card_mod:
+          style: |
+            ha-card {
+              border: 3px solid #764ba2;
+            }
+        entities:
+          - entity: sensor.aqara_makuuhuone_temperature
+            name: Current Temperature
+            icon: mdi:thermometer
+          - entity: switch.mh1
+            name: MH1 Radiator
+          - type: divider
+          - entity: input_number.mh1_target_temp
+            name: Target Temperature
+          - entity: input_datetime.mh1_start_time
+            name: Heating Start (Default 22:00)
+          - entity: input_datetime.mh1_end_time
+            name: Heating End (Default 07:00)
+          - type: divider
+          - entity: input_boolean.mh1_manual_override
+            name: Manual Override (Force 24/7 heating)
+            icon: mdi:lock-open
+
+  # ========================================================================
+  # ROW 4: TEMPERATURE MONITORING
+  # ========================================================================
+  - type: custom:apexcharts-card
+    header:
+      show: true
+      title: 🌡️ Room Temperatures - 24 Hours
+      show_states: true
+      colorize_states: true
+    graph_span: 24h
+    span:
+      start: hour
+    now:
+      show: true
+    yaxis:
+      - id: temp
+        min: 15
+        max: 25
+        decimals: 1
+    apex_config:
+      chart:
+        height: 300
+      stroke:
+        width: 3
+        curve: smooth
+      legend:
+        show: true
+        position: top
+        fontSize: 14px
+      tooltip:
+        shared: true
+    series:
+      - entity: sensor.aqara_makuuhuone_temperature
+        name: 🛏️ MH1 (Master)
+        color: '#FF6B6B'
+        stroke_width: 3
+      - entity: sensor.aqara_poikienhuone_temperature
+        name: 👦 Tuomas
+        color: '#4ECDC4'
+        stroke_width: 3
+      - entity: sensor.aqara_saranhuone_temperature
+        name: 👧 Sara
+        color: '#FFE66D'
+        stroke_width: 3
+      - entity: sensor.aqara_olohuone_temperature
+        name: 🛋️ Living Room
+        color: '#95E1D3'
+        stroke_width: 2
+        opacity: 0.7
+      - entity: sensor.aqara_keittio_temperature
+        name: 🍳 Kitchen
+        color: '#AA96DA'
+        stroke_width: 2
+        opacity: 0.7
+
+  # ========================================================================
+  # ROW 5: DEVICE CONTROL & STATUS
+  # ========================================================================
+  - type: horizontal-stack
+    cards:
+      # Tesla Control
+      - type: vertical-stack
+        cards:
+          - type: entities
+            title: 🚗 Tesla Charging
+            show_header_toggle: false
+            card_mod:
+              style: |
+                ha-card {
+                  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                  color: white;
+                }
+            entities:
+              - entity: switch.tesla_model_3_charger
+                name: Charger
+              - entity: number.tesla_model_3_charging_amps
+                name: Charging Amps
+                icon: mdi:current-ac
+              - entity: sensor.tesla_model_3_battery
+                name: Battery Level
+                icon: mdi:battery
+          
+          - type: markdown
+            content: |
+              **Auto-adjusted by Node-RED:**
+              - Sauna ON → 8A max
+              - Power >85% → Reduces gradually
+              - Power >95% → 6A minimum
+
+      # Other Devices
+      - type: vertical-stack
+        cards:
+          - type: entities
+            title: 🔥 Heating Devices
+            show_header_toggle: false
+            card_mod:
+              style: |
+                ha-card {
+                  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+                }
+            entities:
+              - entity: switch.shellypro4pm_ec62609fd3dc_switch_2
+                name: Water Boiler (3kW)
+                icon: mdi:water-boiler
+              - entity: climate.mitsu_ilp
+                name: Heat Pump
+              - entity: switch.sauna_channel_1
+                name: Sauna (7kW - Priority 1)
+                icon: mdi:sauna
+              - entity: binary_sensor.kiuas_tilatieto
+                name: Sauna Status
+          
+          - type: markdown
+            content: |
+              **Priority Order:**
+              1. 🧖 Sauna (always protected)
+              2. 🏠 Heating (comfort)
+              3. 💧 Boiler (flexible)
+              4. 🚗 Tesla (adjustable)
+
+  # ========================================================================
+  # ROW 6: TODAY'S PRICE CHART
+  # ========================================================================
+  - type: custom:apexcharts-card
+    header:
+      show: true
+      title: 💰 Electricity Price Today - 24h
+      show_states: true
+      colorize_states: true
+    graph_span: 30h
+    span:
+      start: hour
+      offset: '-2h'
+    now:
+      show: true
+      label: NOW
+    yaxis:
+      - id: price
+        min: 0
+        max: ~50
+        decimals: 0
+    apex_config:
+      chart:
+        height: 280
+      legend:
+        show: true
+        position: top
+      dataLabels:
+        enabled: false
+      tooltip:
+        shared: true
+        x:
+          format: 'HH:mm'
+      xaxis:
+        labels:
+          format: 'HH:mm'
+    series:
+      - entity: sensor.electricity_total_price_cents
+        name: Total Price (incl. transfer)
+        type: column
+        group_by:
+          func: last
+          duration: 1h
+        show:
+          in_header: true
+          extremas: time
+        color_threshold:
+          - value: 0
+            color: '#4ECDC4'
+          - value: 12
+            color: '#95E1D3'
+          - value: 16
+            color: '#FFE66D'
+          - value: 20
+            color: '#FF9A76'
+          - value: 25
+            color: '#FF6B6B'
+          - value: 35
+            color: '#FF0000'
+      
+      - entity: sensor.sahkon_myyntihinta_c_kwh
+        name: Spot Price
+        type: line
+        stroke_width: 2
+        color: '#0066CC'
+        show:
+          in_header: true
+          in_chart: false
+      
+      - entity: sensor.sahko_siirtohinta
+        name: Transfer
+        type: line
+        stroke_width: 2
+        color: '#00CC66'
+        show:
+          in_header: true
+          in_chart: false
+
+  # ========================================================================
+  # ROW 7: BEST CHARGING WINDOW & SAVINGS
+  # ========================================================================
+  - type: horizontal-stack
+    cards:
+      - type: markdown
+        content: |
+          ## ⚡ Best Charging Window Tomorrow
+          
+          {{ states('sensor.best_charging_window_tomorrow') }}
+          
+          ---
+          
+          🕐 **Time:** {{ state_attr('sensor.best_charging_window_tomorrow', 'start_time') }} - {{ state_attr('sensor.best_charging_window_tomorrow', 'end_time') }}
+          
+          💰 **Average Price:** {{ state_attr('sensor.best_charging_window_tomorrow', 'average_price') }} c/kWh
+          
+          💵 **Savings:** {{ state_attr('sensor.best_charging_window_tomorrow', 'savings') }} € vs worst window
+          
+          📊 **Estimated Cost:** {{ state_attr('sensor.best_charging_window_tomorrow', 'estimated_cost') }} € for full charge
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+              font-size: 15px;
+            }
+            ha-markdown {
+              padding: 20px !important;
+            }
+      
+      - type: vertical-stack
+        cards:
+          - type: gauge
+            entity: sensor.sahko_hinnan_korjaus_kuukausi
+            name: This Month
+            min: 0
+            max: 500
+            needle: true
+            unit: '€'
+            segments:
+              - from: 0
+                color: '#4ECDC4'
+              - from: 200
+                color: '#95E1D3'
+              - from: 300
+                color: '#FFE66D'
+              - from: 400
+                color: '#FF9A76'
+              - from: 450
+                color: '#FF6B6B'
+          
+          - type: entity
+            entity: sensor.water_total_cost
+            name: Water Cost
+            icon: mdi:water
+
+  # ========================================================================
+  # ROW 8: PHASE 2 STATUS SUMMARY
+  # ========================================================================
+  - type: markdown
+    content: |
+      # 📊 PHASE 2 AUTOMATION STATUS
+      
+      ## 🏠 Heating Control
+      - **Kids Home:** {{ 'YES ✅ (Heating enabled)' if is_state('input_boolean.kids_home', 'on') else 'NO ❌ (Energy saving mode)' }}
+      - **MH1 Schedule:** {{ states('input_datetime.mh1_start_time')[:5] }} - {{ states('input_datetime.mh1_end_time')[:5] }} ({{ states('input_number.mh1_target_temp') }}°C)
+      - **MH1 Override:** {{ 'ACTIVE 🔓' if is_state('input_boolean.mh1_manual_override', 'on') else 'Off 🔒' }}
+      
+      ---
+      
+      ## ⚡ Power Management (Node-RED)
+      - **Priority Load Balancer:** Protecting 17,250W fuse limit
+      - **Peak Power Limiter:** Keeping 60-min avg <8kW (no tehomaksu!)
+      - **Price Optimizer:** Heat pump scheduled to cheap hours
+      - **Phase Monitor:** Watching voltage & balance
+      - **Radiator Control:** Temperature-based automation active
+      
+      ---
+      
+      ## 🌡️ Current Temperatures
+      
+      | Room | Temp | Radiator | Target |
+      |------|------|----------|--------|
+      | 🛏️ MH1 | {{ states('sensor.aqara_makuuhuone_temperature') }}°C | {{ 'ON 🔥' if is_state('switch.mh1', 'on') else 'OFF' }} | {{ states('input_number.mh1_target_temp') }}°C |
+      | 👦 Tuomas | {{ states('sensor.aqara_poikienhuone_temperature') }}°C | {{ 'ON 🔥' if is_state('switch.shellypro4pm_ec62609fd3dc_switch_1', 'on') else 'OFF' }} | {{ states('input_number.kids_rooms_target_temp') }}°C |
+      | 👧 Sara | {{ states('sensor.aqara_saranhuone_temperature') }}°C | {{ 'ON 🔥' if is_state('switch.shellypro4pm_ec62609fd3dc_switch_0', 'on') else 'OFF' }} | {{ states('input_number.kids_rooms_target_temp') }}°C |
+      | 🛋️ Living | {{ states('sensor.aqara_olohuone_temperature') }}°C | Heat Pump | Auto |
+      
+      ---
+      
+      ## 💰 Expected Monthly Savings (Phase 2)
+      - Kids away week: ~40-50 kWh = €6-8
+      - MH1 night-only: ~15-20 kWh/week = €12-16/month
+      - Peak avoidance: €16-24/month (no tehomaksu)
+      - **Total: €34-48/month = €400-580/year** 🎯
+    card_mod:
+      style: |
+        ha-card {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+          font-size: 14px;
+        }
+        ha-markdown {
+          padding: 24px !important;
+        }
+
+# ============================================================================
+# END OF DASHBOARD
+# ============================================================================
