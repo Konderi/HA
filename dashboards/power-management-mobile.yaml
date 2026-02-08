@@ -442,15 +442,10 @@ views:
                 ha-card {
                   background: rgba(var(--rgb-primary-text-color), 0.05);
                 }
-            segments:
-              - from: 0
-                color: '#4ECDC4'
-              - from: 8
-                color: '#FFE66D'
-              - from: 12
-                color: '#FF9A76'
-              - from: 15
-                color: '#FF6B6B'
+            severity:
+              green: 0
+              yellow: 10
+              red: 14
           
           - type: gauge
             entity: sensor.talon_kokonaiskulutus_paiva_kwh
@@ -463,17 +458,10 @@ views:
                 ha-card {
                   background: rgba(var(--rgb-primary-text-color), 0.05);
                 }
-            segments:
-              - from: 0
-                color: '#4ECDC4'
-              - from: 40
-                color: '#95E1D3'
-              - from: 60
-                color: '#FFE66D'
-              - from: 80
-                color: '#FF9A76'
-              - from: 100
-                color: '#FF6B6B'
+            severity:
+              green: 0
+              yellow: 70
+              red: 95
       
       # 7-Day Chart
       - type: custom:apexcharts-card
@@ -797,22 +785,15 @@ views:
             max: 500
             needle: true
             unit: '€'
+            severity:
+              green: 0
+              yellow: 300
+              red: 420
             card_mod:
               style: |
                 ha-card {
                   background: rgba(var(--rgb-primary-text-color), 0.05);
                 }
-            segments:
-              - from: 0
-                color: '#4ECDC4'
-              - from: 200
-                color: '#95E1D3'
-              - from: 300
-                color: '#FFE66D'
-              - from: 400
-                color: '#FF9A76'
-              - from: 450
-                color: '#FF6B6B'
           
           - type: entity
             entity: sensor.talon_kokonaiskulutus_kuukausi_kwh
