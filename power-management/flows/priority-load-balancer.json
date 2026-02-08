@@ -153,7 +153,6 @@
     "entityidfilter": "sensor.sahko_kokonaiskulutus_teho",
     "entityidfiltertype": "exact",
     "outputinitially": false,
-    "state_type": "num",
     "haltifstate": "",
     "halt_if_type": "str",
     "halt_if_compare": "is",
@@ -173,6 +172,12 @@
         "propertyType": "msg",
         "value": "",
         "valueType": "entityState"
+      },
+      {
+        "property": "data",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entity"
       }
     ],
     "x": 140,
@@ -297,7 +302,6 @@
     "entityidfilter": "binary_sensor.tesla_model_3_charger",
     "entityidfiltertype": "exact",
     "outputinitially": true,
-    "state_type": "str",
     "haltifstate": "",
     "halt_if_type": "str",
     "halt_if_compare": "is",
@@ -317,6 +321,12 @@
         "propertyType": "msg",
         "value": "",
         "valueType": "entityState"
+      },
+      {
+        "property": "data",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entity"
       }
     ],
     "x": 150,
