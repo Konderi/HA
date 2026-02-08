@@ -10,7 +10,7 @@
     "id": "presence_sensor",
     "type": "server-state-changed",
     "z": "advanced_heating_flow",
-    "name": "Home Presence",
+    "name": "Home Presence ⚠️ UPDATE person.user to your person entity",
     "server": "home_assistant",
     "version": 4,
     "exposeToHomeAssistant": false,
@@ -211,7 +211,7 @@
     "id": "get_weather",
     "type": "api-current-state",
     "z": "advanced_heating_flow",
-    "name": "Get Outdoor Temp",
+    "name": "Get Outdoor Temp ⚠️ UPDATE weather.home",
     "server": "home_assistant",
     "version": 3,
     "outputs": 1,
@@ -283,7 +283,7 @@
     "areaId": [],
     "deviceId": [],
     "entityId": [
-      "climate.living_room"
+      "climate.living_room ⚠️ UPDATE to your climate entity"
     ],
     "data": "{\"temperature\": payload, \"hvac_mode\": \"heat\"}",
     "dataType": "jsonata",
@@ -320,7 +320,7 @@
     "id": "manual_override",
     "type": "server-state-changed",
     "z": "advanced_heating_flow",
-    "name": "Manual Temperature Change",
+    "name": "Manual Temperature Change ⚠️ UPDATE climate.living_room",
     "server": "home_assistant",
     "version": 4,
     "exposeToHomeAssistant": false,

@@ -24,7 +24,7 @@
         "value": ""
       }
     ],
-    "entityidfilter": "sensor.electricity_price",
+    "entityidfilter": "sensor.electricity_total_price_cents",
     "entityidfiltertype": "exact",
     "outputinitially": true,
     "haltifstate": "",
@@ -115,7 +115,7 @@
     "areaId": [],
     "deviceId": [],
     "entityId": [
-      "climate.living_room"
+      "climate.living_room ⚠️ UPDATE to your climate entity"
     ],
     "data": "{\"temperature\": payload}",
     "dataType": "jsonata",
@@ -289,7 +289,7 @@
     "id": "solar_production",
     "type": "server-state-changed",
     "z": "eco_mode_flow",
-    "name": "Solar Production",
+    "name": "Solar Production ⚠️ UPDATE sensor.solar_power",
     "server": "home_assistant",
     "version": 4,
     "exposeToHomeAssistant": false,

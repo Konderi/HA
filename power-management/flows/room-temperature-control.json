@@ -318,7 +318,7 @@
         "t": "set",
         "p": "entity_id",
         "pt": "msg",
-        "to": "climate.living_room",
+        "to": "climate.living_room ⚠️ UPDATE to your climate entity",
         "tot": "str"
       }
     ],

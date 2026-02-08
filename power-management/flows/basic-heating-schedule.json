@@ -119,7 +119,7 @@
     "areaId": [],
     "deviceId": [],
     "entityId": [
-      "climate.living_room"
+      "climate.living_room ⚠️ UPDATE to your climate entity"
     ],
     "data": "{\"temperature\": \"{{ payload }}\"}",
     "dataType": "jsonata",

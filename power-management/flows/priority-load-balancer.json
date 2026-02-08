@@ -135,7 +135,7 @@
     "id": "power_monitor",
     "type": "server-state-changed",
     "z": "load_balancer_flow",
-    "name": "Total Power Monitor",
+    "name": "Total Power Monitor ⚠️ UPDATE sensor to your power meter",
     "server": "home_assistant",
     "version": 4,
     "exposeToHomeAssistant": false,
