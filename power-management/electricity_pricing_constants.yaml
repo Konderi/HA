@@ -1,0 +1,204 @@
+# ============================================
+# ELECTRICITY PRICING CONSTANTS
+# Single source of truth for all pricing values
+# ============================================
+#
+# ⚠️ IMPORTANT: Change your pricing values HERE ONLY!
+# All sensors and calculations will use these values.
+#
+# Last Updated: February 8, 2026
+# Contract: Your Energy Company
+# ============================================
+
+input_number:
+  # ====================
+  # SPOT PRICE ADDITIONS (All include ALV 25.5%)
+  # ====================
+  
+  electricity_tax_eur:
+    name: "Electric Tax (€/kWh)"
+    min: 0
+    max: 0.1
+    step: 0.00000001
+    mode: box
+    unit_of_measurement: "€/kWh"
+    icon: mdi:percent
+    initial: 0.02827515  # 2.827515 c/kWh
+
+  electricity_margin_eur:
+    name: "Company Margin (€/kWh)"
+    min: 0
+    max: 0.05
+    step: 0.0001
+    mode: box
+    unit_of_measurement: "€/kWh"
+    icon: mdi:cash-plus
+    initial: 0.0059  # 0.59 c/kWh
+
+  # ====================
+  # TRANSFER FEES (Time-based, include ALV 25.5%)
+  # ====================
+  
+  electricity_transfer_day_eur:
+    name: "Transfer Fee Day (€/kWh)"
+    min: 0
+    max: 0.15
+    step: 0.0001
+    mode: box
+    unit_of_measurement: "€/kWh"
+    icon: mdi:weather-sunny
+    initial: 0.0511  # 5.11 c/kWh
+  
+  electricity_transfer_night_eur:
+    name: "Transfer Fee Night (€/kWh)"
+    min: 0
+    max: 0.15
+    step: 0.0001
+    mode: box
+    unit_of_measurement: "€/kWh"
+    icon: mdi:weather-night
+    initial: 0.0312  # 3.12 c/kWh
+
+  # ====================
+  # TARIFF TIME SETTINGS
+  # ====================
+  
+  electricity_day_tariff_start_hour:
+    name: "Day Tariff Start Hour"
+    min: 0
+    max: 23
+    step: 1
+    mode: box
+    unit_of_measurement: "hour"
+    icon: mdi:clock-start
+    initial: 7  # 07:00
+  
+  electricity_day_tariff_end_hour:
+    name: "Day Tariff End Hour"
+    min: 0
+    max: 23
+    step: 1
+    mode: box
+    unit_of_measurement: "hour"
+    icon: mdi:clock-end
+    initial: 22  # 22:00
+
+  # ====================
+  # FIXED MONTHLY COSTS
+  # ====================
+  
+  electricity_base_fee_monthly:
+    name: "Monthly Base Fee (€)"
+    min: 0
+    max: 50
+    step: 0.01
+    mode: box
+    unit_of_measurement: "€"
+    icon: mdi:calendar-month
+    initial: 5.99  # €/month
+
+  # ====================
+  # OPTIONAL: WINTER PEAK PRICING
+  # ====================
+  
+  electricity_winter_peak_enabled:
+    name: "Enable Winter Peak Pricing"
+    min: 0
+    max: 1
+    step: 1
+    mode: box
+    icon: mdi:snowflake
+    initial: 0  # 0 = disabled, 1 = enabled
+
+  electricity_transfer_winter_peak_eur:
+    name: "Transfer Fee Winter Peak (€/kWh)"
+    min: 0
+    max: 0.20
+    step: 0.0001
+    mode: box
+    unit_of_measurement: "€/kWh"
+    icon: mdi:snowflake-alert
+    initial: 0.0842  # 8.42 c/kWh (if you have winter peak)
+
+  # ====================
+  # PRICE CONTROL THRESHOLDS
+  # ====================
+  
+  electricity_price_cheap_cents:
+    name: "Cheap Price Threshold (c/kWh)"
+    min: 0
+    max: 30
+    step: 0.1
+    mode: slider
+    unit_of_measurement: "c/kWh"
+    icon: mdi:cash-minus
+    initial: 12.0  # Below this = cheap
+  
+  electricity_price_expensive_cents:
+    name: "Expensive Price Threshold (c/kWh)"
+    min: 10
+    max: 50
+    step: 0.1
+    mode: slider
+    unit_of_measurement: "c/kWh"
+    icon: mdi:cash-plus
+    initial: 18.0  # Above this = expensive
+
+# ====================
+# PRICING CONSTANTS (Read-only info)
+# ====================
+
+sensor:
+  - platform: template
+    sensors:
+      electricity_pricing_info:
+        friendly_name: "Electricity Pricing Info"
+        value_template: "Configured"
+        attribute_templates:
+          # Quick reference (in cents)
+          electric_tax_cents: >
+            {{ (states('input_number.electricity_tax_eur') | float * 100) | round(2) }}
+          margin_cents: >
+            {{ (states('input_number.electricity_margin_eur') | float * 100) | round(2) }}
+          transfer_day_cents: >
+            {{ (states('input_number.electricity_transfer_day_eur') | float * 100) | round(2) }}
+          transfer_night_cents: >
+            {{ (states('input_number.electricity_transfer_night_eur') | float * 100) | round(2) }}
+          base_fee: >
+            {{ states('input_number.electricity_base_fee_monthly') | float | round(2) }}
+          
+          # Tariff schedule
+          day_tariff_hours: >
+            {{ states('input_number.electricity_day_tariff_start_hour') | int }}-{{ states('input_number.electricity_day_tariff_end_hour') | int }}
+          night_tariff_hours: >
+            {{ states('input_number.electricity_day_tariff_end_hour') | int }}-{{ states('input_number.electricity_day_tariff_start_hour') | int }}
+          
+          # Total fixed costs (not including spot price)
+          fixed_costs_day_eur: >
+            {% set tax = states('input_number.electricity_tax_eur') | float %}
+            {% set margin = states('input_number.electricity_margin_eur') | float %}
+            {% set transfer = states('input_number.electricity_transfer_day_eur') | float %}
+            {{ (tax + margin + transfer) | round(5) }}
+          
+          fixed_costs_night_eur: >
+            {% set tax = states('input_number.electricity_tax_eur') | float %}
+            {% set margin = states('input_number.electricity_margin_eur') | float %}
+            {% set transfer = states('input_number.electricity_transfer_night_eur') | float %}
+            {{ (tax + margin + transfer) | round(5) }}
+          
+          fixed_costs_day_cents: >
+            {% set tax = states('input_number.electricity_tax_eur') | float %}
+            {% set margin = states('input_number.electricity_margin_eur') | float %}
+            {% set transfer = states('input_number.electricity_transfer_day_eur') | float %}
+            {{ ((tax + margin + transfer) * 100) | round(2) }}
+          
+          fixed_costs_night_cents: >
+            {% set tax = states('input_number.electricity_tax_eur') | float %}
+            {% set margin = states('input_number.electricity_margin_eur') | float %}
+            {% set transfer = states('input_number.electricity_transfer_night_eur') | float %}
+            {{ ((tax + margin + transfer) * 100) | round(2) }}
+          
+          # Contract info
+          last_updated: "2026-02-08"
+          alv_included: "Yes (25.5%)"
+          data_source: "Spot-Hinta.fi API"
