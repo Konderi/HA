@@ -83,7 +83,6 @@
       unique_id: sahkon_myyntihinta_c_kwh
       unit_of_measurement: "c/kWh"
       device_class: monetary
-      state_class: measurement
       state: >
         {{ (states('sensor.nordpool_kwh_fi_eur_4_10_0') | float(0) * 100) | round(2) }}
       icon: mdi:cash
@@ -118,7 +117,6 @@
       unique_id: shf_electricity_full_price_charts
       unit_of_measurement: "c/kWh"
       device_class: monetary
-      state_class: measurement
       state: >
         {{ states('sensor.electricity_total_price_cents') | float(0) }}
       icon: mdi:chart-line
