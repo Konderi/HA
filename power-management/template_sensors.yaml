@@ -33,7 +33,7 @@ template:
       # ====================
       # DEPRECATED - Use sensor.transfer_tariff_now instead
       # ====================
-      - name: "Sähkön siirtohinta"
+      - name: "Sahko siirtohinta"
         unique_id: sahko_siirtohinta_legacy
         unit_of_measurement: "c/kWh"
         device_class: monetary
@@ -76,7 +76,7 @@ template:
       # ====================
       # DEPRECATED - Use sensor.electricity_total_price_cents instead
       # ====================
-      - name: "Sähkön kokonaishinta SHF/Charts"
+      - name: "SHF Electricity Full Price Charts"
         unique_id: shf_electricity_full_price_charts_legacy
         unit_of_measurement: "c/kWh"
         device_class: monetary

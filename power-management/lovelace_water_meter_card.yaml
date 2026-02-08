@@ -1,0 +1,73 @@
+# ============================================
+# WATER METER CARD
+# Lovelace Dashboard Card for Water Tracking
+# ============================================
+#
+# Add this to your Lovelace dashboard as a new card.
+# Provides easy manual water meter reading entry.
+# ============================================
+
+type: vertical-stack
+cards:
+  # Manual Reading Entry
+  - type: entities
+    title: 💧 Water Meter Reading
+    show_header_toggle: false
+    entities:
+      - entity: input_number.water_meter_reading
+        name: Current Meter Reading
+        icon: mdi:counter
+      - type: section
+      - entity: sensor.water_consumption
+        name: Total Consumption
+        icon: mdi:water-pump
+      - entity: sensor.water_total_cost
+        name: Total Cost
+        icon: mdi:cash
+    footer:
+      type: buttons
+      entities:
+        - entity: input_number.water_meter_reading
+          name: Update Reading
+          tap_action:
+            action: call-service
+            service: input_number.set_value
+            service_data:
+              entity_id: input_number.water_meter_reading
+              value: "{{ states('input_number.water_meter_reading') | float + 100 }}"
+          icon: mdi:plus-circle
+          
+  # Cost Breakdown
+  - type: markdown
+    content: >
+      ### 💰 Cost Breakdown
+      
+      **Consumption:** {{ (states('sensor.water_consumption') | float / 1000) | round(3) }} m³
+      
+      - Water fee: {{ (states('sensor.water_consumption') | float / 1000 * 1.45) | round(2) }} €
+      
+      - Wastewater: {{ (states('sensor.water_consumption') | float / 1000 * 2.32) | round(2) }} €
+      
+      - VAT (24%): {{ (states('sensor.water_consumption') | float / 1000 * (1.45 + 2.32) * 0.24) | round(2) }} €
+      
+      **Total: {{ states('sensor.water_total_cost') }} €**
+      
+      ---
+      
+      📅 *Update your meter reading monthly or when you read the physical meter*
+
+# Alternative: Simple Glance Card
+# Uncomment below and delete above if you prefer a simpler view
+#
+# type: glance
+# title: 💧 Water Meter
+# show_name: true
+# show_icon: true
+# show_state: true
+# entities:
+#   - entity: input_number.water_meter_reading
+#     name: Meter Reading
+#   - entity: sensor.water_consumption
+#     name: Consumption
+#   - entity: sensor.water_total_cost
+#     name: Total Cost

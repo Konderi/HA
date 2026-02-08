@@ -1,0 +1,21 @@
+# ============================================
+# WATER METER HELPER
+# Manual Water Meter Reading System
+# ============================================
+#
+# This file creates an input helper for manual water meter readings.
+# Add to configuration.yaml:
+#   input_number: !include input_numbers.yaml
+#
+# Or add to your existing input_number section.
+# ============================================
+
+# Water meter reading (manual entry)
+water_meter_reading:
+  name: "Water Meter Reading"
+  min: 0
+  max: 999999
+  step: 1
+  unit_of_measurement: "L"
+  icon: mdi:counter
+  mode: box
