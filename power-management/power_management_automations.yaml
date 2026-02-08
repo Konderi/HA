@@ -1,0 +1,69 @@
+# ==========================================
+# POWER MANAGEMENT AUTOMATIONS
+# Helper Management & Auto-disable Logic
+# ==========================================
+#
+# Add to configuration.yaml:
+#   automation manual: !include_dir_list power-management/
+# OR merge with existing automations.yaml
+# ==========================================
+
+# Reset boiler runtime at midnight
+- id: reset_boiler_runtime_midnight
+  alias: "Reset Boiler Runtime at Midnight"
+  trigger:
+    - platform: time
+      at: "00:00:00"
+  action:
+    - service: input_number.set_value
+      target:
+        entity_id: sensor.boiler_runtime_today
+      data:
+        value: 0
+
+# Auto-disable Luxus mode after 2 hours
+- id: boiler_luxus_auto_disable
+  alias: "Boiler Luxus Mode Auto Disable"
+  trigger:
+    - platform: state
+      entity_id: input_boolean.boiler_luxus_mode
+      to: 'on'
+  action:
+    # Record activation time
+    - service: input_datetime.set_datetime
+      target:
+        entity_id: input_datetime.boiler_luxus_activated
+      data:
+        datetime: "{{ now().isoformat() }}"
+    # Wait 2 hours
+    - delay:
+        hours: 2
+    # Disable Luxus mode
+    - service: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.boiler_luxus_mode
+    # Send notification
+    - service: notify.notify
+      data:
+        title: "💧 Boiler Luxus Mode Ended"
+        message: "Luxus mode automatically disabled after 2 hours"
+
+# Auto-disable Tesla priority charging when charged
+- id: tesla_priority_auto_disable
+  alias: "Tesla Priority Charging Auto Disable"
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.tesla_model_3_battery
+      above: 80
+  condition:
+    - condition: state
+      entity_id: input_boolean.tesla_priority_charging
+      state: 'on'
+  action:
+    - service: input_boolean.turn_off
+      target:
+        entity_id: input_boolean.tesla_priority_charging
+    - service: notify.notify
+      data:
+        title: "🚗 Tesla Priority Charging Complete"
+        message: "Priority mode disabled - battery at {{ states('sensor.tesla_model_3_battery') }}%"

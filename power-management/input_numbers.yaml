@@ -1,14 +1,15 @@
 # ============================================
-# WATER METER HELPER
-# Manual Water Meter Reading System
+# INPUT NUMBER HELPERS
+# Water Meter + Power Management Controls
 # ============================================
 #
-# This file creates an input helper for manual water meter readings.
 # Add to configuration.yaml:
-#   input_number: !include input_numbers.yaml
-#
-# Or add to your existing input_number section.
+#   input_number: !include power-management/input_numbers.yaml
 # ============================================
+
+# ==========================================
+# WATER METER (Existing)
+# ==========================================
 
 # Water meter reading (manual entry)
 water_meter_reading:
@@ -19,3 +20,126 @@ water_meter_reading:
   unit_of_measurement: "L"
   icon: mdi:counter
   mode: box
+
+# ==========================================
+# POWER MANAGEMENT - BOILER CONTROLS
+# ==========================================
+
+# Maximum price rank for boiler (1-24)
+boiler_max_rank:
+  name: "Boiler Max Price Rank"
+  min: 1
+  max: 24
+  step: 1
+  initial: 8
+  icon: mdi:numeric
+  mode: slider
+  unit_of_measurement: "rank"
+
+# Maximum daily runtime hours
+boiler_max_hours_daily:
+  name: "Boiler Max Hours Per Day"
+  min: 1
+  max: 8
+  step: 0.5
+  initial: 3
+  icon: mdi:clock-outline
+  mode: slider
+  unit_of_measurement: "h"
+
+# ==========================================
+# POWER MANAGEMENT - RADIATOR CONTROLS
+# ==========================================
+
+# MH1 (Master Bedroom)
+mh1_outside_temp_threshold:
+  name: "MH1 Outside Temp Threshold"
+  min: -30
+  max: 20
+  step: 1
+  initial: 10
+  icon: mdi:thermometer-low
+  mode: slider
+  unit_of_measurement: "°C"
+
+mh1_min_room_temp:
+  name: "MH1 Min Room Temperature"
+  min: 15
+  max: 25
+  step: 0.5
+  initial: 19
+  icon: mdi:thermometer-chevron-down
+  mode: slider
+  unit_of_measurement: "°C"
+
+mh1_max_room_temp:
+  name: "MH1 Max Room Temperature"
+  min: 18
+  max: 28
+  step: 0.5
+  initial: 21
+  icon: mdi:thermometer-chevron-up
+  mode: slider
+  unit_of_measurement: "°C"
+
+# Tuomas Room
+tuomas_outside_temp_threshold:
+  name: "Tuomas Outside Temp Threshold"
+  min: -30
+  max: 20
+  step: 1
+  initial: 12
+  icon: mdi:thermometer-low
+  mode: slider
+  unit_of_measurement: "°C"
+
+tuomas_min_room_temp:
+  name: "Tuomas Min Room Temperature"
+  min: 15
+  max: 25
+  step: 0.5
+  initial: 20
+  icon: mdi:thermometer-chevron-down
+  mode: slider
+  unit_of_measurement: "°C"
+
+tuomas_max_room_temp:
+  name: "Tuomas Max Room Temperature"
+  min: 18
+  max: 28
+  step: 0.5
+  initial: 22
+  icon: mdi:thermometer-chevron-up
+  mode: slider
+  unit_of_measurement: "°C"
+
+# Sara Room
+sara_outside_temp_threshold:
+  name: "Sara Outside Temp Threshold"
+  min: -30
+  max: 20
+  step: 1
+  initial: 12
+  icon: mdi:thermometer-low
+  mode: slider
+  unit_of_measurement: "°C"
+
+sara_min_room_temp:
+  name: "Sara Min Room Temperature"
+  min: 15
+  max: 25
+  step: 0.5
+  initial: 20
+  icon: mdi:thermometer-chevron-down
+  mode: slider
+  unit_of_measurement: "°C"
+
+sara_max_room_temp:
+  name: "Sara Max Room Temperature"
+  min: 18
+  max: 28
+  step: 0.5
+  initial: 22
+  icon: mdi:thermometer-chevron-up
+  mode: slider
+  unit_of_measurement: "°C"
