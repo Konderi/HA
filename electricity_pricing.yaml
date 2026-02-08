@@ -8,7 +8,6 @@ template:
       - name: "Electricity Total Price (cents)"
         unique_id: electricity_total_price_cents
         unit_of_measurement: "c/kWh"
-        device_class: monetary
         state_class: measurement
         state: >
           {% set nordpool = states('sensor.nordpool_kwh_fi_eur_4_10_0') | float(0) %}
