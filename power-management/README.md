@@ -262,6 +262,12 @@ A complete Lovelace dashboard provides centralized control and monitoring:
 
 ## 📚 Documentation
 
+### 🚀 Getting Started (START HERE!)
+- **[MASTER_IMPLEMENTATION_PLAN.md](MASTER_IMPLEMENTATION_PLAN.md)** - ⭐ **Complete step-by-step deployment guide**
+- **[IMPLEMENTATION_PROGRESS.md](IMPLEMENTATION_PROGRESS.md)** - Track your progress as you implement
+- **[IMPLEMENTATION_CHECKLIST.md](IMPLEMENTATION_CHECKLIST.md)** - Original detailed deployment guide
+- **[PROJECT_COMPLETE.md](PROJECT_COMPLETE.md)** - Complete project summary
+
 ### Quick Start
 - **[IMPLEMENTATION_CHECKLIST.md](IMPLEMENTATION_CHECKLIST.md)** - Step-by-step deployment guide
 - **[PROJECT_COMPLETE.md](PROJECT_COMPLETE.md)** - Complete project summary
@@ -344,6 +350,14 @@ A complete Lovelace dashboard provides centralized control and monitoring:
 ---
 
 ## 🚀 Getting Started
+
+### Step 0: Read the Master Plan (10 minutes) ⭐
+```bash
+1. MASTER_IMPLEMENTATION_PLAN.md - Complete deployment roadmap
+2. IMPLEMENTATION_PROGRESS.md - Your progress tracker
+3. Understand the 5 phases
+4. Review time estimates (4-5 hours total)
+```
 
 ### Step 1: Read the Docs (15 minutes)
 ```bash
