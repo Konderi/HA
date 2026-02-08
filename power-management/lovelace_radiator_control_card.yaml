@@ -1,0 +1,77 @@
+# Phase 2: Radiator Control Dashboard Card
+# Add this to your Lovelace dashboard
+
+type: vertical-stack
+cards:
+  # Kids Status Toggle
+  - type: entities
+    title: 🏠 Kids Status
+    show_header_toggle: false
+    entities:
+      - entity: input_boolean.kids_home
+        name: Kids at Home
+        icon: mdi:human-child
+      - type: section
+      - entity: sensor.aqara_poikienhuone_temperature
+        name: Tuomas Room
+        icon: mdi:thermometer
+      - entity: switch.shellypro4pm_ec62609fd3dc_switch_1
+        name: Tuomas Radiator
+      - entity: sensor.aqara_saranhuone_temperature
+        name: Sara Room
+        icon: mdi:thermometer
+      - entity: switch.shellypro4pm_ec62609fd3dc_switch_0
+        name: Sara Radiator
+
+  # Kids Rooms Temperature Settings
+  - type: entities
+    title: 🌡️ Kids Rooms Settings
+    show_header_toggle: false
+    entities:
+      - entity: input_number.kids_rooms_min_temp
+        name: Minimum Temperature
+      - entity: input_number.kids_rooms_target_temp
+        name: Target Temperature
+
+  # Master Bedroom Control
+  - type: entities
+    title: 🛏️ Master Bedroom (MH1)
+    show_header_toggle: false
+    entities:
+      - entity: sensor.aqara_makuuhuone_temperature
+        name: Current Temperature
+        icon: mdi:thermometer
+      - entity: switch.mh1
+        name: MH1 Radiator
+      - type: section
+      - entity: input_number.mh1_target_temp
+        name: Target Temperature
+      - entity: input_datetime.mh1_start_time
+        name: Heating Start Time
+      - entity: input_datetime.mh1_end_time
+        name: Heating End Time
+      - entity: input_boolean.mh1_manual_override
+        name: Manual Override (24/7 heating)
+
+  # Status Overview
+  - type: markdown
+    content: |
+      ## 📊 Radiator Status
+      
+      **MH1 (Master Bedroom):**
+      - Schedule: {{ states('input_datetime.mh1_start_time') }} - {{ states('input_datetime.mh1_end_time') }}
+      - Target: {{ states('input_number.mh1_target_temp') }}°C
+      - Current: {{ states('sensor.aqara_makuuhuone_temperature') }}°C
+      - Status: {{ 'ON' if is_state('switch.mh1', 'on') else 'OFF' }}
+      
+      **Kids Rooms:**
+      - Kids Home: {{ 'YES ✅' if is_state('input_boolean.kids_home', 'on') else 'NO ❌' }}
+      - Min/Target: {{ states('input_number.kids_rooms_min_temp') }}°C / {{ states('input_number.kids_rooms_target_temp') }}°C
+      
+      **Tuomas:**
+      - Current: {{ states('sensor.aqara_poikienhuone_temperature') }}°C
+      - Radiator: {{ 'ON' if is_state('switch.shellypro4pm_ec62609fd3dc_switch_1', 'on') else 'OFF' }}
+      
+      **Sara:**
+      - Current: {{ states('sensor.aqara_saranhuone_temperature') }}°C
+      - Radiator: {{ 'ON' if is_state('switch.shellypro4pm_ec62609fd3dc_switch_0', 'on') else 'OFF' }}

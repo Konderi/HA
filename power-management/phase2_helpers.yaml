@@ -1,0 +1,61 @@
+# Phase 2: Power Management Helper Entities
+# Add to configuration.yaml: input_boolean: !include power-management/phase2_helpers.yaml
+# Or if using packages, include this entire file
+
+input_boolean:
+  # Kids at home toggle (every other week)
+  kids_home:
+    name: "Kids at Home"
+    icon: mdi:human-child
+
+  # MH1 Master Bedroom manual override
+  mh1_manual_override:
+    name: "MH1 Manual Heating Override"
+    icon: mdi:radiator
+
+input_number:
+  # MH1 Master Bedroom target temperature
+  mh1_target_temp:
+    name: "MH1 Target Temperature"
+    min: 18
+    max: 24
+    step: 0.5
+    unit_of_measurement: "°C"
+    icon: mdi:thermometer
+    mode: slider
+    initial: 20
+
+  # Kids rooms temperature thresholds (optional, defaults in flow)
+  kids_rooms_min_temp:
+    name: "Kids Rooms Minimum Temperature"
+    min: 16
+    max: 20
+    step: 0.5
+    unit_of_measurement: "°C"
+    icon: mdi:thermometer-low
+    mode: slider
+    initial: 18
+
+  kids_rooms_target_temp:
+    name: "Kids Rooms Target Temperature"
+    min: 18
+    max: 22
+    step: 0.5
+    unit_of_measurement: "°C"
+    icon: mdi:thermometer-high
+    mode: slider
+    initial: 19
+
+input_datetime:
+  # MH1 heating schedule
+  mh1_start_time:
+    name: "MH1 Heating Start Time"
+    has_date: false
+    has_time: true
+    initial: "22:00"
+
+  mh1_end_time:
+    name: "MH1 Heating End Time"
+    has_date: false
+    has_time: true
+    initial: "07:00"
