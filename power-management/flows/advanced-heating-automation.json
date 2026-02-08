@@ -10,7 +10,7 @@
     "id": "presence_sensor",
     "type": "server-state-changed",
     "z": "advanced_heating_flow",
-    "name": "Home Presence ⚠️ UPDATE person.user to your person entity",
+    "name": "Home Presence ⚠️ UPDATE person.toni to your person entity",
     "server": "home_assistant",
     "version": 4,
     "exposeToHomeAssistant": false,
@@ -24,7 +24,7 @@
         "value": ""
       }
     ],
-    "entityidfilter": "person.user",
+    "entityidfilter": "person.toni",
     "entityidfiltertype": "exact",
     "outputinitially": false,
     "haltifstate": "",
@@ -158,7 +158,7 @@
     "halt_if": "home",
     "halt_if_type": "str",
     "halt_if_compare": "is",
-    "entity_id": "person.user",
+    "entity_id": "person.toni",
     "blockInputOverrides": false,
     "outputProperties": [
       {
@@ -211,14 +211,14 @@
     "id": "get_weather",
     "type": "api-current-state",
     "z": "advanced_heating_flow",
-    "name": "Get Outdoor Temp ⚠️ UPDATE weather.home",
+    "name": "Get Outdoor Temp ⚠️ UPDATE weather.forecast_koti",
     "server": "home_assistant",
     "version": 3,
     "outputs": 1,
     "halt_if": "",
     "halt_if_type": "str",
     "halt_if_compare": "is",
-    "entity_id": "weather.home",
+    "entity_id": "weather.forecast_koti",
     "blockInputOverrides": false,
     "outputProperties": [
       {
@@ -283,7 +283,7 @@
     "areaId": [],
     "deviceId": [],
     "entityId": [
-      "climate.living_room ⚠️ UPDATE to your climate entity"
+      "climate.mitsu_ilp"
     ],
     "data": "{\"temperature\": payload, \"hvac_mode\": \"heat\"}",
     "dataType": "jsonata",
@@ -320,7 +320,7 @@
     "id": "manual_override",
     "type": "server-state-changed",
     "z": "advanced_heating_flow",
-    "name": "Manual Temperature Change ⚠️ UPDATE climate.living_room",
+    "name": "Manual Temperature Change ⚠️ UPDATE climate.mitsu_ilp",
     "server": "home_assistant",
     "version": 4,
     "exposeToHomeAssistant": false,
@@ -334,7 +334,7 @@
         "value": ""
       }
     ],
-    "entityidfilter": "climate.living_room",
+    "entityidfilter": "climate.mitsu_ilp",
     "entityidfiltertype": "exact",
     "outputinitially": false,
     "haltifstate": "",

@@ -41,7 +41,7 @@
     "type": "function",
     "z": "room_control_flow",
     "name": "Living Room Temperature Logic",
-    "func": "const now = new Date();\nconst hour = now.getHours();\n\nlet targetTemp;\n\n// Living room is main space - comfortable most of the day\nif (hour >= 7 && hour < 23) {\n    targetTemp = 21;\n} else {\n    targetTemp = 18;\n}\n\nmsg.payload = targetTemp;\nmsg.room = 'living_room';\nmsg.entity_id = 'climate.living_room';\n\nreturn msg;",
+    "func": "const now = new Date();\nconst hour = now.getHours();\n\nlet targetTemp;\n\n// Living room is main space - comfortable most of the day\nif (hour >= 7 && hour < 23) {\n    targetTemp = 21;\n} else {\n    targetTemp = 18;\n}\n\nmsg.payload = targetTemp;\nmsg.room = 'living_room';\nmsg.entity_id = 'climate.mitsu_ilp';\n\nreturn msg;",
     "outputs": 1,
     "timeout": 0,
     "noerr": 0,
@@ -318,7 +318,7 @@
         "t": "set",
         "p": "entity_id",
         "pt": "msg",
-        "to": "climate.living_room ⚠️ UPDATE to your climate entity",
+        "to": "climate.mitsu_ilp",
         "tot": "str"
       }
     ],

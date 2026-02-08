@@ -115,7 +115,7 @@
     "areaId": [],
     "deviceId": [],
     "entityId": [
-      "climate.living_room ⚠️ UPDATE to your climate entity"
+      "climate.mitsu_ilp"
     ],
     "data": "{\"temperature\": payload}",
     "dataType": "jsonata",
@@ -289,7 +289,7 @@
     "id": "solar_production",
     "type": "server-state-changed",
     "z": "eco_mode_flow",
-    "name": "Solar Production ⚠️ UPDATE sensor.solar_power",
+    "name": "Solar Production",
     "server": "home_assistant",
     "version": 4,
     "exposeToHomeAssistant": false,
