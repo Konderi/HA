@@ -133,7 +133,8 @@ Complete Lovelace dashboard for monitoring and controlling the entire system:
 - **Device analytics** - Compare power factor across heating devices
 
 👉 **See [PROFESSIONAL_APEXCHARTS.md](PROFESSIONAL_APEXCHARTS.md) for advanced chart configurations**  
-👉 **See [VISUAL_CHARTS_GUIDE.md](VISUAL_CHARTS_GUIDE.md) for visual mockups and examples**
+👉 **See [VISUAL_CHARTS_GUIDE.md](VISUAL_CHARTS_GUIDE.md) for visual mockups and examples**  
+👉 **See [AI_POWER_MANAGEMENT.md](AI_POWER_MANAGEMENT.md) for intelligent reporting and analysis** 🤖
 
 ---
 
@@ -278,6 +279,15 @@ A complete Lovelace dashboard provides centralized control and monitoring:
 - **[VISUAL_CHARTS_GUIDE.md](VISUAL_CHARTS_GUIDE.md)** - Visual mockups and design patterns
 - **[PROFESSIONAL_CHARTS_SUMMARY.md](PROFESSIONAL_CHARTS_SUMMARY.md)** - Quick reference guide
 - **[DOCUMENTATION_SUMMARY.md](DOCUMENTATION_SUMMARY.md)** - Complete documentation index
+
+### AI-Enhanced Features 🤖
+- **[AI_POWER_MANAGEMENT.md](AI_POWER_MANAGEMENT.md)** - AI-powered reporting and analysis (NEW!)
+  - Daily energy reports with natural language summaries
+  - Weekly trend analysis and recommendations
+  - Anomaly detection with explanations
+  - Natural language queries and voice interface
+  - Predictive optimization suggestions
+  - Equipment health monitoring
 
 ### Core Guides
 - **[POWER_MANAGEMENT_GUIDE.md](POWER_MANAGEMENT_GUIDE.md)** - Complete system documentation
@@ -435,6 +445,7 @@ You now have everything for a **professional-grade power management system**:
 - ✅ Complete control panel with all settings
 - ✅ Mobile-optimized interface
 - ✅ 6 professional ApexCharts with power factor monitoring
+- ✅ AI-powered reporting and natural language analysis 🤖
 - ✅ Complete migration guides for legacy systems
 - ✅ Visual design mockups and patterns
 - ✅ Zero ongoing maintenance

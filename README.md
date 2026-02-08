@@ -1,4 +1,12 @@
-# 🏠 Home Assistant Projects
+# 🏠 Home Assi#### Key Features:
+- 🔒 **Fuse protection** - Priority-based load balancing for high-power devices
+- 📊 **Tehomaksu prevention** - Eliminates peak power fees through intelligent monitoring
+- 💡 **Price optimization** - Schedules devices based on Nordpool electricity prices
+- 📈 **Phase monitoring** - Real-time voltage and load monitoring with alerts
+- ⚡ **Power factor tracking** - Device-level efficiency monitoring with 6 professional charts
+- 🤖 **AI-powered insights** - Natural language reports, anomaly detection, and predictive optimization
+- 🔄 **Migration guides** - Complete upgrade paths for legacy systems
+- 🎛️ **Professional dashboard** - Complete Lovelace control panel with real-time analyticsojects
 
 A collection of professional Home Assistant automations, integrations, and configurations for smart home management.
 
@@ -29,6 +37,7 @@ A comprehensive 4-flow Node-RED automation system that prevents main fuse burnou
 - Telegram notifications
 - ApexCharts (6 professional visualization charts)
 - Modern template sensors (HA 2026.6+ compatible)
+- OpenAI/Claude/Gemini AI integration for intelligent reporting
 
 #### Compatibility:
 - ✅ **Home Assistant 2026.2.x** (tested)
