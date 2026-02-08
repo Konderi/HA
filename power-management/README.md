@@ -4,6 +4,32 @@ A complete, production-ready Node-RED automation system for Home Assistant featu
 
 **💰 Annual Savings: 150-250€** | **🔋 4 Integrated Flows** | **📊 Professional Dashboard** | **⚡ Real-time Monitoring**
 
+---
+
+## ⚠️ URGENT: Legacy Sensor Migration Required
+
+**If you have deprecation warnings about template sensors**, you need to migrate before HA 2026.6:
+
+🚨 **46+ legacy sensors will stop working in HA 2026.6**
+
+**Quick Fix (15 min):**
+1. Add new pricing files to `configuration.yaml`
+2. Replace old `sensors.yaml` with migrated version
+3. Update dashboard sensor references
+4. Restart Home Assistant
+
+👉 **See [QUICK_MIGRATION.md](QUICK_MIGRATION.md) for 3-step fix**  
+👉 **See [LEGACY_SENSOR_MIGRATION.md](LEGACY_SENSOR_MIGRATION.md) for detailed guide**
+
+**Benefits:**
+- ✅ No more deprecation warnings (46 → 0)
+- ✅ System won't break in HA 2026.6
+- ✅ Centralized pricing constants (easier updates)
+- ✅ More accurate price calculations
+- ✅ Future-proof for HA 2027+
+
+---
+
 ## 🔋 Power Management System
 
 Complete intelligent power management to prevent fuse overload, eliminate peak power fees, and optimize energy costs:
@@ -43,6 +69,38 @@ Complete intelligent power management to prevent fuse overload, eliminate peak p
 
 ---
 
+## 🔄 Migration Guides
+
+### Heating Automation Migration 🔥
+Replace old YAML heating automations with Node-RED flows:
+- **Step-by-step guide** - Disable old automations, test Node-RED flows
+- **6 automations** - All heating logic moved to Node-RED
+- **Better control** - Priority-based, price-optimized heating
+- **30-45 min** - Complete migration time including testing
+
+👉 **See [HEATING_MIGRATION_GUIDE.md](HEATING_MIGRATION_GUIDE.md) for complete instructions**
+
+### ApexCharts Dashboard Upgrade 📊
+Upgrade electricity price charts to use modern sensors:
+- **2 charts upgraded** - 24h price chart + 7-day consumption chart
+- **Removes hardcoded prices** - Uses centralized pricing constants
+- **Future-proof** - Compatible with HA 2026.6+
+- **Simpler config** - No complex JavaScript calculations
+
+👉 **See [APEXCHARTS_UPGRADE_GUIDE.md](APEXCHARTS_UPGRADE_GUIDE.md) for chart configurations**
+
+### Legacy Sensor Migration ⚠️
+Fix 46+ deprecated template sensor warnings:
+- **Critical deadline** - Must complete before HA 2026.6
+- **15-minute fix** - Quick migration with step-by-step guide
+- **Zero warnings** - Clean system after migration
+- **Better accuracy** - Centralized pricing, day/night auto-detection
+
+👉 **See [QUICK_MIGRATION.md](QUICK_MIGRATION.md) for fast fix**  
+👉 **See [LEGACY_SENSOR_MIGRATION.md](LEGACY_SENSOR_MIGRATION.md) for detailed guide**
+
+---
+
 ## 🎛️ Professional Control Panel
 
 Complete Lovelace dashboard for monitoring and controlling the entire system:
@@ -67,6 +125,16 @@ Complete Lovelace dashboard for monitoring and controlling the entire system:
 - **Optimization score** - System efficiency rating, recommendations
 
 👉 **See [DASHBOARD.md](DASHBOARD.md) for complete YAML configuration and setup instructions**
+
+### Professional ApexCharts Dashboards 📊
+- **6 advanced charts** - Multi-metric analysis, power factor monitoring, heatmaps
+- **Power quality tracking** - Real-time efficiency metrics per device and phase
+- **Interactive visualizations** - Zoom, pan, export, gradient fills, annotations
+- **Pattern recognition** - Weekly heatmaps reveal optimization opportunities
+- **Device analytics** - Compare power factor across heating devices
+
+👉 **See [PROFESSIONAL_APEXCHARTS.md](PROFESSIONAL_APEXCHARTS.md) for advanced chart configurations**  
+👉 **See [VISUAL_CHARTS_GUIDE.md](VISUAL_CHARTS_GUIDE.md) for visual mockups and examples**
 
 ---
 
