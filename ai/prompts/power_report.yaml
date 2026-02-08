@@ -1,0 +1,59 @@
+# ============================================================================
+# AI PROMPT: POWER CONSUMPTION REPORT
+# ============================================================================
+# Template for AI assistant to generate current power consumption reports
+# Uses Home Assistant template syntax to pull live sensor data
+# ============================================================================
+
+prompt: |
+  Here's your current power consumption report:
+  
+  ⚡ **CURRENT POWER STATUS**
+  • Total Power: {{ states('sensor.total_power_kw') }} kW
+  • Phase 1: {{ states('sensor.shellyem3_phase1_power') | float / 1000 | round(2) }} kW
+  • Phase 2: {{ states('sensor.shellyem3_phase2_power') | float / 1000 | round(2) }} kW
+  • Phase 3: {{ states('sensor.shellyem3_phase3_power') | float / 1000 | round(2) }} kW
+  
+  💰 **ELECTRICITY PRICING**
+  • Current Price: {{ states('sensor.electricity_total_price_cents') }} c/kWh
+  • Price Rank: {{ states('sensor.shf_rank_now') }}/24
+  • Status: {% if states('sensor.shf_rank_now')|int <= 6 %}🟢 CHEAP - Boost mode active
+  {% elif states('sensor.shf_rank_now')|int >= 19 %}🔴 EXPENSIVE - Eco mode active
+  {% else %}🟡 NORMAL - Standard mode active{% endif %}
+  
+  🌡️ **HEATING STATUS**
+  • ILP Temperature: {{ state_attr('climate.mitsu_ilp', 'temperature') }}°C
+  • Current Mode: {% if states('sensor.shf_rank_now')|int <= 6 %}🔥 Boost ({{ states('input_number.tehostuslampo') }}°C target)
+  {% elif states('sensor.shf_rank_now')|int >= 19 %}🍃 Eco ({{ states('input_number.lamponpudotus_presence') }}°C target)
+  {% else %}🏠 Normal ({{ states('input_number.normaalilampo_presence') }}°C target){% endif %}
+  • Indoor Temp: {{ states('sensor.aqara_makuuhuone_temperature') }}°C (bedroom)
+  • Outdoor Temp: {{ states('sensor.aqara_ulkosensori_temperature') }}°C
+  
+  📊 **TODAY'S CONSUMPTION**
+  • Total Energy: {{ states('sensor.talon_kokonaiskulutus_paiva_kwh') }} kWh
+  • Estimated Cost: €{{ (states('sensor.talon_kokonaiskulutus_paiva_kwh')|float * states('sensor.electricity_total_price_cents')|float / 100) | round(2) }}
+  
+  🚗 **TESLA STATUS**
+  • Charger: {% if is_state('binary_sensor.tesla_model_3_charger', 'on') %}🔌 Charging{% else %}⚫ Not charging{% endif %}
+  • Battery: {{ states('sensor.tesla_model_3_battery_level') }}%
+  
+  💡 **RECOMMENDATIONS**
+  {% if states('sensor.total_power_kw')|float > 12 %}
+  ⚠️ High power consumption detected! Consider reducing non-essential loads.
+  {% endif %}
+  {% if states('sensor.shf_rank_now')|int <= 6 %}
+  💡 Great time for high-power tasks - electricity is cheap!
+  {% elif states('sensor.shf_rank_now')|int >= 19 %}
+  💡 Electricity is expensive - avoid unnecessary consumption.
+  {% endif %}
+  
+  {% set hours_until_cheap = states('sensor.hours_until_next_cheap_period')|int %}
+  {% if hours_until_cheap > 0 and hours_until_cheap < 12 %}
+  ⏰ Next cheap period starts in {{ hours_until_cheap }} hours.
+  {% endif %}
+
+# Response metadata
+name: "Power Report"
+description: "Comprehensive power consumption and pricing report"
+category: "energy"
+version: "1.0"

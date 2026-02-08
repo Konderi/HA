@@ -1,0 +1,305 @@
+# ============================================================================
+# POWER MANAGEMENT NOTIFICATIONS
+# ============================================================================
+# Automated notifications for power events, price alerts, and heating status
+# Sends to iPhone via mobile_app notify service
+# ============================================================================
+
+# ==========================================================================
+# HIGH POWER CONSUMPTION ALERT
+# ==========================================================================
+- id: notify_high_power_consumption
+  alias: "Notify: High Power Consumption"
+  description: "Alert when power consumption exceeds 12 kW"
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.total_power_kw
+      above: 12
+      for:
+        minutes: 2
+  condition:
+    - condition: time
+      after: "06:00:00"
+      before: "23:00:00"
+  action:
+    - service: notify.iphone17
+      data:
+        title: "⚠️ High Power Alert"
+        message: "Power consumption: {{ states('sensor.total_power_kw') }} kW (Limit: 12 kW)"
+        data:
+          push:
+            sound: "default"
+          actions:
+            - action: "VIEW_POWER"
+              title: "View Dashboard"
+            - action: "DISMISS"
+              title: "OK"
+
+# ==========================================================================
+# PEAK POWER LIMIT WARNING
+# ==========================================================================
+- id: notify_approaching_peak_limit
+  alias: "Notify: Approaching Peak Power Limit"
+  description: "Warning when approaching 15 kW limit"
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.total_power_kw
+      above: 13.5
+  action:
+    - service: notify.iphone17
+      data:
+        title: "🔴 Peak Power Warning"
+        message: "CRITICAL: {{ states('sensor.total_power_kw') }} kW - Approaching 15 kW limit!"
+        data:
+          push:
+            sound:
+              name: "default"
+              critical: 1
+              volume: 1.0
+          actions:
+            - action: "EMERGENCY_REDUCE"
+              title: "Reduce Load"
+            - action: "VIEW_POWER"
+              title: "View Details"
+
+# ==========================================================================
+# ELECTRICITY PRICE ALERTS
+# ==========================================================================
+- id: notify_cheap_electricity_price
+  alias: "Notify: Cheap Electricity Price"
+  description: "Notify when electricity enters cheap hours (Rank 1-3)"
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.shf_rank_now
+      below: 4
+  condition:
+    - condition: time
+      after: "06:00:00"
+      before: "22:00:00"
+  action:
+    - service: notify.iphone17
+      data:
+        title: "💰 Cheap Electricity!"
+        message: "Price rank: {{ states('sensor.shf_rank_now') }} - Good time for high-power tasks"
+        data:
+          actions:
+            - action: "BOOST_HEATING"
+              title: "Boost Heating"
+            - action: "CHARGE_TESLA"
+              title: "Charge Tesla"
+
+- id: notify_expensive_electricity_price
+  alias: "Notify: Expensive Electricity Price"
+  description: "Notify when electricity enters expensive hours (Rank 22-24)"
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.shf_rank_now
+      above: 21
+  condition:
+    - condition: time
+      after: "06:00:00"
+      before: "22:00:00"
+  action:
+    - service: notify.iphone17
+      data:
+        title: "💸 Expensive Electricity"
+        message: "Price rank: {{ states('sensor.shf_rank_now') }} - Reduce consumption"
+        data:
+          actions:
+            - action: "ECO_MODE"
+              title: "Enable Eco Mode"
+
+# ==========================================================================
+# HEATING MODE CHANGES
+# ==========================================================================
+- id: notify_heating_mode_boost
+  alias: "Notify: Heating Boost Mode Activated"
+  description: "Notify when ILP switches to boost mode"
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.shf_rank_now
+      below: 7
+  action:
+    - service: notify.iphone17
+      data:
+        title: "🔥 Heating: Boost Mode"
+        message: "ILP set to {{ states('input_number.tehostuslampo') }}°C (Cheap hours)"
+
+- id: notify_heating_mode_eco
+  alias: "Notify: Heating Eco Mode Activated"
+  description: "Notify when ILP switches to eco mode"
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.shf_rank_now
+      above: 18
+  action:
+    - service: notify.iphone17
+      data:
+        title: "🍃 Heating: Eco Mode"
+        message: "ILP set to {{ states('input_number.lamponpudotus_presence') }}°C (Expensive hours)"
+
+# ==========================================================================
+# TESLA CHARGING NOTIFICATIONS
+# ==========================================================================
+- id: notify_tesla_charging_started
+  alias: "Notify: Tesla Charging Started"
+  description: "Notify when Tesla starts charging"
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.tesla_model_3_charger
+      to: "on"
+  action:
+    - service: notify.iphone17
+      data:
+        title: "🚗 Tesla Charging"
+        message: "Tesla started charging - Price rank: {{ states('sensor.shf_rank_now') }}"
+
+- id: notify_tesla_charging_complete
+  alias: "Notify: Tesla Charging Complete"
+  description: "Notify when Tesla charging is complete"
+  trigger:
+    - platform: state
+      entity_id: sensor.tesla_model_3_battery_level
+      to: "100"
+  action:
+    - service: notify.iphone17
+      data:
+        title: "✅ Tesla Fully Charged"
+        message: "Battery: 100% - You can unplug now"
+
+# ==========================================================================
+# DAILY ENERGY SUMMARY
+# ==========================================================================
+- id: notify_daily_energy_summary
+  alias: "Notify: Daily Energy Summary"
+  description: "Send daily energy consumption summary"
+  trigger:
+    - platform: time
+      at: "22:00:00"
+  action:
+    - service: notify.iphone17
+      data:
+        title: "📊 Daily Energy Summary"
+        message: |
+          Today's consumption: {{ states('sensor.talon_kokonaiskulutus_paiva_kwh') }} kWh
+          Average price: {{ states('sensor.electricity_total_price_cents') }} c/kWh
+          Estimated cost: €{{ (states('sensor.talon_kokonaiskulutus_paiva_kwh')|float * states('sensor.electricity_total_price_cents')|float / 100) | round(2) }}
+
+# ==========================================================================
+# PHASE IMBALANCE WARNING
+# ==========================================================================
+- id: notify_phase_imbalance
+  alias: "Notify: Phase Imbalance Detected"
+  description: "Alert when phase imbalance exceeds safe limits"
+  trigger:
+    - platform: template
+      value_template: >
+        {% set p1 = states('sensor.shellyem3_phase1_power')|float %}
+        {% set p2 = states('sensor.shellyem3_phase2_power')|float %}
+        {% set p3 = states('sensor.shellyem3_phase3_power')|float %}
+        {% set max_diff = [p1, p2, p3]|max - [p1, p2, p3]|min %}
+        {{ max_diff > 3000 }}
+  action:
+    - service: notify.iphone17
+      data:
+        title: "⚠️ Phase Imbalance"
+        message: "Significant power imbalance between phases detected"
+        data:
+          actions:
+            - action: "VIEW_PHASES"
+              title: "View Details"
+
+# ==========================================================================
+# SAUNA READY NOTIFICATION
+# ==========================================================================
+- id: notify_sauna_ready
+  alias: "Notify: Sauna is Ready"
+  description: "Notify when sauna reaches target temperature"
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.kiuas_tilatieto
+      to: "on"
+      for:
+        minutes: 30
+  action:
+    - service: notify.iphone17
+      data:
+        title: "🧖 Sauna Ready"
+        message: "Sauna has been heating for 30 minutes and should be ready"
+        data:
+          push:
+            sound: "default"
+
+# ==========================================================================
+# HOLIDAY MODE ACTIVATED
+# ==========================================================================
+- id: notify_holiday_mode_activated
+  alias: "Notify: Holiday Mode Activated"
+  description: "Confirm when holiday mode is turned on"
+  trigger:
+    - platform: state
+      entity_id: input_boolean.lomatila
+      to: "on"
+  action:
+    - service: notify.iphone17
+      data:
+        title: "🏖️ Holiday Mode ON"
+        message: "Heating set to maintenance mode. Have a great trip!"
+
+- id: notify_holiday_mode_deactivated
+  alias: "Notify: Holiday Mode Deactivated"
+  description: "Confirm when holiday mode is turned off"
+  trigger:
+    - platform: state
+      entity_id: input_boolean.lomatila
+      to: "off"
+  action:
+    - service: notify.iphone17
+      data:
+        title: "🏠 Welcome Home!"
+        message: "Holiday mode deactivated. Heating returning to normal."
+
+# ============================================================================
+# NOTIFICATION ACTION HANDLERS
+# ============================================================================
+# Handle notification action button presses
+
+- id: handle_boost_heating_action
+  alias: "Handle: Boost Heating Action"
+  description: "Handle boost heating button from notification"
+  trigger:
+    - platform: event
+      event_type: ios.notification_action_fired
+      event_data:
+        actionName: "BOOST_HEATING"
+  action:
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.ilp_pyynti
+      data:
+        value: "{{ states('input_number.tehostuslampo') }}"
+    - service: climate.set_temperature
+      target:
+        entity_id: climate.mitsu_ilp
+      data:
+        temperature: "{{ states('input_number.tehostuslampo') }}"
+
+- id: handle_eco_mode_action
+  alias: "Handle: Eco Mode Action"
+  description: "Handle eco mode button from notification"
+  trigger:
+    - platform: event
+      event_type: ios.notification_action_fired
+      event_data:
+        actionName: "ECO_MODE"
+  action:
+    - service: input_boolean.turn_on
+      target:
+        entity_id: input_boolean.hinta_automaation_ohitus
+    - service: climate.set_temperature
+      target:
+        entity_id: climate.mitsu_ilp
+      data:
+        temperature: "{{ states('input_number.lamponpudotus_presence') }}"
+
+# ============================================================================

@@ -1,0 +1,103 @@
+# ============================================================================
+# AI PROMPT: ENERGY ANALYSIS & RECOMMENDATIONS
+# ============================================================================
+# Template for AI to analyze energy patterns and provide optimization tips
+# ============================================================================
+
+prompt: |
+  📊 **ENERGY ANALYSIS REPORT**
+  
+  **CONSUMPTION PATTERNS**
+  • Today: {{ states('sensor.talon_kokonaiskulutus_paiva_kwh') }} kWh
+  • Yesterday: {{ states('input_number.sahkon_kulutus_edellinen_paiva') }} kWh
+  • Change: {% set change = (states('sensor.talon_kokonaiskulutus_paiva_kwh')|float - states('input_number.sahkon_kulutus_edellinen_paiva')|float) | round(1) %}
+    {% if change > 0 %}📈 +{{ change }} kWh ({{ (change / states('input_number.sahkon_kulutus_edellinen_paiva')|float * 100) | round(0) }}% increase)
+    {% elif change < 0 %}📉 {{ change }} kWh ({{ (change / states('input_number.sahkon_kulutus_edellinen_paiva')|float * 100) | round(0) }}% decrease)
+    {% else %}➡️ No change{% endif %}
+  
+  **COST EFFICIENCY**
+  • Average price today: {{ states('sensor.electricity_total_price_cents') }} c/kWh
+  • Daily cost estimate: €{{ (states('sensor.talon_kokonaiskulutus_paiva_kwh')|float * states('sensor.electricity_total_price_cents')|float / 100) | round(2) }}
+  • Monthly projection: €{{ (states('sensor.talon_kokonaiskulutus_paiva_kwh')|float * states('sensor.electricity_total_price_cents')|float / 100 * 30) | round(0) }}
+  
+  **HEATING EFFICIENCY**
+  • ILP Mode Usage Today:
+    - Boost mode (cheap hours): ~6 hours at {{ states('input_number.tehostuslampo') }}°C
+    - Normal mode (mid-price): ~12 hours at {{ states('input_number.normaalilampo_presence') }}°C
+    - Eco mode (expensive): ~6 hours at {{ states('input_number.lamponpudotus_presence') }}°C
+  • Temperature delta: {{ (states('input_number.tehostuslampo')|float - states('input_number.lamponpudotus_presence')|float) | round(1) }}°C
+  • Estimated savings: {{ ((states('input_number.tehostuslampo')|float - states('input_number.lamponpudotus_presence')|float) * 3) | round(0) }}% vs constant temperature
+  
+  **POWER DISTRIBUTION**
+  {% set p1 = states('sensor.shellyem3_phase1_power')|float / 1000 %}
+  {% set p2 = states('sensor.shellyem3_phase2_power')|float / 1000 %}
+  {% set p3 = states('sensor.shellyem3_phase3_power')|float / 1000 %}
+  {% set total = p1 + p2 + p3 %}
+  • Phase 1: {{ p1 | round(2) }} kW ({{ (p1/total*100) | round(0) }}%)
+  • Phase 2: {{ p2 | round(2) }} kW ({{ (p2/total*100) | round(0) }}%)
+  • Phase 3: {{ p3 | round(2) }} kW ({{ (p3/total*100) | round(0) }}%)
+  {% set max_diff = [p1, p2, p3]|max - [p1, p2, p3]|min %}
+  • Balance: {% if max_diff < 2 %}✅ Good ({{ max_diff|round(1) }} kW difference)
+    {% elif max_diff < 3 %}⚠️ Fair ({{ max_diff|round(1) }} kW difference)
+    {% else %}❌ Poor ({{ max_diff|round(1) }} kW difference - rebalance loads!){% endif %}
+  
+  **💡 PERSONALIZED RECOMMENDATIONS**
+  
+  {% if states('sensor.total_power_kw')|float > 12 %}
+  1. **Reduce Peak Consumption**
+     Current power ({{ states('sensor.total_power_kw') }} kW) exceeds 12 kW target.
+     • Stagger high-power appliances (don't run multiple at once)
+     • Consider using cheaper hours for washing/drying
+     • Check if sauna and water heater are running simultaneously
+  {% endif %}
+  
+  {% if (states('input_number.tehostuslampo')|float - states('input_number.lamponpudotus_presence')|float) < 3 %}
+  2. **Increase Heating Delta for More Savings**
+     Current temperature difference is only {{ (states('input_number.tehostuslampo')|float - states('input_number.lamponpudotus_presence')|float) | round(1) }}°C.
+     • Increase Boost temp to 24-25°C (from {{ states('input_number.tehostuslampo') }}°C)
+     • Decrease Eco temp to 18-19°C (from {{ states('input_number.lamponpudotus_presence') }}°C)
+     • This could save 5-10% more on heating costs
+  {% endif %}
+  
+  {% if max_diff > 2.5 %}
+  3. **Balance Phase Loads**
+     Phases are imbalanced by {{ max_diff|round(1) }} kW.
+     • Move some devices to underloaded phases
+     • Consider professional electrical assessment
+     • Imbalance can increase grid fees
+  {% endif %}
+  
+  {% if is_state('binary_sensor.tesla_model_3_charger', 'on') and states('sensor.shf_rank_now')|int > 12 %}
+  4. **Optimize Tesla Charging**
+     Tesla is charging during non-cheap hours (Rank {{ states('sensor.shf_rank_now') }}).
+     • Enable scheduled charging for hours 01:00-07:00
+     • Use "Tesla Priority Charging" helper in Settings
+     • Can save €5-10 per charge
+  {% endif %}
+  
+  {% set outdoor_temp = states('sensor.aqara_ulkosensori_temperature')|float %}
+  {% if outdoor_temp > 15 and states('climate.mitsu_ilp') != 'off' %}
+  5. **Heating Not Needed**
+     Outdoor temperature is {{ outdoor_temp }}°C - heating may not be necessary.
+     • Consider turning off ILP completely
+     • Adjust "Outside Temp Trigger" in Settings
+     • Save significant energy on mild days
+  {% endif %}
+  
+  **📈 OPTIMIZATION SCORE**
+  {% set score = 100 %}
+  {% if states('sensor.total_power_kw')|float > 12 %}{% set score = score - 15 %}{% endif %}
+  {% if max_diff > 2.5 %}{% set score = score - 10 %}{% endif %}
+  {% if (states('input_number.tehostuslampo')|float - states('input_number.lamponpudotus_presence')|float) < 3 %}{% set score = score - 10 %}{% endif %}
+  {% if is_state('binary_sensor.tesla_model_3_charger', 'on') and states('sensor.shf_rank_now')|int > 12 %}{% set score = score - 10 %}{% endif %}
+  
+  Your current optimization score: **{{ score }}/100**
+  {% if score >= 90 %}🌟 Excellent! You're maximizing savings!
+  {% elif score >= 75 %}👍 Good! A few improvements possible.
+  {% elif score >= 60 %}⚠️ Fair. Follow recommendations to save more.
+  {% else %}❌ Poor. Significant savings opportunity!{% endif %}
+
+name: "Energy Analysis"
+description: "Detailed energy analysis with personalized recommendations"
+category: "energy"
+version: "1.0"

@@ -1,0 +1,188 @@
+# ============================================================================
+# AI PROMPT: HEATING OPTIMIZATION TIPS
+# ============================================================================
+# Template for ILP heating system optimization recommendations
+# ============================================================================
+
+prompt: |
+  🌡️ **HEATING OPTIMIZATION REPORT**
+  
+  **CURRENT HEATING CONFIGURATION**
+  • System: Mitsubishi ILP Heat Pump
+  • Control Mode: Price-Based (3-mode automatic)
+  • Current Target: {{ state_attr('climate.mitsu_ilp', 'temperature') }}°C
+  • Actual Indoor: {{ states('sensor.aqara_makuuhuone_temperature') }}°C
+  • Outdoor: {{ states('sensor.aqara_ulkosensori_temperature') }}°C
+  
+  **TEMPERATURE SETTINGS**
+  • 🔥 Boost Mode (Rank 1-6): {{ states('input_number.tehostuslampo') }}°C
+  • 🏠 Normal Mode (Rank 7-18): {{ states('input_number.normaalilampo_presence') }}°C
+  • 🍃 Eco Mode (Rank 19-24): {{ states('input_number.lamponpudotus_presence') }}°C
+  • Temperature Delta: {{ (states('input_number.tehostuslampo')|float - states('input_number.lamponpudotus_presence')|float) | round(1) }}°C
+  
+  **CURRENT MODE STATUS**
+  {% set rank = states('sensor.shf_rank_now')|int %}
+  {% if rank <= 6 %}
+  • Active Mode: 🔥 **BOOST** (Pre-heating during cheap hours)
+  • Price Rank: {{ rank }}/24 (Cheapest hours)
+  • Strategy: Heating aggressively to store thermal energy
+  • Next Mode Change: When rank > 6 (switches to Normal)
+  {% elif rank >= 19 %}
+  • Active Mode: 🍃 **ECO** (Saving during expensive hours)
+  • Price Rank: {{ rank }}/24 (Most expensive)
+  • Strategy: Minimal heating, relying on stored thermal mass
+  • Next Mode Change: When rank < 19 (switches to Normal)
+  {% else %}
+  • Active Mode: 🏠 **NORMAL** (Standard comfort)
+  • Price Rank: {{ rank }}/24 (Mid-price hours)
+  • Strategy: Maintaining comfortable temperature
+  • Next Mode Change: When rank ≤ 6 (Boost) or ≥ 19 (Eco)
+  {% endif %}
+  
+  **EFFICIENCY ANALYSIS**
+  {% set outdoor = states('sensor.aqara_ulkosensori_temperature')|float %}
+  {% set indoor = states('sensor.aqara_makuuhuone_temperature')|float %}
+  {% set delta_t = indoor - outdoor %}
+  
+  • Temperature Difference: {{ delta_t | round(1) }}°C
+  • Heat Loss Rate: {% if delta_t < 15 %}🟢 Low{% elif delta_t < 25 %}🟡 Moderate{% else %}🔴 High{% endif %}
+  • ILP Efficiency: {% if outdoor > 0 %}🟢 Optimal (COP ~3-4){% elif outdoor > -10 %}🟡 Good (COP ~2-3){% else %}🔴 Reduced (COP ~1.5-2){% endif %}
+  
+  {% if outdoor < -15 %}
+  ⚠️ **Cold Weather Mode**
+  ILP efficiency drops significantly below -15°C. Consider supplemental heating or raising Eco mode temperature.
+  {% endif %}
+  
+  **💡 OPTIMIZATION RECOMMENDATIONS**
+  
+  {% set boost = states('input_number.tehostuslampo')|float %}
+  {% set normal = states('input_number.normaalilampo_presence')|float %}
+  {% set eco = states('input_number.lamponpudotus_presence')|float %}
+  {% set delta = boost - eco %}
+  
+  {% if delta < 3 %}
+  **1. Increase Temperature Delta for Better Savings**
+  Current delta ({{ delta | round(1) }}°C) is too small to maximize savings.
+  
+  **Recommended adjustments:**
+  • Boost: {{ boost | round(1) }}°C → **24°C** (+{{ (24 - boost) | round(1) }}°C)
+  • Normal: Keep at {{ normal | round(1) }}°C ✓
+  • Eco: {{ eco | round(1) }}°C → **19°C** ({{ (19 - eco) | round(1) }}°C)
+  • New Delta: **5°C** (vs current {{ delta | round(1) }}°C)
+  • Expected Savings: **+10-15%** on heating costs
+  
+  Why this works:
+  - Pre-heat more during cheap hours (thermal mass storage)
+  - Reduce less during expensive hours (stored heat carries over)
+  - Total comfort maintained, but shifted to cheaper times
+  {% endif %}
+  
+  {% if outdoor > states('input_number.ulkolampo_trigger')|float %}
+  **2. Heating May Not Be Needed**
+  Outdoor temperature ({{ outdoor }}°C) is above trigger ({{ states('input_number.ulkolampo_trigger') }}°C).
+  
+  **Actions:**
+  • Heating is automatically disabled ✓
+  • Or adjust trigger: Settings → ILP → Outside Temp Trigger
+  • Consider lowering trigger to 12-13°C for spring/fall
+  {% elif outdoor > 10 %}
+  **3. Mild Weather - Reduce Heating**
+  At {{ outdoor }}°C outdoor, full heating may be excessive.
+  
+  **Recommendations:**
+  • Lower all temps by 1-2°C
+  • Boost: {{ boost | round(1) }}°C → {{ (boost - 2) | round(1) }}°C
+  • Normal: {{ normal | round(1) }}°C → {{ (normal - 2) | round(1) }}°C
+  • Eco: {{ eco | round(1) }}°C → {{ (eco - 2) | round(1) }}°C
+  {% endif %}
+  
+  {% if indoor - state_attr('climate.mitsu_ilp', 'temperature')|float > 2 %}
+  **4. Room Overheating**
+  Indoor temp ({{ indoor }}°C) exceeds target by {{ (indoor - state_attr('climate.mitsu_ilp', 'temperature')|float) | round(1) }}°C.
+  
+  **Possible causes:**
+  • Excellent insulation (good!)
+  • Other heat sources active
+  • Boost temp too high for current weather
+  
+  **Recommendations:**
+  • Lower boost temp by 1°C
+  • Check if other heaters are on
+  • Consider increasing ventilation
+  {% elif state_attr('climate.mitsu_ilp', 'temperature')|float - indoor > 2 %}
+  **5. Room Not Reaching Target**
+  Indoor temp ({{ indoor }}°C) is {{ (state_attr('climate.mitsu_ilp', 'temperature')|float - indoor) | round(1) }}°C below target.
+  
+  **Possible causes:**
+  • Poor insulation
+  • Drafts or air leaks
+  • ILP capacity insufficient
+  • Very cold outdoor temperature
+  
+  **Recommendations:**
+  • Increase boost temp by 1-2°C
+  • Check for drafts around windows/doors
+  • Consider insulation improvements
+  • Extend boost mode hours if possible
+  {% endif %}
+  
+  **ROOM-BY-ROOM OPTIMIZATION**
+  • Master Bedroom: {{ states('sensor.aqara_makuuhuone_temperature') }}°C
+    {% if states('input_boolean.mh1_manual_override') == 'on' %}⚙️ Manual override active{% endif %}
+  • Kids Room (Tuomas): {{ states('sensor.aqara_poikienhuone_temperature') }}°C
+    {% if states('input_boolean.kids_home') == 'off' %}💤 Kids away - radiators can be reduced{% endif %}
+  • Sara's Room: {{ states('sensor.aqara_saranhuone_temperature') }}°C
+  
+  {% if states('input_boolean.kids_home') == 'off' %}
+  **6. Kids Away - Reduce Room Heating**
+  Kids rooms can be set to lower temperature when unoccupied:
+  • Turn off radiators in kids rooms
+  • Save 15-20% on heating while they're away
+  • Use "Kids at Home" toggle in Settings
+  {% endif %}
+  
+  **SEASONAL RECOMMENDATIONS**
+  {% set month = now().month %}
+  {% if month in [12, 1, 2] %}
+  **Winter Mode (December-February)**
+  • Current settings look good for winter ✓
+  • Maintain 4-5°C delta between modes
+  • Focus on pre-heating during cheap hours
+  • Monitor outdoor temp - adjust if < -15°C
+  {% elif month in [3, 4, 5, 9, 10, 11] %}
+  **Spring/Fall Mode (Mar-May, Sep-Nov)**
+  • Weather is {{ outdoor }}°C - consider reducing temps
+  • Suggested: Boost 22°C, Normal 20°C, Eco 18°C
+  • Can disable heating on days > 15°C
+  • Check "Outside Temp Trigger" setting
+  {% else %}
+  **Summer Mode (June-August)**
+  • At {{ outdoor }}°C, heating should be OFF
+  • ILP can provide cooling if supported
+  • Focus on ventilation and shading
+  • Keep settings for quick fall startup
+  {% endif %}
+  
+  **📊 HEATING PERFORMANCE SCORE**
+  {% set score = 100 %}
+  {% if delta < 3 %}{% set score = score - 20 %}{% endif %}
+  {% if outdoor > states('input_number.ulkolampo_trigger')|float and not is_state('climate.mitsu_ilp', 'off') %}{% set score = score - 15 %}{% endif %}
+  {% if abs(indoor - state_attr('climate.mitsu_ilp', 'temperature')|float) > 2 %}{% set score = score - 10 %}{% endif %}
+  {% if states('input_boolean.kids_home') == 'off' and states('switch.shellypro4pm_ec62609fd3dc_switch_0') == 'on' %}{% set score = score - 10 %}{% endif %}
+  
+  **Score: {{ score }}/100**
+  {% if score >= 90 %}🌟 Excellent! Heating is well optimized!
+  {% elif score >= 75 %}👍 Good! Minor improvements possible.
+  {% elif score >= 60 %}⚠️ Fair. Follow recommendations above.
+  {% else %}❌ Needs attention. Apply recommendations for better efficiency.{% endif %}
+  
+  **QUICK ACTIONS**
+  • Adjust temps: Settings → ILP Climate Control
+  • View heating stats: Dashboard → Statistics page
+  • Enable/disable modes: Settings → Automation Controls
+  • Set schedules: Settings → Room Temperatures
+
+name: "Heating Optimization"
+description: "ILP heating system optimization and efficiency recommendations"
+category: "climate"
+version: "1.0"

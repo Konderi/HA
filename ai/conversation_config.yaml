@@ -1,0 +1,76 @@
+# ============================================================================
+# HOME ASSISTANT AI CONVERSATION AGENT CONFIGURATION
+# ============================================================================
+# Configure HA's built-in conversation agent (Assist) with custom prompts
+# for power management, energy analysis, and heating optimization
+# ============================================================================
+
+# Add to configuration.yaml:
+#   conversation: !include ai/conversation_config.yaml
+
+# Enable conversation agent with custom prompts
+conversation:
+  intents:
+    # Power consumption report intent
+    PowerReport:
+      - "give me a power report"
+      - "show power consumption"
+      - "what's our power usage"
+      - "energy report"
+      
+    # Energy analysis intent  
+    EnergyAnalysis:
+      - "analyze energy usage"
+      - "energy recommendations"
+      - "how can I save energy"
+      - "optimize consumption"
+      
+    # Heating optimization intent
+    HeatingOptimization:
+      - "optimize heating"
+      - "heating recommendations"
+      - "is my heating efficient"
+      - "improve heating"
+      
+    # Price information intent
+    PriceInfo:
+      - "electricity price"
+      - "what's the current price"
+      - "when is electricity cheap"
+      - "price forecast"
+
+# ============================================================================
+# USAGE IN HOME ASSISTANT
+# ============================================================================
+#
+# You can interact with the AI assistant through:
+#
+# 1. Voice Assistant (if configured):
+#    "Hey Home Assistant, give me a power report"
+#
+# 2. Conversation Panel:
+#    Settings → Voice Assistants → Open Assist
+#    Type: "give me a power report"
+#
+# 3. Dashboard Conversation Card:
+#    Add conversation card to any dashboard
+#
+# 4. Scripts/Automations:
+#    service: conversation.process
+#    data:
+#      text: "give me a power report"
+#
+# ============================================================================
+# CUSTOM PROMPT RESPONSES
+# ============================================================================
+# 
+# The prompts are defined in separate YAML files in ai/prompts/ directory
+# Each prompt file contains the response template with Home Assistant
+# template syntax to pull live data from sensors
+#
+# Available prompts:
+# - power_report.yaml: Current power consumption and pricing
+# - energy_analysis.yaml: Daily/weekly energy analysis
+# - heating_optimization.yaml: ILP heating efficiency tips
+#
+# ============================================================================

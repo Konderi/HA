@@ -1,0 +1,91 @@
+# ============================================================================
+# iOS NOTIFICATION CONFIGURATION
+# ============================================================================
+# Configuration for sending notifications to iPhone via Home Assistant
+# Mobile App (companion app required)
+# ============================================================================
+
+# iOS notification service configuration
+# Add to configuration.yaml:
+#   notify: !include config/notify/ios_notify.yaml
+
+# iPhone notification service (requires Home Assistant Companion App)
+- name: iphone17
+  platform: mobile_app
+  device_id: iphone_17  # Replace with your actual device ID from HA
+
+# Optional: Notification groups for multiple devices
+- name: all_phones
+  platform: group
+  services:
+    - service: mobile_app_iphone_17
+
+# ============================================================================
+# USAGE EXAMPLES
+# ============================================================================
+# 
+# Basic notification:
+# service: notify.iphone17
+# data:
+#   title: "Power Alert"
+#   message: "High power consumption detected: 12.5 kW"
+#
+# With action buttons:
+# service: notify.iphone17
+# data:
+#   title: "Price Alert"
+#   message: "Electricity price is now cheap (Rank 3)"
+#   data:
+#     actions:
+#       - action: "BOOST_HEATING"
+#         title: "Boost Heating"
+#       - action: "DISABLE_ALERT"
+#         title: "Disable"
+#
+# With category (pre-defined actions):
+# service: notify.iphone17
+# data:
+#   title: "Peak Power Warning"
+#   message: "Power: 15 kW - Approaching limit"
+#   data:
+#     push:
+#       category: "power_alert"
+#
+# Critical alert (bypasses Do Not Disturb):
+# service: notify.iphone17
+# data:
+#   title: "CRITICAL: Power Overload"
+#   message: "Immediate action required!"
+#   data:
+#     push:
+#       sound:
+#         name: "default"
+#         critical: 1
+#         volume: 1.0
+#
+# ============================================================================
+# SETUP INSTRUCTIONS
+# ============================================================================
+# 
+# 1. Install Home Assistant Companion App on iPhone
+#    - Download from App Store
+#    - Sign in to your Home Assistant instance
+#
+# 2. Find your device ID:
+#    - Settings → Devices & Services → Mobile App
+#    - Click on your iPhone device
+#    - Copy the "Device ID" (e.g., "iphone_17" or similar)
+#
+# 3. Replace "iphone_17" above with your actual device ID
+#
+# 4. Add to configuration.yaml:
+#    notify: !include config/notify/ios_notify.yaml
+#
+# 5. Restart Home Assistant
+#
+# 6. Test notification:
+#    - Developer Tools → Services
+#    - Service: notify.iphone17
+#    - Service data: {"message": "Test notification"}
+#
+# ============================================================================

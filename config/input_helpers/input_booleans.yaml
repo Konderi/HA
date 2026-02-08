@@ -1,0 +1,40 @@
+# ============================================
+# INPUT BOOLEAN HELPERS
+# Power Management Override Controls
+# ============================================
+#
+# Add to configuration.yaml:
+#   input_boolean: !include power-management/input_booleans.yaml
+# ============================================
+
+# ==========================================
+# OVERRIDE CONTROLS
+# ==========================================
+
+# Tesla priority charging override
+tesla_priority_charging:
+  name: "Tesla Priority Charging"
+  icon: mdi:car-electric-outline
+  initial: false
+
+# Boiler Luxus mode (2 hours override)
+boiler_luxus_mode:
+  name: "Boiler Luxus Mode (2h)"
+  icon: mdi:water-boiler-alert
+  initial: false
+
+# ==========================================
+# ROOM TEMPERATURE CONTROL
+# ==========================================
+
+# Kids at home indicator
+kids_home:
+  name: "Kids at Home"
+  icon: mdi:account-multiple
+  initial: false
+
+# Manual override for MH1 room radiator
+mh1_manual_override:
+  name: "MH1 Manual Override"
+  icon: mdi:temperature-celsius
+  initial: false

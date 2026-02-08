@@ -1,0 +1,36 @@
+# ============================================
+# INPUT DATETIME HELPERS
+# Power Management + Other Timers
+# ============================================
+#
+# Add to configuration.yaml:
+#   input_datetime: !include power-management/input_datetimes.yaml
+# ============================================
+
+# ==========================================
+# EXISTING HELPERS (from configuration.yaml)
+# ==========================================
+
+device_start_time:
+  name: Device Start Time
+  has_time: true
+  has_date: false
+
+device_end_time:
+  name: Device End Time
+  has_time: true
+  has_date: false
+
+electric_trigger_point:
+  name: Electric price trigger
+  has_time: true
+  has_date: false
+
+# ==========================================
+# POWER MANAGEMENT - Luxus Mode Tracking
+# ==========================================
+
+boiler_luxus_activated:
+  name: "Boiler Luxus Activated Time"
+  has_date: true
+  has_time: true
