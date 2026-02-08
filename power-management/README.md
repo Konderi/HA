@@ -303,8 +303,8 @@ Year 1:  200-350€ total value delivered! 🎉
 ## ⚡ System Requirements
 
 ### Required:
-- Home Assistant 2023.x or newer
-- Node-RED add-on
+- **Home Assistant 2026.2.x** (or 2024.x+, tested on 2026.2)
+- **Node-RED add-on v21.0.0** (or newer)
 - Shelly EM3 (or similar 3-phase power monitoring)
 - Nordpool electricity price integration
 - Telegram bot configured
@@ -317,6 +317,12 @@ Year 1:  200-350€ total value delivered! 🎉
 ### Optional:
 - HACS (for custom dashboard cards)
 - Mobile app (for notifications and quick access)
+
+### Compatibility Notes:
+- ✅ Uses modern template sensor syntax (HA 2021.4+)
+- ✅ Compatible with separated YAML configuration files
+- ✅ Lovelace dashboard uses current card specifications
+- ✅ Node-RED flows compatible with v18.x - v21.x
 
 ---
 

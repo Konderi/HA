@@ -27,6 +27,12 @@ A comprehensive 4-flow Node-RED automation system that prevents main fuse burnou
 - Nordpool price integration
 - Telegram notifications
 
+#### Compatibility:
+- ✅ **Home Assistant 2026.2.x** (tested)
+- ✅ **Node-RED 21.0.0** (tested)
+- ✅ Modern template syntax
+- ✅ Separated YAML configuration support
+
 #### Status: ✅ Production Ready
 
 **[View Complete Documentation →](./power-management/README.md)**
@@ -48,13 +54,16 @@ Navigate to individual project folders for detailed instructions.
 ## 📋 Requirements
 
 ### Core:
-- Home Assistant 2023.x or newer
-- Node-RED add-on (for automation projects)
+- **Home Assistant 2026.2.x** (or 2024.x+)
+- **Node-RED 21.0.0** (or 18.x+)
 
 ### Recommended:
 - HACS (Home Assistant Community Store)
 - Mobile app for notifications
 - Git for version control
+
+### Compatibility:
+See [COMPATIBILITY.md](./power-management/COMPATIBILITY.md) for detailed version information.
 
 ---
 

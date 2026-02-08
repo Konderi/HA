@@ -2,6 +2,12 @@
 
 Complete Lovelace dashboard configuration for monitoring and controlling your power management and heating optimization system.
 
+**✅ Tested with:**
+- Home Assistant 2026.2.x
+- Node-RED 21.0.0
+- Modern template sensor syntax (HA 2021.4+)
+- Current Lovelace card specifications
+
 ---
 
 ## 📊 Dashboard Overview
