@@ -818,3 +818,562 @@ views:
             ha-card {
               background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
             }
+# ============================================================================
+# SETTINGS PAGE - Power Management & Heating Configuration
+# ============================================================================
+# Comprehensive settings page with all input helpers and configuration options
+# Organized by category for easy management
+# ============================================================================
+
+  # ==========================================================================
+  # PAGE: SETTINGS - Configuration & Helpers
+  # ==========================================================================
+  - title: Settings
+    path: settings
+    icon: mdi:cog
+    type: sections
+    sections:
+      # ======================================================================
+      # SECTION 1: POWER MANAGEMENT SETTINGS
+      # ======================================================================
+      - type: grid
+        title: ⚡ Power Management Configuration
+        cards:
+          # Tesla Priority Charging
+          - type: tile
+            entity: input_boolean.tesla_priority_charging
+            name: Tesla Priority Charging
+            icon: mdi:car-electric
+            features:
+              - type: "target-temperature"
+            
+          # Boiler Luxus Mode
+          - type: tile
+            entity: input_boolean.boiler_luxus_mode
+            name: Boiler Luxus Mode (2h Override)
+            icon: mdi:water-boiler-alert
+          
+          # Boiler Max Rank
+          - type: tile
+            entity: input_number.boiler_max_rank
+            name: Boiler Max Price Rank
+            icon: mdi:numeric
+            features:
+              - type: "numeric-input"
+                style: slider
+          
+          # Boiler Max Hours
+          - type: tile
+            entity: input_number.boiler_max_hours_daily
+            name: Boiler Max Hours/Day
+            icon: mdi:clock-outline
+            features:
+              - type: "numeric-input"
+                style: slider
+
+          # Electricity Price Thresholds
+          - type: entities
+            title: 💰 Electricity Price Configuration
+            show_header_toggle: false
+            entities:
+              - entity: input_number.electricity_margin_eur
+                name: Company Margin
+                icon: mdi:cash-multiple
+              - entity: input_number.electricity_tax_eur
+                name: Electric Tax
+                icon: mdi:receipt-text
+              - entity: input_number.electricity_transfer_day_eur
+                name: Transfer Fee (Day)
+                icon: mdi:transmission-tower
+              - entity: input_number.electricity_transfer_night_eur
+                name: Transfer Fee (Night)
+                icon: mdi:weather-night
+              - entity: input_number.electricity_day_tariff_start_hour
+                name: Day Tariff Start Hour
+                icon: mdi:weather-sunny
+              - entity: input_number.electricity_day_tariff_end_hour
+                name: Day Tariff End Hour
+                icon: mdi:weather-sunset-down
+              - entity: input_number.electricity_price_cheap_cents
+                name: Cheap Price Threshold
+                icon: mdi:currency-eur-off
+              - entity: input_number.electricity_price_expensive_cents
+                name: Expensive Price Threshold
+                icon: mdi:currency-eur
+              - entity: input_number.electricity_base_fee_monthly
+                name: Monthly Base Fee
+                icon: mdi:cash
+            card_mod:
+              style: |
+                ha-card {
+                  background: rgba(76, 175, 80, 0.1);
+                }
+
+      # ======================================================================
+      # SECTION 2: HEATING CONTROL SETTINGS
+      # ======================================================================
+      - type: grid
+        title: 🌡️ Heating Control Configuration
+        cards:
+          # ILP (Heat Pump) Settings
+          - type: entities
+            title: 🏠 ILP Heat Pump Settings
+            show_header_toggle: false
+            entities:
+              - entity: input_number.normaalilampo_presence
+                name: Normal Temp (Presence)
+                icon: mdi:home-thermometer
+              - entity: input_number.lamponpudotus_presence
+                name: Reduced Temp (Away)
+                icon: mdi:thermometer-minus
+              - entity: input_number.tehostuslampo
+                name: Boost Temperature
+                icon: mdi:thermometer-plus
+              - entity: input_number.yllapitolampo
+                name: Maintenance Temp
+                icon: mdi:thermometer
+              - entity: input_number.ilp_pyynti
+                name: ILP Request Temp
+                icon: mdi:thermometer-lines
+              - entity: input_number.ilp_max_rank_boost
+                name: ILP Max Rank Boost
+                icon: mdi:chart-line
+              - entity: input_number.ulkolampo_trigger
+                name: Outside Temp Trigger
+                icon: mdi:thermometer-alert
+            card_mod:
+              style: |
+                ha-card {
+                  background: rgba(255, 152, 0, 0.1);
+                }
+
+          # Automation Overrides
+          - type: entities
+            title: 🔧 Automation Overrides
+            show_header_toggle: false
+            entities:
+              - entity: input_boolean.lammitysautomaatiot
+                name: Bypass Heating Automations
+                icon: mdi:radiator-disabled
+              - entity: input_boolean.hinta_automaation_ohitus
+                name: Bypass Price Automation
+                icon: mdi:currency-eur-off
+              - entity: input_boolean.muut_automaatiot
+                name: Bypass Other Automations
+                icon: mdi:robot-off
+              - entity: input_boolean.lomatila
+                name: Holiday Mode
+                icon: mdi:palm-tree
+              - entity: input_boolean.ilp_yllapitoautomaatio
+                name: ILP Maintenance Auto
+                icon: mdi:robot
+            card_mod:
+              style: |
+                ha-card {
+                  background: rgba(244, 67, 54, 0.1);
+                }
+
+      # ======================================================================
+      # SECTION 3: ROOM TEMPERATURE CONTROL
+      # ======================================================================
+      - type: grid
+        title: 🏠 Room-by-Room Temperature Settings
+        cards:
+          # Kids Room Control
+          - type: entities
+            title: 👨‍👩‍👧‍👦 Kids Rooms
+            show_header_toggle: false
+            entities:
+              - entity: input_boolean.kids_home
+                name: Kids at Home
+                icon: mdi:account-multiple
+              - entity: input_number.kids_rooms_target_temp
+                name: Target Temperature
+                icon: mdi:thermometer
+              - entity: input_number.kids_rooms_min_temp
+                name: Minimum Temperature
+                icon: mdi:thermometer-low
+              - type: divider
+              - type: section
+                label: "Current Status"
+              - entity: sensor.aqara_poikienhuone_temperature
+                name: Boys Room Temp
+                icon: mdi:thermometer
+              - entity: sensor.aqara_saranhuone_temperature
+                name: Sara's Room Temp
+                icon: mdi:thermometer
+            card_mod:
+              style: |
+                ha-card {
+                  background: rgba(156, 39, 176, 0.1);
+                }
+
+          # MH1 (Master Bedroom)
+          - type: entities
+            title: 🛏️ Master Bedroom (MH1)
+            show_header_toggle: false
+            entities:
+              - entity: input_boolean.mh1_manual_override
+                name: Manual Override
+                icon: mdi:hand-back-right
+              - entity: input_number.mh1_target_temp
+                name: Target Temperature
+                icon: mdi:thermometer
+              - entity: input_number.mh1_min_room_temp
+                name: Minimum Temperature
+                icon: mdi:thermometer-chevron-down
+              - entity: input_number.mh1_max_room_temp
+                name: Maximum Temperature
+                icon: mdi:thermometer-chevron-up
+              - entity: input_number.mh1_outside_temp_threshold
+                name: Outside Temp Threshold
+                icon: mdi:thermometer-low
+              - type: divider
+              - entity: input_datetime.mh1_start_time
+                name: Heating Start Time
+                icon: mdi:clock-start
+              - entity: input_datetime.mh1_end_time
+                name: Heating End Time
+                icon: mdi:clock-end
+              - type: divider
+              - type: section
+                label: "Current Status"
+              - entity: sensor.aqara_makuuhuone_temperature
+                name: Current Room Temp
+                icon: mdi:thermometer
+              - entity: switch.mh1
+                name: Radiator Switch
+                icon: mdi:radiator
+              - entity: input_boolean.mh1_lammitysautomaatio
+                name: Automation Enabled
+                icon: mdi:robot
+            card_mod:
+              style: |
+                ha-card {
+                  background: rgba(33, 150, 243, 0.1);
+                }
+
+          # Tuomas Room
+          - type: entities
+            title: 🎮 Tuomas Room
+            show_header_toggle: false
+            entities:
+              - entity: input_number.tuomas_min_room_temp
+                name: Minimum Temperature
+                icon: mdi:thermometer-chevron-down
+              - entity: input_number.tuomas_max_room_temp
+                name: Maximum Temperature
+                icon: mdi:thermometer-chevron-up
+              - entity: input_number.tuomas_outside_temp_threshold
+                name: Outside Temp Threshold
+                icon: mdi:thermometer-low
+              - type: divider
+              - type: section
+                label: "Current Status"
+              - entity: sensor.aqara_poikienhuone_temperature
+                name: Current Room Temp
+                icon: mdi:thermometer
+              - entity: switch.shellypro4pm_ec62609fd3dc_switch_0
+                name: Radiator Switch
+                icon: mdi:radiator
+            card_mod:
+              style: |
+                ha-card {
+                  background: rgba(103, 58, 183, 0.1);
+                }
+
+          # Sara Room
+          - type: entities
+            title: 👧 Sara Room
+            show_header_toggle: false
+            entities:
+              - entity: input_number.sara_min_room_temp
+                name: Minimum Temperature
+                icon: mdi:thermometer-chevron-down
+              - entity: input_number.sara_max_room_temp
+                name: Maximum Temperature
+                icon: mdi:thermometer-chevron-up
+              - entity: input_number.sara_outside_temp_threshold
+                name: Outside Temp Threshold
+                icon: mdi:thermometer-low
+              - type: divider
+              - type: section
+                label: "Current Status"
+              - entity: sensor.aqara_saranhuone_temperature
+                name: Current Room Temp
+                icon: mdi:thermometer
+              - entity: switch.shellypro4pm_ec62609fd3dc_switch_1
+                name: Radiator Switch
+                icon: mdi:radiator
+            card_mod:
+              style: |
+                ha-card {
+                  background: rgba(233, 30, 99, 0.1);
+                }
+
+      # ======================================================================
+      # SECTION 4: ADVANCED SETTINGS & MONITORING
+      # ======================================================================
+      - type: grid
+        title: 🔬 Advanced Configuration
+        cards:
+          # SHF (Spot-hinta.fi) Settings
+          - type: entities
+            title: 📊 Spot Price Control (SHF)
+            show_header_toggle: false
+            entities:
+              - entity: input_number.shf_rank_slider
+                name: Max Rank Allowed
+                icon: mdi:sort-numeric-ascending
+              - entity: input_number.shf_price_slider
+                name: Max Price Allowed
+                icon: mdi:currency-eur
+              - entity: input_number.shf_price1_slider
+                name: Price Level 1
+                icon: mdi:numeric-1-circle
+              - entity: input_number.shf_price2_slider
+                name: Price Level 2
+                icon: mdi:numeric-2-circle
+              - entity: input_number.shf_price_avg_slider
+                name: Average Price Hours
+                icon: mdi:chart-bell-curve
+              - entity: input_number.shf_control_factor
+                name: Control Factor
+                icon: mdi:alpha-f-circle
+              - entity: input_number.shf_control_function_factor
+                name: Control Function Factor
+                icon: mdi:function
+              - type: divider
+              - type: section
+                label: "Current Status"
+              - entity: sensor.shf_rank_now
+                name: Current Rank
+                icon: mdi:podium
+              - entity: binary_sensor.shf_rank_acceptable
+                name: Rank Acceptable
+                icon: mdi:check-circle
+            card_mod:
+              style: |
+                ha-card {
+                  background: rgba(0, 188, 212, 0.1);
+                }
+
+          # Heating Thresholds
+          - type: entities
+            title: 🌡️ Heating Thresholds
+            show_header_toggle: false
+            entities:
+              - entity: input_number.sahkon_hinta_trigger
+                name: Price Trigger
+                icon: mdi:cash-multiple
+              - entity: input_number.kalliin_hinnan_raja
+                name: Expensive Price Limit
+                icon: mdi:alert-circle
+              - entity: input_number.lammitystunnit
+                name: Heating Hours
+                icon: mdi:clock-time-eight
+              - entity: input_number.heater_max_rank_allowed
+                name: Heater Max Rank
+                icon: mdi:radiator
+              - entity: input_number.lvv_max_rank_allowed
+                name: Boiler Max Rank
+                icon: mdi:water-boiler
+            card_mod:
+              style: |
+                ha-card {
+                  background: rgba(255, 193, 7, 0.1);
+                }
+
+          # Daily Tracking
+          - type: entities
+            title: 📈 Daily Consumption Tracking
+            show_header_toggle: false
+            state_color: true
+            entities:
+              - entity: input_number.sahkon_kulutus_edellinen_paiva
+                name: Electricity Yesterday
+                icon: mdi:flash
+              - entity: input_number.veden_kulutus_edellinen_paiva
+                name: Water Yesterday
+                icon: mdi:water
+              - type: divider
+              - type: section
+                label: "Today"
+              - entity: sensor.talon_kokonaiskulutus_paiva_kwh
+                name: Electricity Today
+                icon: mdi:flash-outline
+              - entity: sensor.total_power_consumption
+                name: Current Power
+                icon: mdi:lightning-bolt
+            card_mod:
+              style: |
+                ha-card {
+                  background: rgba(121, 85, 72, 0.1);
+                }
+
+      # ======================================================================
+      # SECTION 5: QUICK ACTIONS & PRESETS
+      # ======================================================================
+      - type: grid
+        title: ⚡ Quick Actions & Presets
+        cards:
+          # Quick Action Buttons
+          - type: horizontal-stack
+            cards:
+              - type: button
+                name: Away Mode
+                icon: mdi:home-export-outline
+                icon_height: 40px
+                tap_action:
+                  action: call-service
+                  service: script.activate_away_mode
+                  confirmation:
+                    text: "Activate Away Mode? This will reduce heating and disable unnecessary loads."
+                card_mod:
+                  style: |
+                    ha-card {
+                      background: rgba(255, 152, 0, 0.2);
+                    }
+              
+              - type: button
+                name: Home Mode
+                icon: mdi:home-import-outline
+                icon_height: 40px
+                tap_action:
+                  action: call-service
+                  service: script.activate_home_mode
+                  confirmation:
+                    text: "Activate Home Mode? This will restore normal heating."
+                card_mod:
+                  style: |
+                    ha-card {
+                      background: rgba(76, 175, 80, 0.2);
+                    }
+              
+              - type: button
+                name: Eco Mode
+                icon: mdi:leaf
+                icon_height: 40px
+                tap_action:
+                  action: call-service
+                  service: script.activate_eco_mode
+                  confirmation:
+                    text: "Activate Eco Mode? This will minimize energy consumption."
+                card_mod:
+                  style: |
+                    ha-card {
+                      background: rgba(139, 195, 74, 0.2);
+                    }
+              
+              - type: button
+                name: Boost Heating
+                icon: mdi:fire
+                icon_height: 40px
+                tap_action:
+                  action: call-service
+                  service: climate.set_temperature
+                  data:
+                    entity_id: climate.mitsu_ilp
+                    temperature: 26
+                  confirmation:
+                    text: "Boost heating to 26°C?"
+                card_mod:
+                  style: |
+                    ha-card {
+                      background: rgba(244, 67, 54, 0.2);
+                    }
+
+          # Preset Buttons Row 2
+          - type: horizontal-stack
+            cards:
+              - type: button
+                name: Reset All Overrides
+                icon: mdi:restore
+                icon_height: 40px
+                tap_action:
+                  action: call-service
+                  service: script.reset_all_overrides
+                  confirmation:
+                    text: "Reset all manual overrides to default automation?"
+                card_mod:
+                  style: |
+                    ha-card {
+                      background: rgba(156, 39, 176, 0.2);
+                    }
+              
+              - type: button
+                name: Check Configuration
+                icon: mdi:check-circle-outline
+                icon_height: 40px
+                tap_action:
+                  action: navigate
+                  navigation_path: /developer-tools/yaml
+                card_mod:
+                  style: |
+                    ha-card {
+                      background: rgba(33, 150, 243, 0.2);
+                    }
+              
+              - type: button
+                name: Node-RED Flows
+                icon: mdi:sitemap
+                icon_height: 40px
+                tap_action:
+                  action: navigate
+                  navigation_path: http://homeassistant.local:1880
+                card_mod:
+                  style: |
+                    ha-card {
+                      background: rgba(255, 87, 34, 0.2);
+                    }
+              
+              - type: button
+                name: Reload Helpers
+                icon: mdi:reload
+                icon_height: 40px
+                tap_action:
+                  action: call-service
+                  service: homeassistant.reload_config_entry
+                  confirmation:
+                    text: "Reload all input helpers?"
+                card_mod:
+                  style: |
+                    ha-card {
+                      background: rgba(0, 150, 136, 0.2);
+                    }
+
+          # Info Card
+          - type: markdown
+            content: |
+              ## ℹ️ Settings Information
+              
+              This page contains all configuration options for the power management and heating system.
+              
+              ### 📌 Quick Tips:
+              
+              - **Input Booleans** - Toggle switches for enabling/disabling features
+              - **Input Numbers** - Sliders for temperature, price thresholds, and limits
+              - **Input DateTimes** - Schedule start/end times for automations
+              
+              ### 🔧 After Changes:
+              
+              1. Changes take effect immediately
+              2. Node-RED flows react to helper changes
+              3. Check the Monitor page to see results
+              4. Use Quick Actions for common scenarios
+              
+              ### ⚠️ Important:
+              
+              - Bypass switches override all automations
+              - Manual overrides stay until reset
+              - Price thresholds affect when devices run
+              - Temperature limits prevent over/under heating
+              
+              ---
+              
+              **Last Updated:** {{ now().strftime('%Y-%m-%d %H:%M') }}
+            card_mod:
+              style: |
+                ha-card {
+                  background: linear-gradient(135deg, rgba(103, 58, 183, 0.1) 0%, rgba(63, 81, 181, 0.1) 100%);
+                }

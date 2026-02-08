@@ -618,3 +618,4 @@ views:
                 ha-card {
                   background: rgba(var(--rgb-primary-text-color), 0.05);
                 }
+              

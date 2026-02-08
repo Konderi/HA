@@ -1,0 +1,3691 @@
+kiosk_mode:
+  non_admin_settings:
+    kiosk: true
+    ignore_entity_settings: true
+  entity_settings:
+    - entity:
+        input_boolean.kiosk_mode: 'on'
+      hide_header: true
+    - entity:
+        input_boolean.kiosk_mode: 'off'
+      hide_header: false
+views:
+  - theme: kibibit-dark-cards
+    title: Home
+    icon: mdi:home
+    type: custom:vertical-layout
+    badges: []
+    cards:
+      - type: custom:state-switch
+        entity: group
+        states:
+          admin:
+            type: custom:mushroom-chips-card
+            chips:
+              - type: menu
+              - type: action
+                icon_color: light-green
+                icon: mdi:arrow-expand-vertical
+                tap_action:
+                  action: call-service
+                  service: input_boolean.toggle
+                  data: {}
+                  target:
+                    entity_id: input_boolean.kiosk_mode
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: alarm-control-panel
+            entity: alarm_control_panel.koti_halytin
+            content_info: state
+            double_tap_action:
+              action: more-info
+          - type: entity
+            entity: lock.etuovi
+            content_info: state
+            double_tap_action:
+              action: call-service
+              service: script.etuoven_avaus
+              data: {}
+              target: {}
+            hold_action:
+              action: none
+            use_entity_picture: false
+            icon_color: green
+          - type: weather
+            entity: weather.koti
+            show_conditions: true
+            show_temperature: true
+            double_tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/saa
+          - type: entity
+            entity: sensor.lights_on_count
+            icon_color: yellow
+            icon: mdi:lightbulb-group
+            double_tap_action:
+              action: none
+            tap_action:
+              action: none
+            hold_action:
+              action: call-service
+              service: script.sammuta_valot
+              data: {}
+              target: {}
+          - type: entity
+            entity: input_boolean.lomatila
+            icon_color: green
+            use_entity_picture: false
+            double_tap_action:
+              action: none
+            tap_action:
+              action: toggle
+            hold_action:
+              action: none
+            content_info: name
+        alignment: center
+      - type: custom:mushroom-template-card
+        primary: |-
+          {% set time = now().hour %}
+          {% if (time >= 18) %}
+            Hyvää iltaa, {{user}}!
+          {% elif (time >= 12) %}
+            Hyvää iltapäivää, {{user}}!
+          {% elif (time >= 5) %}
+            Hyvää huomenta, {{user}}!
+          {% else %}
+            Heippa, {{user}}!
+          {% endif %}
+        secondary: ''
+        icon: ''
+        layout: vertical
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-template-card
+            primary: ''
+            secondary: ''
+            icon: mdi:lightbulb
+            icon_color: yellow
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/valot
+            layout: vertical
+          - type: custom:mushroom-template-card
+            primary: ''
+            secondary: ''
+            icon: mdi:chart-bar
+            layout: vertical
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/raportit
+            icon_color: green
+          - type: custom:mushroom-template-card
+            primary: ''
+            secondary: ''
+            icon: mdi:history
+            layout: vertical
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/tilastot
+            icon_color: purple
+          - type: custom:mushroom-template-card
+            primary: ''
+            secondary: ''
+            icon: mdi:tools
+            icon_color: red
+            layout: vertical
+            fill_container: false
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/hallinta
+          - type: custom:mushroom-template-card
+            primary: ''
+            secondary: ''
+            icon: mdi:robot-vacuum
+            icon_color: blue
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/imuri
+            hold_action:
+              action: none
+            double_tap_action:
+              action: none
+            layout: vertical
+          - type: custom:mushroom-template-card
+            primary: ''
+            secondary: ''
+            icon: mdi:cart
+            layout: vertical
+            icon_color: white
+            hold_action:
+              action: none
+            double_tap_action:
+              action: none
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/ostoslista
+          - type: custom:mushroom-template-card
+            primary: ''
+            secondary: ''
+            icon: mdi:video
+            layout: vertical
+            icon_color: pink
+            badge_icon: ''
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/kamerat
+            hold_action:
+              action: none
+            double_tap_action:
+              action: none
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-person-card
+            entity: person.konderi
+            tap_action:
+              action: none
+            hold_action:
+              action: none
+            double_tap_action:
+              action: none
+            icon_type: entity-picture
+            primary_info: none
+            layout: vertical
+            secondary_info: none
+          - type: custom:mushroom-person-card
+            entity: person.jenni
+            tap_action:
+              action: none
+            hold_action:
+              action: none
+            double_tap_action:
+              action: none
+            icon_type: entity-picture
+            primary_info: none
+            layout: vertical
+            secondary_info: none
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-person-card
+            entity: person.sara
+            tap_action:
+              action: none
+            hold_action:
+              action: none
+            double_tap_action:
+              action: more-info
+            layout: vertical
+            icon_type: entity-picture
+            primary_info: none
+          - type: custom:mushroom-person-card
+            entity: person.luca
+            tap_action:
+              action: none
+            hold_action:
+              action: none
+            double_tap_action:
+              action: more-info
+            icon_type: entity-picture
+            primary_info: none
+            layout: vertical
+          - type: custom:mushroom-person-card
+            fill_container: false
+            secondary_info: state
+            double_tap_action:
+              action: more-info
+            hold_action:
+              action: none
+            tap_action:
+              action: none
+            icon_type: entity-picture
+            primary_info: none
+            layout: vertical
+            entity: person.tuomas
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: alarm_control_panel.koti_halytin
+            state: armed_away
+          - entity: alarm_control_panel.koti_halytin
+            state_not: armed_custom_bypass
+          - entity: alarm_control_panel.koti_halytin
+            state_not: armed_home
+          - entity: alarm_control_panel.koti_halytin
+            state_not: armed_night
+          - entity: alarm_control_panel.koti_halytin
+            state_not: armed_vacation
+          - entity: alarm_control_panel.koti_halytin
+            state_not: disarmed
+          - entity: alarm_control_panel.koti_halytin
+            state_not: ''
+          - entity: alarm_control_panel.koti_halytin
+            state_not: triggered
+          - entity: alarm_control_panel.koti_halytin
+            state_not: unavailable
+          - entity: alarm_control_panel.koti_halytin
+            state_not: unknown
+          - condition: state
+            entity: alarm_control_panel.koti_halytin
+            state: pending
+        card:
+          type: alarm-panel
+          states:
+            - arm_home
+            - arm_away
+          entity: alarm_control_panel.koti_halytin
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: binary_sensor.kiuas_tilatieto
+            state: 'on'
+        card:
+          type: custom:mushroom-title-card
+          title: '!!! SAUNA PÄÄLLÄ !!!'
+          alignment: center
+          title_tap_action:
+            action: none
+          subtitle_tap_action:
+            action: none
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: binary_sensor.kiuas_tilatieto
+            state: 'on'
+        card:
+          type: grid
+          cards:
+            - type: entity
+              entity: sensor.sauna_temperature
+              name: Lämpötila
+            - show_name: true
+              show_icon: true
+              type: button
+              tap_action:
+                action: toggle
+              entity: switch.sauna_channel_1
+              name: Pois/Päälle
+            - type: entity
+              entity: binary_sensor.doorsensor_sauna_contact
+              name: Ovi
+      - type: custom:mushroom-title-card
+        title: Huoneet
+        alignment: center
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-template-card
+            primary: Yläkerta
+            secondary: |-
+              {{ states('sensor.aqara_olohuone_temperature') }}°c
+              {{ states('sensor.aqara_olohuone_humidity') }}%
+            icon: mdi:arrow-up
+            entity: light.ylakerta
+            icon_color: |-
+              {% if is_state('light.ylakerta', 'on') %}
+                orange
+              {% endif %}
+            layout: vertical
+            tap_action:
+              action: none
+            double_tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/olohuone
+            hold_action:
+              action: none
+          - type: custom:mushroom-template-card
+            primary: Autotalli
+            secondary: |-
+              {{ states('sensor.anturi_autotalli_temperature') }}°c
+              {{ states('sensor.anturi_autotalli_humidity') }}%
+            icon: mdi:car
+            icon_color: |-
+              {% if is_state('light.alakerta', 'on') %}
+                orange
+              {% endif %}
+            entity: light.alakerta
+            layout: vertical
+            double_tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/autotalli
+            tap_action:
+              action: none
+            hold_action:
+              action: none
+          - type: custom:mushroom-template-card
+            primary: Alakerta
+            secondary: |-
+              {{ states('sensor.aqara_ala_aula_temperature') }}°c
+              {{ states('sensor.aqara_ala_aula_humidity') }}%
+            icon: mdi:arrow-down
+            icon_color: |-
+              {% if is_state('light.alakerta', 'on') %}
+                orange
+              {% endif %}
+            entity: light.alakerta
+            layout: vertical
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-template-card
+            primary: Olohuone
+            secondary: |-
+              {{ states('sensor.aqara_olohuone_temperature') }}°c
+              {{ states('sensor.aqara_olohuone_humidity') }}%
+            icon: mdi:sofa
+            entity: light.olohuone
+            icon_color: |-
+              {% if is_state('light.oh_kattovalo', 'on') %}
+                orange
+              {% endif %}
+            layout: vertical
+            tap_action:
+              action: none
+            double_tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/olohuone
+            hold_action:
+              action: none
+          - type: custom:mushroom-template-card
+            primary: Makuuhuone
+            secondary: |-
+              {{ states('sensor.aqara_makuuhuone_temperature') }}°c
+              {{ states('sensor.aqara_makuuhuone_humidity') }}%
+            icon: mdi:bed-double
+            icon_color: |-
+              {% if is_state('light.makuuhuone', 'on') %}
+                orange
+              {% endif %}
+            entity: light.makuuhuone
+            layout: vertical
+            double_tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/makuuhuone
+            tap_action:
+              action: none
+            hold_action:
+              action: none
+          - type: custom:mushroom-template-card
+            primary: Ala-aula
+            secondary: |-
+              {{ states('sensor.aqara_ala_aula_temperature') }}°c
+              {{ states('sensor.aqara_ala_aula_humidity') }}%
+            icon: mdi:home-floor-0
+            entity: light.ala_aula
+            icon_color: |-
+              {% if is_state('light.magicmirror', 'on') %}
+                orange
+              {% endif %}
+            layout: vertical
+            tap_action:
+              action: none
+            hold_action:
+              action: more-info
+            double_tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/ala-aula
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-template-card
+            primary: Saran huone
+            secondary: |-
+              {{ states('sensor.aqara_saranhuone_temperature') }}°c
+              {{ states('sensor.aqara_saranhuone_humidity') }}%
+            icon: mdi:human-child
+            entity: light.olohuone_kaytava
+            tap_action:
+              action: none
+            hold_action:
+              action: none
+            double_tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/sara
+            color: |-
+              {% if is_state('light.saran_huone', 'on') %}
+                orange
+              {% endif %}
+            vertical: true
+            features_position: bottom
+          - type: custom:mushroom-template-card
+            primary: Tuomaksen huone
+            secondary: |-
+              {{ states('sensor.aqara_poikienhuone_temperature') }}°c
+              {{ states('sensor.aqara_poikienhuone_humidity') }}%
+            icon: mdi:human-child
+            entity: sensor.aqara_poikienhuone_battery
+            tap_action:
+              action: none
+            hold_action:
+              action: none
+            double_tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/pojat
+            color: |-
+              {% if is_state('light.poikien_huone', 'on') %}
+                orange
+              {% endif %}
+            vertical: true
+            features_position: bottom
+          - type: custom:mushroom-template-card
+            primary: Työhuone
+            secondary: |-
+              {{ states('sensor.aqara_ala_aula_temperature') }}°c
+              {{ states('sensor.aqara_ala_aula_humidity') }}%
+            icon: mdi:chair-rolling
+            layout: vertical
+            icon_color: |-
+              {% if is_state('light.tyopiste', 'on') %}
+                orange
+              {% endif %}
+            entity: light.tyopiste_2
+            tap_action:
+              action: none
+            hold_action:
+              action: none
+            double_tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/tyohuone
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-template-card
+            primary: Keittiö
+            secondary: |-
+              {{ states('sensor.aqara_keittio_temperature') }}°c
+              {{ states('sensor.aqara_keittio_humidity') }}%
+            icon: mdi:knife
+            entity: light.keittio
+            icon_color: |-
+              {% if is_state('light.keittio_spotit', 'on') %}
+                orange
+              {% endif %}
+            layout: vertical
+            tap_action:
+              action: none
+            hold_action:
+              action: none
+            double_tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/keittio
+          - type: custom:mushroom-template-card
+            primary: Kylpyhuone
+            secondary: |-
+              {{ states('sensor.aqara_kylpyhuone_temperature') }}°c
+              {{ states('sensor.aqara_kylpyhuone_humidity') }}%
+            icon: mdi:shower
+            icon_color: |-
+              {% if is_state('light.poikien_huone', 'on') %}
+                orange
+              {% endif %}
+            entity: sensor.aqara_poikienhuone_battery
+            layout: vertical
+            tap_action:
+              action: none
+            hold_action:
+              action: none
+            double_tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/kylpyhuone
+          - type: custom:mushroom-template-card
+            primary: Sauna
+            secondary: |-
+              {{ states('sensor.sauna_temperature') }}°c
+              {{ states('sensor.sauna_humidity') }}%
+            icon: mdi:hot-tub
+            layout: vertical
+            entity: sensor.saunan_lampotila
+            icon_color: |-
+              {% if is_state('binary_sensor.kiuas_tilatieto', 'on') %}
+                red
+              {% endif %}
+            double_tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/sauna
+            hold_action:
+              action: none
+            tap_action:
+              action: none
+  - theme: kibibit-dark-cards
+    title: Hallinta
+    path: hallinta
+    icon: mdi:remote-tv
+    type: custom:vertical-layout
+    badges: []
+    cards:
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: entity
+            entity: person.toni
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/0
+            icon: mdi:arrow-left-bold
+            content_info: name
+            name: Takaisin
+          - type: entity
+            entity: lock.etuovi
+            content_info: state
+            icon_color: green
+          - type: weather
+            entity: weather.forecast_koti
+            show_conditions: true
+            show_temperature: true
+        alignment: center
+      - type: custom:mushroom-title-card
+        title: Lämmityksenhallinta
+        alignment: center
+      - type: thermostat
+        entity: climate.mitsu_ilp
+        name: Ilmalämpöpumppu
+        features:
+          - type: climate-hvac-modes
+            hvac_modes:
+              - 'off'
+              - heat
+              - dry
+              - cool
+              - fan_only
+          - type: climate-fan-modes
+            style: dropdown
+            fan_modes:
+              - auto
+              - low
+              - medium
+              - high
+              - middle
+              - diffuse
+      - type: entities
+        entities:
+          - entity: input_number.normaalilampo_presence
+            name: Normaalilämpö
+          - entity: input_number.lammonpudotus_presence
+            icon: mdi:temperature-celsius
+            name: Pudotuslämpö
+          - entity: input_number.tehostuslampo
+          - entity: input_number.yllapitolampo
+            icon: mdi:temperature-celsius
+          - entity: input_number.kalliin_hinnan_raja
+        show_header_toggle: false
+        state_color: false
+      - type: entities
+        entities:
+          - entity: input_boolean.lvv_heating
+            name: LVV Lämmitysautomaatio
+            icon: mdi:heat-wave
+          - entity: input_boolean.mh1_lammitysautomaatio
+            icon: mdi:heat-wave
+          - entity: input_boolean.ilp_yllapitoautomaatio
+            icon: mdi:heat-wave
+          - entity: switch.shellypro4pm_ec62609fd3dc_switch_2
+            icon: mdi:water-boiler
+            name: Lämminvesivaraaja
+          - entity: input_number.ulkolampo_trigger
+            name: Pattereiden trigger
+          - entity: switch.shellypro4pm_ec62609fd3dc_switch_0
+            icon: mdi:radiator
+            name: MH3 (Sara)
+          - entity: switch.shellypro4pm_ec62609fd3dc_switch_1
+            icon: mdi:radiator
+            name: Oh, Wc ja MH2 (Tuomas)
+          - entity: switch.mh1
+            icon: mdi:radiator
+            name: MH1
+        show_header_toggle: false
+      - type: entities
+        entities:
+          - entity: input_number.shf_price_slider
+          - entity: input_number.shf_rank_slider
+          - entity: sensor.shf_average_price_today
+          - entity: sensor.shf_electricity_price_now
+          - entity: sensor.shf_rank_now
+          - entity: binary_sensor.shf_rank_acceptable
+        show_header_toggle: false
+        state_color: false
+      - type: entities
+        entities:
+          - entity: switch.tesla_model_3_charger
+            name: Aktivoi auton lataus
+          - entity: input_number.auton_lataus
+            name: Hinta trigger
+          - entity: sensor.tesla_model_3_battery
+            name: Akku
+          - entity: number.tesla_model_3_charge_limit
+            name: Latausraja
+          - entity: binary_sensor.tesla_model_3_charger
+            name: Kaapeli
+        show_header_toggle: false
+        state_color: false
+  - theme: kibibit-dark-cards
+    title: Valot
+    path: valot
+    icon: mdi:lightbulb
+    type: custom:vertical-layout
+    badges: []
+    cards:
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: entity
+            entity: person.toni
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/0
+            icon: mdi:arrow-left-bold
+            content_info: name
+            name: Takaisin
+          - type: entity
+            entity: lock.etuovi
+            content_info: state
+            icon_color: green
+          - type: weather
+            entity: weather.forecast_koti
+            show_conditions: true
+            show_temperature: true
+          - type: entity
+            entity: light.koti
+            double_tap_action:
+              action: none
+            icon_color: yellow
+            hold_action:
+              action: none
+            tap_action:
+              action: call-service
+              service: script.sammuta_valot
+              data: {}
+              target: {}
+        alignment: center
+      - type: custom:mushroom-title-card
+        title: Valaistus
+        alignment: center
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-light-card
+            entity: light.spotit
+            name: Keittiö tiski
+            show_brightness_control: false
+            fill_container: false
+            collapsible_controls: false
+            icon: mdi:knife
+            use_light_color: false
+            double_tap_action:
+              action: more-info
+            show_color_temp_control: false
+            layout: vertical
+            hold_action:
+              action: none
+          - type: custom:mushroom-light-card
+            name: Aula
+            double_tap_action:
+              action: more-info
+            show_color_temp_control: false
+            use_light_color: false
+            show_brightness_control: false
+            layout: vertical
+            hold_action:
+              action: none
+            entity: light.shellybulbduo_3494546bdd56
+          - type: custom:mushroom-light-card
+            entity: light.tyopiste
+            use_light_color: false
+            show_brightness_control: false
+            name: Työpiste
+            layout: vertical
+            hold_action:
+              action: none
+            double_tap_action:
+              action: more-info
+            icon: hue:room-office
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-light-card
+            entity: light.shellybulbduo_3494546ba8d0
+            name: Keittiö katto
+            show_brightness_control: false
+            fill_container: false
+            collapsible_controls: false
+            icon: mdi:knife
+            use_light_color: false
+            double_tap_action:
+              action: more-info
+            show_color_temp_control: false
+            layout: vertical
+            hold_action:
+              action: none
+          - type: custom:mushroom-light-card
+            double_tap_action:
+              action: more-info
+            show_color_temp_control: false
+            use_light_color: false
+            show_brightness_control: false
+            layout: vertical
+            hold_action:
+              action: none
+            entity: light.tyotasoled
+            name: Keittiö työtasot
+          - type: custom:mushroom-light-card
+            hold_action:
+              action: none
+            double_tap_action:
+              action: more-info
+            fill_container: true
+            use_light_color: false
+            layout: vertical
+            entity: light.al_aula_tuya_valot
+            name: Ala-aula
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-light-card
+            entity: light.lamppu_ikea_tonimh
+            name: Toni
+            use_light_color: false
+            show_brightness_control: false
+            icon: mdi:bed-empty
+            layout: vertical
+            double_tap_action:
+              action: more-info
+            hold_action:
+              action: none
+          - type: custom:mushroom-light-card
+            entity: light.makuuhuone
+            use_light_color: false
+            show_brightness_control: false
+            show_color_temp_control: false
+            double_tap_action:
+              action: more-info
+            icon: mdi:bed-king
+            layout: vertical
+            hold_action:
+              action: none
+          - type: custom:mushroom-light-card
+            entity: light.lamppu_ikea_jennimh
+            use_light_color: false
+            show_brightness_control: false
+            show_color_temp_control: false
+            name: Jenni
+            icon: mdi:bed-empty
+            layout: vertical
+            double_tap_action:
+              action: more-info
+            hold_action:
+              action: none
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-light-card
+            entity: light.shellydimmer2_c45bbe466060
+            layout: vertical
+            secondary_info: none
+            use_light_color: false
+            name: Olohuone
+            double_tap_action:
+              action: more-info
+            hold_action:
+              action: none
+          - type: custom:mushroom-light-card
+            entity: light.tyopiste
+            layout: vertical
+            secondary_info: none
+            name: Työpiste
+            double_tap_action:
+              action: more-info
+            hold_action:
+              action: none
+          - type: custom:mushroom-light-card
+            layout: vertical
+            primary_info: name
+            secondary_info: none
+            hold_action:
+              action: none
+            double_tap_action:
+              action: more-info
+            entity: light.porssisahkovalo
+            name: Pörssisähkövalo
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-light-card
+            layout: vertical
+            secondary_info: none
+            use_light_color: false
+            double_tap_action:
+              action: more-info
+            hold_action:
+              action: none
+            name: Portaikko
+            primary_info: name
+            entity: light.portaikko
+          - type: custom:mushroom-light-card
+            entity: light.kylpyhuone_katto
+            layout: vertical
+            primary_info: name
+            secondary_info: none
+            hold_action:
+              action: none
+            double_tap_action:
+              action: more-info
+            name: Kylpyhuone
+          - type: custom:mushroom-light-card
+            entity: light.peilivalo
+            name: WC Peilivalo
+            icon: mdi:led-strip
+            layout: vertical
+            primary_info: name
+            secondary_info: none
+      - type: custom:scheduler-card
+        include:
+          - switch.pallovalo_pistorasia_1
+          - switch.takapihan_valot_pistorasia_1
+        exclude: []
+        display_options:
+          primary_info: default
+          secondary_info:
+            - relative-time
+            - additional-tasks
+          icon: action
+  - theme: kibibit-dark-cards
+    title: Raportit
+    path: raportit
+    icon: mdi:chart-bar
+    type: custom:vertical-layout
+    badges: []
+    cards:
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: entity
+            entity: person.toni
+            name: Takaisin
+            content_info: name
+            icon: mdi:arrow-left-bold
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/0
+          - type: entity
+            entity: lock.etuovi
+            content_info: state
+            icon_color: green
+          - type: weather
+            entity: weather.forecast_koti
+            show_conditions: true
+            show_temperature: true
+        alignment: center
+      - type: custom:mushroom-title-card
+        title: Kulutusraportit
+        alignment: center
+      - type: custom:apexcharts-card
+        apex_config:
+          legend:
+            show: false
+            decimalsInFloat: 2
+            tickAmount: 10
+          xaxis:
+            labels:
+              format: d.M.
+          tooltip:
+            fixed:
+              enabled: true
+              position: topRight
+        experimental:
+          color_threshold: true
+        graph_span: 7d
+        show:
+          last_updated: false
+        now:
+          show: false
+        header:
+          standard_format: false
+          show: true
+          show_states: true
+          colorize_states: true
+          title: Sähkön kokonaishinta ja -kulutus 7d
+        span:
+          start: hour
+          offset: '-7d'
+        series:
+          - entity: sensor.talon_kokonaiskulutus_tunti_kwh
+            yaxis_id: tuntikulutus
+            name: Kokonaiskulutus
+            type: area
+            stroke_width: 1
+            float_precision: 3
+            extend_to: now
+            color: '#EA8043'
+            opacity: 0.8
+            group_by:
+              func: last
+              duration: 1hour
+            show:
+              header_color_threshold: true
+              legend_value: false
+              in_header: true
+          - entity: sensor.vuorokauden_keskihinta2
+            yaxis_id: nordpool
+            type: line
+            color: green
+            opacity: 1
+            float_precision: 1
+            extend_to: false
+            unit: c/kWh
+            stroke_width: 3
+            group_by:
+              func: avg
+              duration: 1day
+            show:
+              header_color_threshold: true
+              legend_value: false
+              in_header: true
+            name: Sähkön keskihinta 1vrk
+          - entity: sensor.viikon_keskihinta
+            yaxis_id: nordpool
+            name: Sähkön keskihinta 7vrk
+            float_precision: 2
+            extend_to: false
+            color: red
+            show:
+              in_header: true
+              legend_value: true
+              in_chart: false
+              header_color_threshold: true
+          - entity: sensor.sahko_kokonaishinta_c
+            yaxis_id: nordpool
+            type: line
+            float_precision: 1
+            extend_to: false
+            unit: c/kWh
+            stroke_width: 3
+            show:
+              header_color_threshold: true
+              legend_value: false
+              in_header: true
+            name: Sähkön kokonaishinta
+            color: '#6186EC'
+        yaxis:
+          - id: tuntikulutus
+            min: 0
+            max: '|+1|'
+            opposite: false
+            decimals: 0
+          - id: nordpool
+            min: 0
+            max: 55
+            opposite: true
+            decimals: 0
+      - type: custom:mushroom-title-card
+        title: Sähköverkko ja hinnat
+        alignment: center
+      - type: custom:apexcharts-card
+        apex_config:
+          xaxis:
+            labels:
+              format: H:mm
+          tooltip:
+            fixed:
+              enabled: true
+              position: topRight
+          legend:
+            show: false
+        graph_span: 40h
+        experimental:
+          color_threshold: true
+        show:
+          last_updated: false
+        header:
+          title: Sähkön kokonaishinta 24h
+          show: true
+          show_states: true
+          colorize_states: true
+        span:
+          start: hour
+          offset: '-2h'
+        yaxis:
+          - min: 0
+            max: '|+2|'
+            decimals: 0
+            apex_config:
+              forceNiceScale: true
+        now:
+          show: true
+          label: Now
+        series:
+          - entity: sensor.shf_electricity_price
+            show:
+              in_header: false
+              extremas: true
+            group_by:
+              func: last
+              duration: 1h
+            type: column
+            color: lightgray
+            float_precision: 2
+            data_generator: >
+              var siirto = [3.01, 3.01, 3.01, 3.01, 3.01, 3.01, 3.01, 4.92,
+              4.92, 4.92, 4.92, 4.92, 4.92, 4.92, 4.92, 4.92, 4.92, 4.92, 4.92,
+              4.92, 4.92, 4.92, 3.01, 3.01 ] ; var alv = 1.255; var marginaali =
+              0.0059; return entity.attributes.data.map((d, index) => {
+                var tempdate = new Date(d["DateTime"]);
+                var hour = tempdate.getHours();
+                return [tempdate.getTime(), ((entity.attributes.data[index]["PriceNoTax"]+marginaali)*alv)*100+siirto[hour]];
+              });
+            color_threshold:
+              - value: 0
+                color: green
+              - value: 20
+                color: gold
+              - value: 25
+                color: orange
+              - value: 35
+                color: red
+              - value: 200
+          - entity: sensor.shf_electricity_price_now
+            show:
+              in_header: false
+              header_color_threshold: true
+              in_chart: false
+            type: line
+            color: lightgray
+            float_precision: 2
+            stroke_width: 0
+            data_generator: >
+              var siirto = [3.01, 3.01, 3.01, 3.01, 3.01, 3.01, 3.01, 4.92,
+              4.92, 4.92, 4.92, 4.92, 4.92, 4.92, 4.92, 4.92, 4.92, 4.92, 4.92,
+              4.92, 4.92, 4.92, 3.01, 3.01 ] ; var alv = 1.255;  var marginaali
+              = 0.059; var currentTime = new Date().setMinutes(0, 0, 0);
+
+              let currentPrice = entity.attributes.data.find(d => {
+                return new Date(d["DateTime"]).getTime() === currentTime;
+              })["PriceNoTax"];
+
+              return entity.attributes.data.map((d, index) => {
+                var t = new Date();
+                return [new Date(d["DateTime"]).getTime(), ((currentPrice+marginaali)*alv)*100 + siirto[t.getHours()]];
+              });
+            color_threshold:
+              - value: 0
+                color: green
+              - value: 20
+                color: gold
+              - value: 25
+                color: orange
+              - value: 35
+                color: red
+              - value: 200
+          - entity: sensor.sahkon_myyntihinta_c_kwh
+            name: Sähkön myyntihinta
+            float_precision: 2
+            extend_to: false
+            color: '#0066CC'
+            show:
+              in_header: true
+              legend_value: true
+              in_chart: false
+              header_color_threshold: true
+          - entity: sensor.sahko_siirtohinta
+            name: Siirto
+            float_precision: 2
+            extend_to: false
+            color: green
+            show:
+              in_header: true
+              legend_value: true
+              in_chart: false
+              header_color_threshold: true
+          - entity: sensor.sahko_kokonaishinta_c
+            name: Kokonaishinta
+            float_precision: 2
+            extend_to: false
+            show:
+              in_header: true
+              legend_value: true
+              in_chart: false
+              header_color_threshold: true
+            color_threshold:
+              - value: 0
+                color: green
+              - value: 20
+                color: gold
+              - value: 25
+                color: orange
+              - value: 35
+                color: red
+              - value: 200
+      - type: custom:apexcharts-card
+        now:
+          show: true
+          label: now
+        graph_span: 5d
+        experimental:
+          color_threshold: true
+        apex_config:
+          grid:
+            show: true
+            borderColor: dimgray
+            strokeDashArray: 4
+          chart:
+            height: 384px
+          legend:
+            showForSingleSeries: false
+            show: false
+          plotOptions:
+            bar:
+              borderRadius: 0
+          yaxis:
+            decimalsInFloat: 1
+            forceNiceScale: true
+            min: 0
+          xaxis:
+            type: datetime
+            labels:
+              datetimeFormatter:
+                minute: HH:mm
+                day: ddd
+        all_series_config:
+          curve: stepline
+          show:
+            offset_in_name: true
+        header:
+          title: Nordpool ennuste c/kWh
+          show: true
+          show_states: true
+          colorize_states: true
+        span:
+          start: day
+        series:
+          - entity: sensor.nordpool_kwh_fi_eur_4_10_0
+            type: column
+            float_precision: 3
+            stroke_width: 0
+            opacity: 0.2
+            fill_raw: 'null'
+            unit: ¢/kWh
+            name: Nordpool ¢/kWh
+            show:
+              in_header: false
+              legend_value: false
+              extremas: false
+            data_generator: |
+              return [...entity.attributes.raw_today.map((start, index) => {
+                        return [new Date(start["start"]).getTime(), entity.attributes.raw_today[index]["value"]*124];
+                     }),
+                     ...entity.attributes.raw_tomorrow.map((entry) => {
+                        return [new Date(entry.start).getTime(), entry.value*124];
+                     }),
+                     // Add a new entry for the day after tomorrow with a zero value
+                     [new Date(new Date().setDate(new Date().getDate() + 2)).setHours(0, 0, 0, 0), 0]
+                     ].filter(([timestamp, _]) => {
+                         const now = new Date();
+                         const endOfDayAfterTomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 3);
+                         endOfDayAfterTomorrow.setHours(0, 0, 0, 0); // Set to the beginning of two days after today
+                         return timestamp < endOfDayAfterTomorrow.getTime();
+                     });
+            color: '#aaaaaa'
+            color_threshold:
+              - value: 0
+                color: lime
+              - value: 5
+                color: green
+              - value: 10
+                color: orange
+              - value: 15
+                color: red
+              - value: 20
+                color: darkred
+              - value: 30
+                color: black
+          - entity: sensor.nordpool_kwh_fi_eur_4_10_0
+            type: line
+            float_precision: 3
+            stroke_width: 2
+            opacity: 1
+            unit: ¢/kWh
+            name: Nordpool ¢/kWh Prediction
+            color_threshold:
+              - value: 0
+                color: dodgerblue
+                opacity: 0.6
+              - value: 5
+                color: dodgerblue
+                opacity: 0.8
+              - value: 10
+                color: skyblue
+                opacity: 0.8
+              - value: 15
+                color: red
+                opacity: 0.8
+              - value: 20
+                color: darkred
+                opacity: 0.8
+              - value: 30
+                color: black
+                opacity: 0.8
+            show:
+              in_header: false
+              legend_value: false
+              extremas: false
+            data_generator: |
+              const processData = async () => {
+                const response = await fetch('https://raw.githubusercontent.com/vividfog/nordpool-predict-fi/main/deploy/prediction.json');
+                const predictionData = await response.json();
+                return predictionData.map(([timestamp, value]) => [parseInt(timestamp), value]);
+              };
+              return processData();
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: sensor.shellyem3_channel_a_power
+            max: 5750
+            name: Vaihe 1 - Teho
+          - type: gauge
+            entity: sensor.shellyem3_channel_b_power
+            name: Vaihe 2 - Teho
+            max: 5750
+          - type: gauge
+            entity: sensor.shellyem3_channel_c_power
+            name: Vaihe 3 - Teho
+            max: 5750
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: sensor.sahko_kokonaiskulutus_teho
+            max: 30000
+            name: Kokonaisteho
+          - type: gauge
+            entity: sensor.sahko_kokonaisvirta
+            max: 75
+            needle: false
+            name: Kokonaisvirta
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: sensor.shellyem3_channel_a_current
+            name: Vaihe 1 - Virta
+            max: 25
+          - type: gauge
+            entity: sensor.shellyem3_channel_b_current
+            name: Vaihe 2 - Virta
+            max: 25
+          - type: gauge
+            entity: sensor.shellyem3_channel_c_current
+            name: Vaihe 3 - Virta
+            max: 25
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: sensor.shellyem3_channel_a_voltage
+            name: Vaihe 1 - Jännite
+            min: 0
+            max: 400
+          - type: gauge
+            entity: sensor.shellyem3_channel_b_voltage
+            name: Vaihe 2 - Jännite
+            min: 0
+            max: 400
+          - type: gauge
+            entity: sensor.shellyem3_channel_c_voltage
+            name: Vaihe 3 - Jännite
+            min: 0
+            max: 400
+      - type: horizontal-stack
+        cards:
+          - type: entity
+            entity: sensor.talon_kokonaiskulutus_vuosi_kwh
+            state_color: false
+            name: Vuosikulutus
+            icon: mdi:lightning-bolt
+          - type: entity
+            entity: sensor.sahko_hinnan_korjaus_vuosi
+            icon: mdi:lightning-bolt
+            name: Vuosikustannus
+      - type: horizontal-stack
+        cards:
+          - type: entity
+            entity: sensor.talon_kokonaiskulutus_paiva_kwh
+            name: Päivä
+            icon: mdi:lightning-bolt
+          - type: entity
+            entity: sensor.talon_kokonaiskulutus_viikko_kwh
+            name: Viikko
+            icon: mdi:lightning-bolt
+          - type: entity
+            entity: sensor.talon_kokonaiskulutus_kuukausi_kwh
+            name: Kuukausi
+            icon: mdi:lightning-bolt
+      - type: horizontal-stack
+        cards:
+          - type: entity
+            entity: sensor.sahko_hinnan_korjaus_paiva
+            name: Päivä
+            state_color: false
+            icon: mdi:lightning-bolt
+          - type: entity
+            entity: sensor.sahko_hinnan_korjaus_viikko
+            name: Viikko
+            icon: mdi:lightning-bolt
+          - type: entity
+            entity: sensor.sahko_hinnan_korjaus_kuukausi
+            name: Kuukausi
+            icon: mdi:lightning-bolt
+  - theme: kibibit-dark-cards
+    title: Tilastot
+    path: tilastot
+    icon: mdi:finance
+    type: custom:vertical-layout
+    badges: []
+    cards:
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: entity
+            entity: person.toni
+            name: Takaisin
+            icon: mdi:arrow-left-bold
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/0
+            content_info: name
+          - type: entity
+            entity: lock.etuovi
+            content_info: state
+            icon_color: green
+          - type: weather
+            entity: weather.forecast_koti
+            show_conditions: true
+            show_temperature: true
+        alignment: center
+      - type: custom:mushroom-title-card
+        title: Tilastot
+        alignment: center
+      - type: custom:apexcharts-card
+        apex_config:
+          legend:
+            show: false
+            decimalsInFloat: 2
+            tickAmount: 10
+          xaxis:
+            labels:
+              format: d.M.
+          tooltip:
+            fixed:
+              enabled: true
+              position: topRight
+        experimental:
+          color_threshold: true
+        graph_span: 7d
+        span:
+          end: day
+        show:
+          last_updated: false
+        header:
+          show: true
+          show_states: true
+          colorize_states: true
+          title: Sähkön päiväkustannus
+        series:
+          - entity: sensor.talon_kokonaiskustannus_paiva_eur
+            name: Päiväkustannus
+            yaxis_id: kustannus
+            type: column
+            show:
+              extremas: true
+              header_color_threshold: true
+            unit: EUR
+            group_by:
+              func: max
+              duration: 1d
+            color_threshold:
+              - value: 10
+                color: green
+              - value: 15
+                color: gold
+              - value: 20
+                color: orange
+              - value: 25
+                color: orangered
+              - value: 30
+                color: red
+          - entity: sensor.viikon_keskihinta
+            yaxis_id: keskihinta
+            type: line
+            color: yellow
+            opacity: 1
+            float_precision: 1
+            extend_to: false
+            unit: c/kWh
+            stroke_width: 3
+            group_by:
+              func: avg
+              duration: 1day
+            show:
+              header_color_threshold: true
+              legend_value: false
+              in_header: true
+            name: Sähkön keskihinta
+        yaxis:
+          - id: kustannus
+            max: '|+10|'
+            min: 0
+            opposite: false
+            decimals: 0
+          - id: keskihinta
+            max: '|+5|'
+            min: '|-5|'
+            opposite: true
+            decimals: 0
+      - type: custom:apexcharts-card
+        apex_config:
+          chart:
+            stacked: true
+        experimental:
+          color_threshold: true
+        graph_span: 7d
+        span:
+          end: day
+        show:
+          last_updated: false
+        header:
+          show: true
+          show_states: true
+          colorize_states: true
+          title: Sähkön päiväkulutus
+        series:
+          - entity: sensor.talon_kokonaiskulutus_paiva_kwh
+            name: Päiväkulutus
+            type: column
+            show:
+              extremas: true
+              header_color_threshold: true
+            color_threshold:
+              - value: 0
+                color: green
+              - value: 40
+                color: gold
+              - value: 50
+                color: orange
+              - value: 60
+                color: orangered
+              - value: 75
+                color: red
+            unit: kWh
+            group_by:
+              func: max
+              duration: 1d
+      - type: custom:apexcharts-card
+        apex_config:
+          chart:
+            stacked: true
+        graph_span: 7d
+        span:
+          end: day
+        show:
+          last_updated: false
+        header:
+          show: true
+          show_states: true
+          colorize_states: true
+          title: Veden päiväkulutus
+        series:
+          - entity: sensor.veden_kokonaiskulutus_paiva_l
+            name: Päiväkulutus
+            type: column
+            show:
+              extremas: true
+              header_color_threshold: true
+            unit: Litraa
+            color: blue
+            group_by:
+              func: max
+              duration: 1d
+      - type: custom:apexcharts-card
+        apex_config:
+          legend:
+            show: false
+            decimalsInFloat: 2
+            tickAmount: 10
+          xaxis:
+            labels:
+              format: d.M.
+          tooltip:
+            fixed:
+              enabled: true
+              position: topRight
+        experimental:
+          color_threshold: true
+        graph_span: 12w
+        span:
+          end: day
+        show:
+          last_updated: false
+        header:
+          show: true
+          show_states: true
+          colorize_states: true
+          title: Sähkön viikkokustannus €
+        series:
+          - entity: sensor.talon_kokonaiskustannus_viikko_eur
+            yaxis_id: kustannus
+            name: Viikkokustannus
+            type: column
+            show:
+              extremas: true
+              header_color_threshold: true
+            unit: EUR
+            group_by:
+              func: max
+              duration: 7d
+            color_threshold:
+              - value: 30
+                color: green
+              - value: 45
+                color: gold
+              - value: 60
+                color: orange
+              - value: 75
+                color: orangered
+              - value: 100
+                color: red
+          - entity: sensor.viikon_keskihinta
+            yaxis_id: keskihinta
+            type: line
+            color: yellow
+            opacity: 1
+            float_precision: 1
+            extend_to: false
+            unit: c/kWh
+            stroke_width: 3
+            group_by:
+              func: avg
+              duration: 7d
+            show:
+              header_color_threshold: true
+              legend_value: false
+              in_header: true
+            name: Sähkön keskihinta
+        yaxis:
+          - id: kustannus
+            max: '|+10|'
+            min: 0
+            opposite: false
+            decimals: 0
+          - id: keskihinta
+            max: '|+5|'
+            min: '|-5|'
+            opposite: true
+            decimals: 0
+      - type: custom:apexcharts-card
+        apex_config:
+          chart:
+            stacked: true
+        experimental:
+          color_threshold: true
+        graph_span: 12w
+        span:
+          end: day
+        show:
+          last_updated: false
+        header:
+          show: true
+          show_states: false
+          colorize_states: true
+          title: Sähkön viikkokulutus kWh
+        series:
+          - entity: sensor.talon_kokonaiskulutus_viikko_kwh
+            name: Päiväkulutus
+            type: column
+            show:
+              extremas: true
+              header_color_threshold: true
+            color_threshold:
+              - value: 0
+                color: green
+              - value: 25
+                color: gold
+              - value: 35
+                color: orange
+              - value: 45
+                color: orangered
+              - value: 60
+                color: red
+            unit: kWh
+            color: red
+            group_by:
+              func: max
+              duration: 7d
+      - type: custom:apexcharts-card
+        apex_config:
+          chart:
+            stacked: true
+        graph_span: 12w
+        span:
+          end: day
+        show:
+          last_updated: false
+        header:
+          show: true
+          show_states: false
+          colorize_states: true
+          title: Veden viikkokulutus L
+        series:
+          - entity: sensor.veden_kokonaiskulutus_viikko_l
+            name: Päiväkulutus
+            type: column
+            show:
+              extremas: true
+              header_color_threshold: true
+            unit: Litraa
+            color: blue
+            group_by:
+              func: max
+              duration: 7d
+      - type: custom:apexcharts-card
+        apex_config:
+          legend:
+            show: false
+            decimalsInFloat: 2
+            tickAmount: 10
+          xaxis:
+            labels:
+              format: d.M.
+          tooltip:
+            fixed:
+              enabled: true
+              position: topRight
+        experimental:
+          color_threshold: true
+        graph_span: 52w
+        span:
+          end: month
+        show:
+          last_updated: false
+        header:
+          show: true
+          show_states: true
+          colorize_states: true
+          title: Sähkön kuukausikustannus €
+        series:
+          - entity: sensor.talon_kokonaiskustannus_kuukausi_eur
+            name: Päiväkustannus
+            yaxis_id: kustannus
+            type: column
+            show:
+              extremas: true
+              header_color_threshold: true
+            color_threshold:
+              - value: 0
+                color: green
+              - value: 100
+                color: gold
+              - value: 200
+                color: orange
+              - value: 300
+                color: orangered
+              - value: 450
+                color: red
+            unit: EUR
+            group_by:
+              func: max
+              duration: 4w
+          - entity: sensor.kuukauden_keskihinta
+            yaxis_id: keskihinta
+            type: line
+            color: yellow
+            opacity: 1
+            float_precision: 1
+            extend_to: false
+            unit: c/kWh
+            stroke_width: 3
+            group_by:
+              func: avg
+              duration: 4w
+            show:
+              header_color_threshold: true
+              legend_value: false
+              in_header: true
+            name: Sähkön keskihinta
+        yaxis:
+          - id: kustannus
+            max: '|+10|'
+            min: 0
+            opposite: false
+            decimals: 0
+          - id: keskihinta
+            max: '|+5|'
+            min: '|-5|'
+            opposite: true
+            decimals: 0
+      - type: custom:apexcharts-card
+        apex_config:
+          chart:
+            stacked: true
+        experimental:
+          color_threshold: true
+        graph_span: 52w
+        span:
+          end: month
+        show:
+          last_updated: false
+        header:
+          show: true
+          show_states: false
+          colorize_states: true
+          title: Sähkön kuukausikulutus kWh
+        series:
+          - entity: sensor.talon_kokonaiskulutus_kuukausi_kwh
+            name: Päiväkulutus
+            type: column
+            show:
+              extremas: true
+              header_color_threshold: true
+            color_threshold:
+              - value: 0
+                color: green
+              - value: 750
+                color: gold
+              - value: 900
+                color: orange
+              - value: 1200
+                color: orangered
+              - value: 1500
+                color: red
+            unit: kWh
+            color: red
+            group_by:
+              func: max
+              duration: 4w
+      - type: custom:apexcharts-card
+        apex_config:
+          chart:
+            stacked: true
+        graph_span: 52w
+        span:
+          end: month
+        show:
+          last_updated: false
+        header:
+          show: true
+          show_states: false
+          colorize_states: true
+          title: Veden kuukausikulutus L
+        series:
+          - entity: sensor.veden_kokonaiskulutus_kuukausi_l
+            name: Päiväkulutus
+            type: column
+            show:
+              extremas: true
+              header_color_threshold: true
+            unit: Litraa
+            color: blue
+            group_by:
+              func: max
+              duration: 4w
+  - theme: kibibit-dark-cards
+    title: Ostoslista
+    path: ostoslista
+    icon: mdi:cart
+    type: custom:vertical-layout
+    badges: []
+    cards:
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: entity
+            entity: person.toni
+            name: Takaisin
+            icon: mdi:arrow-left-bold
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/0
+            content_info: name
+          - type: entity
+            entity: lock.etuovi
+            content_info: state
+            icon_color: green
+          - type: weather
+            entity: weather.forecast_koti
+            show_conditions: true
+            show_temperature: true
+        alignment: center
+      - display_order: none
+        type: shopping-list
+        title: Ostoslista
+  - theme: kibibit-dark-cards
+    title: Työhuone
+    path: tyohuone
+    icon: hue:room-office
+    type: custom:vertical-layout
+    badges: []
+    cards:
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: entity
+            entity: person.toni
+            name: Takaisin
+            icon: mdi:arrow-left-bold
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/0
+            content_info: name
+          - type: entity
+            entity: lock.etuovi
+            content_info: state
+            icon_color: green
+          - type: weather
+            entity: weather.forecast_koti
+            show_conditions: true
+            show_temperature: true
+        alignment: center
+      - type: custom:mushroom-title-card
+        title: Toimisto
+        alignment: center
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-light-card
+            entity: light.tyopiste
+            name: Työpiste
+            double_tap_action:
+              action: more-info
+            tap_action:
+              action: none
+            hold_action:
+              action: none
+            use_light_color: true
+            show_brightness_control: true
+            show_color_control: true
+          - type: light
+            entity: light.tyohuone_strip
+            name: LED-Strip
+            double_tap_action:
+              action: more-info
+          - type: light
+            entity: light.makuuhuone_toninvalo
+            name: Tasovalo
+            double_tap_action:
+              action: more-info
+      - type: media-control
+        entity: media_player.chromecast8526
+      - type: entities
+        entities:
+          - entity: sensor.iv_kanava_rpm
+          - entity: sensor.iv_kanava_flow
+            name: Virtaus
+          - entity: sensor.iv_kanava_temperature
+          - entity: number.iv_kanava_heatdistributorsettings_temperaturelimit
+          - entity: switch.iv_kanava_boostmode
+            name: Boostmode
+          - entity: number.iv_kanava_boostmode_time
+            name: Boostmode aika
+          - entity: select.iv_kanava_automatic_cycles
+          - entity: number.iv_kanava_fanspeed_trickle
+            name: Yleinen
+          - entity: number.iv_kanava_fanspeed_humidity
+            name: Kosteus
+          - entity: number.iv_kanava_fanspeed_light
+            name: Valo
+        title: PAX Calima
+  - theme: kibibit-dark-cards
+    title: Olohuone
+    path: olohuone
+    icon: mdi:sofa-outline
+    type: custom:vertical-layout
+    badges: []
+    cards:
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: entity
+            entity: person.toni
+            name: Takaisin
+            icon: mdi:arrow-left-bold
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/0
+            content_info: name
+          - type: entity
+            entity: lock.etuovi
+            content_info: state
+            icon_color: green
+            double_tap_action:
+              action: none
+            tap_action:
+              action: none
+            hold_action:
+              action: none
+          - type: weather
+            entity: weather.forecast_koti
+            show_conditions: true
+            show_temperature: true
+        alignment: center
+      - type: custom:mushroom-title-card
+        title: Olohuone
+        alignment: center
+      - type: thermostat
+        entity: climate.mitsu_ilp
+        name: Ilmalämpöpumppu
+        features:
+          - type: climate-hvac-modes
+            hvac_modes:
+              - 'off'
+              - heat
+              - dry
+              - cool
+              - fan_only
+          - type: climate-fan-modes
+            style: dropdown
+            fan_modes:
+              - auto
+              - low
+              - medium
+              - high
+              - middle
+              - diffuse
+      - type: custom:mini-media-player
+        entity: media_player.lg_webos_tv_um7600plb
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-light-card
+            entity: light.shellydimmer2_c45bbe466060
+            name: Olohuone
+            use_light_color: false
+            show_brightness_control: false
+            layout: vertical
+          - type: custom:mushroom-light-card
+            name: Aula
+            use_light_color: false
+            show_brightness_control: false
+            layout: vertical
+            entity: light.shellybulbduo_3494546bdd56
+          - type: custom:mushroom-light-card
+            entity: light.shellybulbduo_3494546ba8d0
+            name: Keittiö
+            layout: vertical
+            use_light_color: false
+      - type: custom:apexcharts-card
+        experimental:
+          color_threshold: true
+        graph_span: 12h
+        show:
+          last_updated: false
+        header:
+          standard_format: false
+          show: true
+          show_states: true
+          colorize_states: true
+          title: Olohuone
+        series:
+          - entity: sensor.aqara_olohuone_temperature
+            name: Lämpötila
+            yaxis_id: temp
+            type: line
+            group_by:
+              func: last
+              duration: 15m
+            stroke_width: 5
+            show:
+              extremas: true
+              header_color_threshold: true
+            color_threshold:
+              - value: 16
+                color: steelblue
+              - value: 18
+                color: midnightblue
+              - value: 20
+                color: orange
+              - value: 21
+                color: orangered
+              - value: 23
+                color: red
+          - entity: sensor.aqara_olohuone_humidity
+            name: Kosteus
+            yaxis_id: humid
+            type: line
+            group_by:
+              func: last
+              duration: 15m
+            stroke_width: 5
+            show:
+              extremas: true
+              header_color_threshold: true
+              in_chart: true
+            color_threshold:
+              - value: 20
+                color: steelblue
+              - value: 35
+                color: midnightblue
+              - value: 50
+                color: deepblue
+        yaxis:
+          - id: temp
+            max: '|+5|'
+            min: '|-5|'
+            opposite: false
+            decimals: 0
+          - id: humid
+            max: '|+5|'
+            min: '|-5|'
+            opposite: true
+            decimals: 0
+  - theme: kibibit-dark-cards
+    title: Makuuhuone
+    path: makuuhuone
+    icon: mdi:bed-king
+    type: custom:vertical-layout
+    badges: []
+    cards:
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: entity
+            entity: person.toni
+            name: Takaisin
+            icon: mdi:arrow-left-bold
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/0
+            content_info: name
+          - type: entity
+            entity: lock.etuovi
+            content_info: state
+            icon_color: green
+          - type: weather
+            entity: weather.forecast_koti
+            show_conditions: true
+            show_temperature: true
+        alignment: center
+      - type: custom:mushroom-title-card
+        title: Makuuhuone
+        alignment: center
+      - type: custom:mini-media-player
+        entity: media_player.samsung_6_series_55
+        source: full
+        info: short
+        artwork: full-cover
+      - type: horizontal-stack
+        cards:
+          - type: custom:mini-media-player
+            entity: media_player.makkari_2
+            name: Bedroom
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-light-card
+            entity: light.lamppu_ikea_jennimh
+            name: Jenni
+            layout: vertical
+            use_light_color: true
+            show_brightness_control: true
+          - type: custom:mushroom-light-card
+            entity: light.makuuhuone
+            layout: vertical
+            use_light_color: true
+            show_brightness_control: true
+          - type: custom:mushroom-light-card
+            entity: light.lamppu_ikea_tonimh
+            name: Toni
+            layout: vertical
+            use_light_color: true
+            show_brightness_control: true
+      - graph: line
+        type: sensor
+        entity: sensor.mh1_power
+        detail: 2
+        name: Patteri
+      - type: custom:apexcharts-card
+        experimental:
+          color_threshold: true
+        graph_span: 12h
+        show:
+          last_updated: false
+        header:
+          standard_format: false
+          show: true
+          show_states: true
+          colorize_states: true
+          title: Makuuhuone
+        series:
+          - entity: sensor.aqara_makuuhuone_temperature
+            name: Lämpötila
+            yaxis_id: temp
+            type: line
+            group_by:
+              func: last
+              duration: 15m
+            stroke_width: 5
+            show:
+              extremas: true
+              header_color_threshold: true
+            color_threshold:
+              - value: 16
+                color: steelblue
+              - value: 18
+                color: midnightblue
+              - value: 20
+                color: orange
+              - value: 21
+                color: orangered
+              - value: 23
+                color: red
+          - entity: sensor.aqara_makuuhuone_humidity
+            name: Kosteus
+            yaxis_id: humid
+            type: line
+            group_by:
+              func: last
+              duration: 15m
+            stroke_width: 5
+            show:
+              extremas: true
+              header_color_threshold: true
+              in_chart: true
+            color_threshold:
+              - value: 20
+                color: steelblue
+              - value: 35
+                color: midnightblue
+              - value: 50
+                color: deepblue
+        yaxis:
+          - id: temp
+            max: '|+5|'
+            min: '|-5|'
+            opposite: false
+            decimals: 0
+          - id: humid
+            max: '|+5|'
+            min: '|-5|'
+            opposite: true
+            decimals: 0
+  - theme: kibibit-dark-cards
+    title: Keittiö
+    path: keittio
+    type: custom:vertical-layout
+    icon: hue:room-kitchen
+    badges: []
+    cards:
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: entity
+            entity: person.toni
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/0
+            icon: mdi:arrow-left-bold
+            content_info: name
+            name: Takaisin
+          - type: entity
+            entity: lock.etuovi
+            content_info: state
+            icon_color: green
+          - type: weather
+            entity: weather.forecast_koti
+            show_conditions: true
+            show_temperature: true
+          - type: entity
+            entity: light.koti
+            double_tap_action:
+              action: none
+            icon_color: yellow
+            hold_action:
+              action: none
+            tap_action:
+              action: call-service
+              service: script.sammuta_valot
+              data: {}
+              target: {}
+        alignment: center
+      - type: custom:mushroom-title-card
+        title: Keittiö
+        alignment: center
+      - type: custom:apexcharts-card
+        experimental:
+          color_threshold: true
+        graph_span: 12h
+        show:
+          last_updated: false
+        header:
+          standard_format: false
+          show: true
+          show_states: true
+          colorize_states: true
+          title: Keittiö
+        series:
+          - entity: sensor.aqara_keittio_temperature
+            yaxis_id: temp
+            name: Lämpötila
+            type: line
+            group_by:
+              func: last
+              duration: 15m
+            stroke_width: 5
+            show:
+              extremas: true
+              header_color_threshold: true
+            color_threshold:
+              - value: 16
+                color: steelblue
+              - value: 18
+                color: midnightblue
+              - value: 20
+                color: orange
+              - value: 21
+                color: orangered
+              - value: 23
+                color: red
+          - entity: sensor.aqara_keittio_humidity
+            name: Kosteus
+            yaxis_id: humid
+            type: line
+            group_by:
+              func: last
+              duration: 15m
+            stroke_width: 5
+            show:
+              extremas: true
+              header_color_threshold: true
+              in_chart: true
+            color_threshold:
+              - value: 20
+                color: steelblue
+              - value: 35
+                color: midnightblue
+              - value: 50
+                color: deepblue
+        yaxis:
+          - id: temp
+            max: '|+5|'
+            min: '|-5|'
+            opposite: false
+            decimals: 0
+          - id: humid
+            max: '|+5|'
+            min: '|-5|'
+            opposite: true
+            decimals: 0
+      - square: false
+        type: grid
+        cards:
+          - type: custom:mushroom-light-card
+            entity: light.spotit
+            icon: mdi:lightbulb-spot
+            name: Spotit
+            hold_action:
+              action: none
+            double_tap_action:
+              action: more-info
+            primary_info: name
+            secondary_info: none
+            use_light_color: true
+          - type: custom:mushroom-light-card
+            entity: light.tyotasoled
+            icon: mdi:led-strip
+            name: Työtasot
+            hold_action:
+              action: none
+            double_tap_action:
+              action: more-info
+            secondary_info: none
+            use_light_color: true
+          - type: custom:mushroom-light-card
+            entity: light.shellybulbduo_3494546ba8d0
+            name: Ruokapöytä
+            icon: phu:ceiling-lamp
+            hold_action:
+              action: none
+            double_tap_action:
+              action: more-info
+            secondary_info: none
+            fill_container: false
+            use_light_color: true
+        columns: 3
+  - theme: kibibit-dark-cards
+    title: Kylpyhuone
+    path: kylpyhuone
+    icon: mdi:bathtub
+    type: custom:vertical-layout
+    badges: []
+    cards:
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: entity
+            entity: person.toni
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/0
+            icon: mdi:arrow-left-bold
+            content_info: name
+            name: Takaisin
+          - type: entity
+            entity: lock.etuovi
+            content_info: state
+            icon_color: green
+          - type: weather
+            entity: weather.forecast_koti
+            show_conditions: true
+            show_temperature: true
+          - type: entity
+            entity: light.koti
+            double_tap_action:
+              action: none
+            icon_color: yellow
+            hold_action:
+              action: none
+            tap_action:
+              action: call-service
+              service: script.sammuta_valot
+              data: {}
+              target: {}
+        alignment: center
+      - type: custom:mushroom-title-card
+        title: Kylpyhuone
+        alignment: center
+      - type: custom:apexcharts-card
+        experimental:
+          color_threshold: true
+        graph_span: 12h
+        show:
+          last_updated: false
+        header:
+          standard_format: false
+          show: true
+          show_states: true
+          colorize_states: true
+          title: Kylpyhuone
+        series:
+          - entity: sensor.aqara_kylpyhuone_temperature
+            yaxis_id: temp
+            name: Lämpötila
+            type: line
+            group_by:
+              func: last
+              duration: 15m
+            stroke_width: 5
+            show:
+              extremas: true
+              header_color_threshold: true
+            color_threshold:
+              - value: 16
+                color: steelblue
+              - value: 18
+                color: midnightblue
+              - value: 20
+                color: orange
+              - value: 21
+                color: orangered
+              - value: 23
+                color: red
+          - entity: sensor.aqara_kylpyhuone_humidity
+            name: Kosteus
+            yaxis_id: humid
+            type: line
+            group_by:
+              func: last
+              duration: 15m
+            stroke_width: 5
+            show:
+              extremas: true
+              header_color_threshold: true
+              in_chart: true
+            color_threshold:
+              - value: 20
+                color: steelblue
+              - value: 35
+                color: midnightblue
+              - value: 50
+                color: deepblue
+        yaxis:
+          - id: temp
+            max: '|+5|'
+            min: '|-5|'
+            opposite: false
+            decimals: 0
+          - id: humid
+            max: '|+5|'
+            min: '|-5|'
+            opposite: true
+            decimals: 0
+      - type: light
+        entity: light.kylpyhuone_katto
+        name: Kylpyhuone
+        icon: mdi:lightbulb-spot
+        double_tap_action:
+          action: more-info
+  - theme: kibibit-dark-cards
+    title: Sauna
+    path: sauna
+    icon: mdi:hot-tub
+    type: custom:vertical-layout
+    badges: []
+    cards:
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: entity
+            entity: person.toni
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/0
+            icon: mdi:arrow-left-bold
+            content_info: name
+            name: Takaisin
+          - type: entity
+            entity: lock.etuovi
+            content_info: state
+            icon_color: green
+          - type: weather
+            entity: weather.forecast_koti
+            show_conditions: true
+            show_temperature: true
+          - type: entity
+            entity: light.koti
+            double_tap_action:
+              action: none
+            icon_color: yellow
+            hold_action:
+              action: none
+            tap_action:
+              action: call-service
+              service: script.sammuta_valot
+              data: {}
+              target: {}
+        alignment: center
+      - type: custom:mushroom-title-card
+        title: Sauna
+        alignment: center
+      - type: conditional
+        conditions:
+          - condition: state
+            entity: binary_sensor.kiuas_tilatieto
+            state: 'on'
+        card:
+          type: custom:mushroom-title-card
+          title: '!!! Sauna päällä !!!'
+          alignment: center
+          title_tap_action:
+            action: none
+          subtitle_tap_action:
+            action: none
+      - type: entities
+        entities:
+          - entity: binary_sensor.doorsensor_sauna_contact
+            name: Ovi
+          - entity: binary_sensor.kiuas_tilatieto
+            icon: mdi:hot-tub
+            name: Kiuas
+          - entity: switch.sauna_channel_1
+            name: Kiukaan ohjaus pois/päälle
+          - entity: switch.sauna_channel_2
+        title: Saunan tila
+        show_header_toggle: false
+      - type: custom:apexcharts-card
+        experimental:
+          color_threshold: true
+        graph_span: 6h
+        show:
+          last_updated: false
+        header:
+          standard_format: false
+          show: true
+          show_states: true
+          colorize_states: true
+          title: Sauna
+        series:
+          - entity: sensor.sauna_temperature
+            yaxis_id: temp
+            name: Lämpötila
+            type: line
+            group_by:
+              func: last
+              duration: 15m
+            stroke_width: 5
+            show:
+              extremas: true
+              header_color_threshold: true
+            color_threshold:
+              - value: 16
+                color: steelblue
+              - value: 18
+                color: midnightblue
+              - value: 20
+                color: orange
+              - value: 21
+                color: orangered
+              - value: 23
+                color: red
+          - entity: sensor.sauna_humidity
+            name: Kosteus
+            yaxis_id: humid
+            type: line
+            group_by:
+              func: last
+              duration: 15m
+            stroke_width: 5
+            show:
+              extremas: true
+              header_color_threshold: true
+              in_chart: true
+            color_threshold:
+              - value: 20
+                color: steelblue
+              - value: 35
+                color: midnightblue
+              - value: 50
+                color: deepblue
+        yaxis:
+          - id: temp
+            max: '|+5|'
+            min: '|-5|'
+            opposite: false
+            decimals: 0
+          - id: humid
+            max: '|+5|'
+            min: '|-5|'
+            opposite: true
+            decimals: 0
+  - theme: kibibit-dark-cards
+    title: Ala-aula
+    path: ala-aula
+    type: custom:vertical-layout
+    icon: mdi:alpha-a-box-outline
+    badges: []
+    cards:
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: entity
+            entity: person.toni
+            name: Takaisin
+            icon: mdi:arrow-left-bold
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/0
+            content_info: name
+          - type: entity
+            entity: lock.etuovi
+            content_info: state
+            icon_color: green
+          - type: weather
+            entity: weather.forecast_koti
+            show_conditions: true
+            show_temperature: true
+        alignment: center
+      - type: custom:mushroom-title-card
+        title: Ala-aula
+        alignment: center
+      - type: custom:apexcharts-card
+        experimental:
+          color_threshold: true
+        graph_span: 12h
+        show:
+          last_updated: false
+        header:
+          standard_format: false
+          show: true
+          show_states: true
+          colorize_states: true
+          title: Ala-aula
+        series:
+          - entity: sensor.aqara_ala_aula_temperature
+            name: Lämpötila
+            yaxis_id: temp
+            type: line
+            group_by:
+              func: last
+              duration: 15m
+            stroke_width: 5
+            show:
+              extremas: true
+              header_color_threshold: true
+            color_threshold:
+              - value: 16
+                color: steelblue
+              - value: 18
+                color: midnightblue
+              - value: 20
+                color: orange
+              - value: 21
+                color: orangered
+              - value: 23
+                color: red
+          - entity: sensor.aqara_ala_aula_humidity
+            name: Kosteus
+            yaxis_id: humid
+            type: line
+            group_by:
+              func: last
+              duration: 15m
+            stroke_width: 5
+            show:
+              extremas: true
+              header_color_threshold: true
+              in_chart: true
+            color_threshold:
+              - value: 20
+                color: steelblue
+              - value: 35
+                color: midnightblue
+              - value: 50
+                color: deepblue
+        yaxis:
+          - id: temp
+            max: '|+5|'
+            min: '|-5|'
+            opposite: false
+            decimals: 0
+          - id: humid
+            max: '|+5|'
+            min: '|-5|'
+            opposite: true
+            decimals: 0
+  - theme: kibibit-dark-cards
+    title: Pojat
+    path: pojat
+    icon: mdi:human-male-boy
+    type: custom:vertical-layout
+    badges: []
+    cards:
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: entity
+            entity: person.toni
+            name: Takaisin
+            icon: mdi:arrow-left-bold
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/0
+            content_info: name
+          - type: entity
+            entity: lock.etuovi
+            content_info: state
+            icon_color: green
+          - type: weather
+            entity: weather.forecast_koti
+            show_conditions: true
+            show_temperature: true
+        alignment: center
+      - type: custom:mushroom-title-card
+        title: Poikien huone
+        alignment: center
+      - type: custom:apexcharts-card
+        experimental:
+          color_threshold: true
+        graph_span: 12h
+        show:
+          last_updated: false
+        header:
+          standard_format: false
+          show: true
+          show_states: true
+          colorize_states: true
+          title: Poikien huone
+        series:
+          - entity: sensor.aqara_poikienhuone_temperature
+            yaxis_id: temp
+            name: Lämpötila
+            type: line
+            group_by:
+              func: last
+              duration: 15m
+            stroke_width: 5
+            show:
+              extremas: true
+              header_color_threshold: true
+            color_threshold:
+              - value: 16
+                color: steelblue
+              - value: 18
+                color: midnightblue
+              - value: 20
+                color: orange
+              - value: 21
+                color: orangered
+              - value: 23
+                color: red
+          - entity: sensor.aqara_poikienhuone_humidity
+            name: Kosteus
+            yaxis_id: humid
+            type: line
+            group_by:
+              func: last
+              duration: 15m
+            stroke_width: 5
+            show:
+              extremas: true
+              header_color_threshold: true
+              in_chart: true
+            color_threshold:
+              - value: 20
+                color: steelblue
+              - value: 35
+                color: midnightblue
+              - value: 50
+                color: deepblue
+        yaxis:
+          - id: temp
+            max: '|+5|'
+            min: '|-5|'
+            opposite: false
+            decimals: 0
+          - id: humid
+            max: '|+5|'
+            min: '|-5|'
+            opposite: true
+            decimals: 0
+  - theme: kibibit-dark-cards
+    icon: mdi:human-female-girl
+    title: Sara
+    path: sara
+    type: custom:vertical-layout
+    badges: []
+    cards:
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: entity
+            entity: person.toni
+            name: Takaisin
+            icon: mdi:arrow-left-bold
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/0
+            content_info: name
+          - type: entity
+            entity: lock.etuovi
+            content_info: state
+            icon_color: green
+          - type: weather
+            entity: weather.forecast_koti
+            show_conditions: true
+            show_temperature: true
+        alignment: center
+      - type: custom:mushroom-title-card
+        title: Saran huone
+        alignment: center
+      - type: custom:mini-media-player
+        entity: media_player.pojat
+        name: Chromecast
+      - type: custom:apexcharts-card
+        experimental:
+          color_threshold: true
+        graph_span: 12h
+        show:
+          last_updated: false
+        header:
+          standard_format: false
+          show: true
+          show_states: true
+          colorize_states: true
+          title: Saran huone
+        series:
+          - entity: sensor.aqara_saranhuone_temperature
+            name: Lämpötila
+            yaxis_id: temp
+            type: line
+            group_by:
+              func: last
+              duration: 15m
+            stroke_width: 5
+            show:
+              extremas: true
+              header_color_threshold: true
+            color_threshold:
+              - value: 16
+                color: steelblue
+              - value: 18
+                color: midnightblue
+              - value: 20
+                color: orange
+              - value: 21
+                color: orangered
+              - value: 23
+                color: red
+          - entity: sensor.aqara_saranhuone_humidity
+            name: Kosteus
+            yaxis_id: humid
+            type: line
+            group_by:
+              func: last
+              duration: 15m
+            stroke_width: 5
+            show:
+              extremas: true
+              header_color_threshold: true
+              in_chart: true
+            color_threshold:
+              - value: 20
+                color: steelblue
+              - value: 35
+                color: midnightblue
+              - value: 50
+                color: deepblue
+        yaxis:
+          - id: temp
+            max: '|+5|'
+            min: '|-5|'
+            opposite: false
+            decimals: 0
+          - id: humid
+            max: '|+5|'
+            min: '|-5|'
+            opposite: true
+            decimals: 0
+      - type: custom:mushroom-light-card
+        entity: light.wled_saran_katto_3
+        name: Saran kattovalo
+        layout: vertical
+        use_light_color: true
+        show_brightness_control: true
+        hold_action:
+          action: none
+        double_tap_action:
+          action: more-info
+      - type: entities
+        entities:
+          - entity: input_select.sara_skenet
+  - theme: kibibit-dark-cards
+    title: Imuri
+    path: imuri
+    icon: mdi:robot-vacuum
+    type: custom:vertical-layout
+    badges: []
+    cards:
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: entity
+            entity: person.toni
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/0
+            icon: mdi:arrow-left-bold
+            content_info: name
+            name: Takaisin
+          - type: entity
+            entity: lock.etuovi
+            content_info: state
+            icon_color: green
+          - type: weather
+            entity: weather.forecast_koti
+            show_conditions: true
+            show_temperature: true
+          - type: entity
+            entity: light.koti
+            double_tap_action:
+              action: none
+            icon_color: yellow
+            hold_action:
+              action: none
+            tap_action:
+              action: call-service
+              service: script.sammuta_valot
+              data: {}
+              target: {}
+        alignment: center
+      - type: custom:mushroom-title-card
+        title: Roborock S6 MaxV
+        alignment: center
+      - type: custom:xiaomi-vacuum-map-card
+        map_source:
+          camera: camera.roborock_s6_maxv_map
+        calibration_source:
+          camera: true
+        entity: vacuum.roborock_s6_maxv
+        vacuum_platform: default
+        map_modes:
+          - template: vacuum_clean_zone
+          - template: vacuum_goto
+          - template: vacuum_goto_predefined
+            predefined_selections:
+              - position:
+                  - 22124
+                  - 26062
+                icon:
+                  name: mdi:trash-can
+                  x: 22124
+                  'y': 26062
+          - template: vacuum_clean_zone_predefined
+            predefined_selections:
+              - zones:
+                  - - 22959
+                    - 26690
+                    - 25003
+                    - 30469
+                label:
+                  text: Aula
+                  x: 24000
+                  'y': 28500
+              - zones:
+                  - - 24913
+                    - 25185
+                    - 28997
+                    - 29450
+                label:
+                  text: Olohuone
+                  x: 26900
+                  'y': 27100
+              - zones:
+                  - - 25020
+                    - 29536
+                    - 28012
+                    - 32531
+                label:
+                  text: Sara
+                  x: 26600
+                  'y': 31200
+              - zones:
+                  - - 19703
+                    - 28959
+                    - 22941
+                    - 32531
+                label:
+                  text: Pojat
+                  x: 21300
+                  'y': 30850
+              - zones:
+                  - - 19702
+                    - 25743
+                    - 22941
+                    - 28944
+                label:
+                  text: Keittiö
+                  x: 21000
+                  'y': 27100
+          - template: vacuum_follow_path
+        map_locked: true
+        two_finger_pan: true
+  - theme: kibibit-dark-cards
+    title: Kamerat
+    path: kamerat
+    icon: mdi:video
+    type: custom:vertical-layout
+    panel: true
+    badges: []
+    cards:
+      - type: vertical-stack
+        cards:
+          - type: custom:mushroom-chips-card
+            chips:
+              - type: entity
+                entity: person.toni
+                tap_action:
+                  action: navigate
+                  navigation_path: /lovelace-puhelin/0
+                icon: mdi:arrow-left-bold
+                content_info: name
+                name: Takaisin
+              - type: entity
+                entity: lock.etuovi
+                content_info: state
+                icon_color: green
+              - type: weather
+                entity: weather.forecast_koti
+                show_conditions: true
+                show_temperature: true
+            alignment: center
+          - type: custom:frigate-card
+            cameras:
+              - camera_entity: camera.etupiha
+              - camera_entity: camera.takapiha
+            live:
+              preload: true
+            performance:
+              profile: high
+            menu:
+              style: outside
+              buttons:
+                recordings:
+                  enabled: true
+                expand:
+                  enabled: true
+  - title: Autotalli
+    path: autotalli
+    icon: mdi:car
+    theme: kibibit-dark-cards
+    type: custom:vertical-layout
+    badges: []
+    cards:
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: entity
+            entity: person.toni
+            name: Takaisin
+            icon: mdi:arrow-left-bold
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/0
+            content_info: name
+          - type: entity
+            entity: lock.etuovi
+            content_info: state
+            icon_color: green
+          - type: weather
+            entity: weather.forecast_koti
+            show_conditions: true
+            show_temperature: true
+        alignment: center
+      - type: picture-elements
+        view_layout:
+          column: 1
+        elements:
+          - type: custom:config-template-card
+            entities:
+              - sensor.p1s_01p00a391700380_ams_1_tray_1
+            element:
+              type: state-icon
+              entity: sensor.p1s_01p00a391700380_ams_1_tray_1
+              icon: >-
+                ${states['sensor.p1s_01p00a391700380_ams_1_tray_1'].state !=
+                'empty' ? 'fapro:filament-1' : 'mdi:tray' }
+            style:
+              top: 28%
+              left: 21.4%
+              '--paper-item-icon-color': var(--tray_1_color)
+              background-color: rgba(0,0,0,0.5)
+              box-shadow: 0 0 5px 5px var(--tray_1_bg)
+              border-radius: 50px
+              '--mdc-icon-size': 2.4em
+          - type: state-label
+            entity: sensor.p1s_01p00a391700380_ams_1_tray_1
+            attribute: type
+            tap_action:
+              action: none
+            style:
+              top: 77%
+              left: 21%
+              text-align: center
+              font-size: 1em
+              background-color: rgba(0,0,0,0.4)
+              box-shadow: 0 0 5px 5px rgba(0, 0, 0, 0.4)
+              border-radius: 50px
+              pointer-events: none
+              color: '#FFFFFF'
+          - type: custom:config-template-card
+            entities:
+              - sensor.p1s_01p00a391700380_ams_1_tray_2
+            element:
+              type: state-icon
+              entity: sensor.p1s_01p00a391700380_ams_1_tray_2
+              icon: >-
+                ${states['sensor.p1s_01p00a391700380_ams_1_tray_2'].state !=
+                'empty' ? 'fapro:filament-1' : 'mdi:tray' }
+            style:
+              top: 28%
+              left: 39.7%
+              '--paper-item-icon-color': var(--tray_2_color)
+              background-color: rgba(0,0,0,0.5)
+              box-shadow: 0 0 5px 5px  var(--tray_2_bg)
+              border-radius: 50px
+              '--mdc-icon-size': 2.4em
+          - type: state-label
+            entity: sensor.p1s_01p00a391700380_ams_1_tray_2
+            attribute: type
+            tap_action:
+              action: none
+            style:
+              top: 77%
+              left: 40%
+              text-align: center
+              font-size: 1em
+              background-color: rgba(0,0,0,0.4)
+              box-shadow: 0 0 5px 5px rgba(0, 0, 0, 0.4)
+              border-radius: 50px
+              pointer-events: none
+              color: '#FFFFFF'
+          - type: custom:config-template-card
+            entities:
+              - sensor.p1s_01p00a391700380_ams_1_tray_3
+            element:
+              type: state-icon
+              entity: sensor.p1s_01p00a391700380_ams_1_tray_3
+              icon: >-
+                ${states['sensor.p1s_01p00a391700380_ams_1_tray_3'].state !=
+                'empty' ? 'fapro:filament-1' : 'mdi:tray' }
+            style:
+              top: 28%
+              left: 59.7%
+              '--paper-item-icon-color': var(--tray_3_color)
+              background-color: rgba(0,0,0,0.5)
+              box-shadow: 0 0 5px 5px  var(--tray_3_bg)
+              border-radius: 50px
+              '--mdc-icon-size': 2.4em
+          - type: state-label
+            entity: sensor.p1s_01p00a391700380_ams_1_tray_3
+            attribute: type
+            tap_action:
+              action: none
+            style:
+              top: 77%
+              left: 60%
+              text-align: center
+              font-size: 1em
+              background-color: rgba(0,0,0,0.4)
+              box-shadow: 0 0 5px 5px rgba(0, 0, 0, 0.4)
+              border-radius: 50px
+              pointer-events: none
+              color: '#FFFFFF'
+          - type: custom:config-template-card
+            entities:
+              - sensor.p1s_01p00a391700380_ams_1_tray_4
+            element:
+              type: state-icon
+              entity: sensor.p1s_01p00a391700380_ams_1_tray_4
+              icon: >-
+                ${states['sensor.p1s_01p00a391700380_ams_1_tray_4'].state !=
+                'empty' ? 'fapro:filament-1' : 'mdi:tray' }
+            style:
+              top: 28%
+              left: 79.6%
+              '--paper-item-icon-color': var(--tray_4_color)
+              background-color: rgba(0,0,0,0.5)
+              box-shadow: 0 0 5px 5px var(--tray_4_bg)
+              border-radius: 50px
+              '--mdc-icon-size': 2.4em
+          - type: state-label
+            entity: sensor.p1s_01p00a391700380_ams_1_tray_4
+            attribute: type
+            tap_action:
+              action: none
+            style:
+              top: 77%
+              left: 79.6%
+              text-align: center
+              font-size: 1em
+              background-color: rgba(0,0,0,0.4)
+              box-shadow: 0 0 5px 5px rgba(0, 0, 0, 0.4)
+              border-radius: 50px
+              pointer-events: none
+              color: '#FFFFFF'
+          - type: conditional
+            conditions:
+              - entity: sensor.p1s_01p00a391700380_print_status
+                state_not: offline
+            elements:
+              - type: conditional
+                conditions:
+                  - entity: sensor.p1s_01p00a391700380_ams_1_ams_temperature
+                    state_not:
+                      - unavailable
+                      - unknown
+                elements:
+                  - entity: sensor.p1s_01p00a391700380_ams_1_ams_temperature
+                    type: state-badge
+                    style:
+                      top: 50.75%
+                      left: 8%
+                      font-size: 0.75em
+                      color: rgba(0,0,0,0)
+              - type: custom:config-template-card
+                entities:
+                  - sensor.p1s_01p00a391700380_ams_1_humidity_index
+                element:
+                  type: state-icon
+                  entity: sensor.p1s_01p00a391700380_ams_1_humidity_index
+                  icon: >-
+                    ${'fapro:humidity-index-' +
+                    states['sensor.p1s_01p00a391700380_ams_1_humidity_index'].state
+                    + '#fullcolor'}
+                style:
+                  top: 38.5%
+                  left: 92.5%
+                  background-color: var(--label-badge-background-color,#fff)
+                  border-radius: 50px
+                  border: 0.12em solid var(--humidity-border-color)
+                  '--mdc-icon-size': 2.05em
+        image: /local/media/bambuprinter/AMS_2.png
+        card_mod:
+          style: |
+            ha-card {
+              background: none !important;
+              border: none !important;
+              box-shadow: none !important;
+              --humidity-border-color: {% if states('sensor.p1s_01p00a391700380_ams_1_humidity_index')  != 'unavailable' and states('sensor.p1s_01p00a391700380_ams_1_humidity_index') | int > 3 %} rgba(255, 255, 126, 0.5); {% elif states('sensor.p1s_01p00a391700380_ams_1_humidity_index')  != 'unavailable' and states('sensor.p1s_01p00a391700380_ams_1_humidity_index') | int > 1 %} rgba(228,127,97,1.0); {% else %} rgba(194,74,72,1.0); {% endif %}
+              --tray_1_color: {{state_attr('sensor.p1s_01p00a391700380_ams_1_tray_1', 'color') }};
+              --tray_2_color: {{state_attr('sensor.p1s_01p00a391700380_ams_1_tray_2', 'color') }};
+              --tray_3_color: {{state_attr('sensor.p1s_01p00a391700380_ams_1_tray_3', 'color') }};
+              --tray_4_color: {{state_attr('sensor.p1s_01p00a391700380_ams_1_tray_4', 'color') }};
+              --tray_1_bg: {% if is_state_attr('sensor.p1s_01p00a391700380_ams_1_tray_1', 'active', true) %} rgba(255, 255, 126, 0.5); {% else %} rgba(0,0,0,0.5); {% endif %}
+              --tray_2_bg: {% if is_state_attr('sensor.p1s_01p00a391700380_ams_1_tray_2', 'active', true) %} rgba(255, 255, 126, 0.5); {% else %} rgba(0,0,0,0.5); {% endif %}
+              --tray_3_bg: {% if is_state_attr('sensor.p1s_01p00a391700380_ams_1_tray_3', 'active', true) %} rgba(255, 255, 126, 0.5); {% else %} rgba(0,0,0,0.5); {% endif %}
+              --tray_4_bg: {% if is_state_attr('sensor.p1s_01p00a391700380_ams_1_tray_4', 'active', true) %} rgba(255, 255, 126, 0.5); {% else %} rgba(0,0,0,0.5); {% endif %}
+            }
+      - type: custom:layout-card
+        layout_type: custom:horizontal-layout
+        cards:
+          - type: picture-elements
+            view_layout:
+              column: 1
+            elements:
+              - type: conditional
+                conditions:
+                  - entity: sensor.p1s_01p00a391700380_print_status
+                    state_not: offline
+                elements:
+                  - entity: light.p1s_01p00a391700380_chamber_light
+                    type: state-icon
+                    style:
+                      top: 46%
+                      left: 18%
+                      '--mdc-icon-size': 2.6em
+                    tap_action:
+                      action: toggle
+                  - entity: sensor.p1s_01p00a391700380_print_status
+                    type: state-label
+                    style:
+                      top: 6.5%
+                      left: 23.69%
+                      font-size: 1em
+                      color: '#FFFFFF'
+                  - type: conditional
+                    conditions:
+                      - entity: sensor.p1s_01p00a391700380_print_status
+                        state:
+                          - running
+                          - pause
+                    elements:
+                      - type: conditional
+                        conditions:
+                          - entity: image.p1s_01p00a391700380_cover_image
+                            state_not:
+                              - unavailable
+                              - unknown
+                        elements:
+                          - type: custom:hui-element
+                            card_type: picture-entity
+                            show_name: false
+                            show_state: false
+                            entity: image.p1s_01p00a391700380_cover_image
+                            style:
+                              top: 50%
+                              left: 50%
+                              transform: translate(-45%, -40%) scale(75%, 75%)
+                              '--ha-card-border-width': 0px
+                              '--ha-card-background': none
+                      - entity: sensor.p1s_01p00a391700380_print_progress
+                        type: state-badge
+                        tap_action:
+                          action: none
+                        style:
+                          top: 18.5%
+                          left: 81%
+                          font-size: 1em
+                          color: rgba(0,0,0,0)
+                          '--label-badge-red': '#11739D'
+                  - entity: sensor.p1s_01p00a391700380_nozzle_temperature
+                    type: state-badge
+                    style:
+                      top: 31%
+                      left: 51%
+                      font-size: 0.8em
+                      color: rgba(0,0,0,0)
+                  - entity: sensor.p1s_01p00a391700380_bed_temperature
+                    type: state-badge
+                    style:
+                      top: 78%
+                      left: 51%
+                      font-size: 0.8em
+                      color: rgba(0,0,0,0)
+                  - type: conditional
+                    conditions:
+                      - entity: sensor.p1s_01p00a391700380_chamber_temperature
+                        state_not:
+                          - unavailable
+                          - unknown
+                    elements:
+                      - entity: sensor.p1s_01p00a391700380_chamber_temperature
+                        type: state-badge
+                        style:
+                          font-size: 0.8em
+                          top: 31%
+                          left: 19%
+                          color: rgba(0,0,0,0)
+            card_mod:
+              style: |
+                ha-card {
+                  box-shadow: none !important;
+                  background: none !important;
+                  border: none !important;
+                }
+            image: /local/media/bambuprinter/on_p1s.png
+            entity: light.p1s_01p00a391700380_chamber_light
+            state_image:
+              unavailable: /local/media/bambuprinter/off_p1s.png
+              'on': /local/media/bambuprinter/on_p1s.png
+              'off': /local/media/bambuprinter/off_p1s.png
+        layout:
+          max_cols: 3
+      - type: vertical-stack
+        view_layout:
+          column: 3
+        cards:
+          - type: horizontal-stack
+            cards:
+              - type: custom:button-card
+                show_name: false
+                show_icon: true
+                tap_action:
+                  action: toggle
+                entity: switch.remove_me
+                icon: mdi:printer-3d
+                state:
+                  - value: 'on'
+                    icon: mdi:power
+                    color: green
+                  - value: 'off'
+                    icon: mdi:power
+                    color: grey
+                aspect_ratio: 2
+                card_mod:
+                  style: |
+                    ha-card {
+                      box-shadow: none !important;
+                      background: rgba(0,0,0,0);
+                      border: none;
+                    }
+              - type: custom:mushroom-title-card
+                title: Bambulab P1S + AMS
+                alignment: center
+              - type: custom:gap-card
+          - type: custom:gap-card
+            height: 25
+          - type: custom:hui-element
+            card_type: horizontal-stack
+            cards:
+              - type: custom:hui-element
+                card_type: button
+                entity: select.p1s_01p00a391700380_printing_speed
+                name: Silent
+                icon: mdi:speedometer-slow
+                tap_action:
+                  action: call-service
+                  service: select.select_option
+                  data:
+                    option: silent
+                  target:
+                    entity_id: select.p1s_01p00a391700380_printing_speed
+                card_mod:
+                  style: |
+                    ha-card {
+                      box-shadow: none !important;
+                      background-color: rgba(0,0,0,0);
+                      border: none;
+                      --pbs-button-color: {% if is_state('select.p1s_01p00a391700380_printing_speed', 'silent') %} yellow; {% else %} grey; {% endif %}
+                      --paper-item-icon-color: {% if is_state('select.p1s_01p00a391700380_printing_speed', 'silent') %} yellow; {% else %} grey; {% endif %}
+                    }
+              - type: custom:hui-element
+                card_type: button
+                entity: select.p1s_01p00a391700380_printing_speed
+                name: Standard
+                icon: mdi:speedometer-medium
+                tap_action:
+                  action: call-service
+                  service: select.select_option
+                  data:
+                    option: standard
+                  target:
+                    entity_id: select.p1s_01p00a391700380_printing_speed
+                card_mod:
+                  style: |
+                    ha-card {
+                      box-shadow: none !important;
+                      background-color: rgba(0,0,0,0);
+                      border: none;
+                      --paper-item-icon-color: {% if is_state('select.p1s_01p00a391700380_printing_speed', 'standard') %} yellow; {% else %} grey; {% endif %}
+                    }
+              - type: custom:hui-element
+                card_type: button
+                entity: select.p1s_01p00a391700380_printing_speed
+                name: Sport
+                icon: mdi:speedometer
+                tap_action:
+                  action: call-service
+                  service: select.select_option
+                  data:
+                    option: sport
+                  target:
+                    entity_id: select.p1s_01p00a391700380_printing_speed
+                card_mod:
+                  style: |
+                    ha-card {
+                      box-shadow: none !important;
+                      background-color: rgba(0,0,0,0);
+                      border: none;
+                      --paper-item-icon-color: {% if is_state('select.p1s_01p00a391700380_printing_speed', 'sport') %} yellow; {% else %} grey; {% endif %}
+                    }
+              - type: custom:hui-element
+                card_type: button
+                entity: select.p1s_01p00a391700380_printing_speed
+                name: Ludicrous
+                icon: mdi:speedometer
+                tap_action:
+                  action: call-service
+                  service: select.select_option
+                  data:
+                    option: ludicrous
+                  target:
+                    entity_id: select.p1s_01p00a391700380_printing_speed
+                card_mod:
+                  style: |
+                    ha-card {
+                      box-shadow: none !important;
+                      background-color: rgba(0,0,0,0);
+                      border: none;
+                      --paper-item-icon-color: {% if is_state('select.p1s_01p00a391700380_printing_speed', 'ludicrous') %} yellow; {% else %} grey; {% endif %}
+                    }
+          - type: custom:gap-card
+            height: 25
+          - type: custom:hui-element
+            card_type: horizontal-stack
+            cards:
+              - type: custom:button-card
+                variables:
+                  pause_entity: button.p1s_01p00a391700380_pause_printing
+                  start_entity: button.p1s_01p00a391700380_resume_printing
+                entity: sensor.p1s_01p00a391700380_print_status
+                name: |
+                  [[[  if (entity.state == 'running') return "Pause";
+                   else if (entity.state =='pause') return "Resume";
+                  else return '';  ]]]
+                state:
+                  - value: running
+                    icon: mdi:pause
+                    color: orange
+                  - value: pause
+                    icon: mdi:play
+                    color: orange
+                  - value: offline
+                    icon: mdi:void
+                    color: grey
+                  - value: idle
+                    icon: mdi:void
+                    color: grey
+                  - value: failed
+                    icon: mdi:void
+                    color: grey
+                  - value: finish
+                    icon: mdi:void
+                    color: grey
+                  - value: prepare
+                    icon: mdi:void
+                    color: grey
+                tap_action:
+                  action: >
+                    [[[ if (entity.state == 'running' || entity.state ==
+                    'pause') return "call-service"; 
+
+                    else return "none";
+
+                    ]]]
+                  service: button.press
+                  service_data:
+                    entity_id: >
+                      [[[ if
+                      (states['sensor.p1s_01p00a391700380_print_status'].state
+                      == 'running') 
+                          return variables.pause_entity; 
+                          if (states['sensor.p1s_01p00a391700380_print_status'].state == 'pause') 
+                          return variables.start_entity; 
+                        else return "";
+                        ]]]
+                card_mod:
+                  style: |
+                    ha-card {
+                      box-shadow: none !important;
+                      background-color: rgba(0,0,0,0);
+                      border: none;
+                      --paper-item-icon-color: {% if is_state('sensor.p1s_01p00a391700380_print_status', 'running') or is_state('sensor.p1s_01p00a391700380_print_status', 'pause') %} orange; {% else %} grey; {% endif %}            
+                    }
+              - type: custom:gap-card
+              - type: custom:button-card
+                entity: sensor.p1s_01p00a391700380_print_status
+                name: |
+                  [[[  if (entity.state == 'running') return "Cancel";
+                   else if (entity.state =='pause') return "Cancel";
+                  else return '';  ]]]
+                confirmation:
+                  text: Cancel Print?
+                state:
+                  - value: running
+                    icon: mdi:cancel
+                    color: red
+                  - value: pause
+                    icon: mdi:cancel
+                    color: red
+                  - value: offline
+                    icon: mdi:void
+                    color: grey
+                  - value: idle
+                    icon: mdi:void
+                    color: grey
+                  - value: failed
+                    icon: mdi:void
+                    color: grey
+                  - value: finish
+                    icon: mdi:void
+                    color: grey
+                  - value: prepare
+                    icon: mdi:void
+                    color: grey
+                tap_action:
+                  action: >
+                    [[[ if (entity.state == 'running' || entity.state ==
+                    'pause') return "call-service";  else return "none"; ]]]
+                  service: button.press
+                  service_data:
+                    entity_id: button.p1s_01p00a391700380_stop_printing
+                card_mod:
+                  style: |
+                    ha-card {
+                      box-shadow: none !important;
+                      background-color: rgba(0,0,0,0);
+                      border: none;
+                      --paper-item-icon-color: {% if is_state('sensor.p1s_01p00a391700380_print_status', 'running') or is_state('sensor.p1s_01p00a391700380_print_status', 'pause') %} red; {% else %} grey; {% endif %}            
+                    }
+          - type: custom:mushroom-title-card
+            title: ''
+            subtitle: Print Details
+            alignment: center
+          - type: horizontal-stack
+            cards:
+              - type: custom:mushroom-entity-card
+                entity: sensor.p1s_01p00a391700380_print_progress
+                name: Progress
+              - type: custom:mushroom-template-card
+                primary: Layer
+                icon_color: var(--rgb-state-entity)
+                secondary: >-
+                  {{states('sensor.p1s_01p00a391700380_current_layer')}} /
+                  {{states('sensor.p1s_01p00a391700380_total_layer_count')}}
+                icon: mdi:layers
+          - type: vertical-stack
+            cards:
+              - type: entities
+                entities:
+                  - entity: sensor.p1s_01p00a391700380_current_stage
+                    name: Stage
+                  - entity: binary_sensor.p1s_01p00a391700380_hms_errors
+                    name: HMS Notifications
+                  - entity: sensor.p1s_01p00a391700380_start_time
+                    name: Start Time
+                    attribute: start_time
+                  - entity: sensor.p1s_01p00a391700380_end_time
+                    name: End Time
+                    attribute: end_time
+                  - entity: sensor.p1s_01p00a391700380_remaining_time
+                    name: Remaining Time
+      - type: thermostat
+        entity: climate.lapivirtauslammitin_wi_fi
+      - type: custom:apexcharts-card
+        experimental:
+          color_threshold: true
+        graph_span: 12h
+        show:
+          last_updated: false
+        header:
+          standard_format: false
+          show: true
+          show_states: true
+          colorize_states: true
+          title: Autotalli
+        series:
+          - entity: sensor.anturi_autotalli_temperature
+            name: Lämpötila
+            yaxis_id: temp
+            type: line
+            group_by:
+              func: last
+              duration: 15m
+            stroke_width: 5
+            show:
+              extremas: true
+              header_color_threshold: true
+            color_threshold:
+              - value: 16
+                color: steelblue
+              - value: 18
+                color: midnightblue
+              - value: 20
+                color: orange
+              - value: 21
+                color: orangered
+              - value: 23
+                color: red
+          - entity: sensor.anturi_autotalli_humidity
+            name: Kosteus
+            yaxis_id: humid
+            type: line
+            group_by:
+              func: last
+              duration: 15m
+            stroke_width: 5
+            show:
+              extremas: true
+              header_color_threshold: true
+              in_chart: true
+            color_threshold:
+              - value: 20
+                color: steelblue
+              - value: 35
+                color: midnightblue
+              - value: 50
+                color: deepblue
+        yaxis:
+          - id: temp
+            max: '|+5|'
+            min: '|-5|'
+            opposite: false
+            decimals: 0
+          - id: humid
+            max: '|+5|'
+            min: '|-5|'
+            opposite: true
+            decimals: 0
+  - title: Sää
+    path: saa
+    icon: mdi:weather-lightning-rainy
+    cards:
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: entity
+            entity: person.toni
+            tap_action:
+              action: navigate
+              navigation_path: /lovelace-puhelin/0
+            icon: mdi:arrow-left-bold
+            content_info: name
+            name: Takaisin
+          - type: entity
+            entity: lock.etuovi
+            content_info: state
+            icon_color: green
+          - type: weather
+            entity: weather.forecast_koti
+            show_conditions: true
+            show_temperature: true
+        alignment: center
+      - type: custom:fmi-radar
+        station_id: '101130'
+        speed_ms: '1200'
+        time_horizontal_pos: oikea
+        time_vertical_pos: ylä
+        time_font_weight: 400
+        time_font_size: 1.5
+        time_font_color: black
+        time_prefix: klo.
