@@ -66,206 +66,270 @@ The dashboard provides:
 
 ### Step 1: Create Helper Entities
 
-Add these to your `configuration.yaml`:
+**For separated configuration files**, create the following files in your Home Assistant config directory:
+
+#### Option A: Separated Files (Recommended)
+
+Create these files:
+- `input_boolean.yaml`
+- `input_number.yaml`
+- `input_datetime.yaml`
+- `template.yaml` (or `sensor.yaml` if using legacy format)
+- `binary_sensor.yaml`
+- `script.yaml`
+
+Then add to your `configuration.yaml`:
+
+```yaml
+# Include separate configuration files
+input_boolean: !include input_boolean.yaml
+input_number: !include input_number.yaml
+input_datetime: !include input_datetime.yaml
+template: !include template.yaml
+binary_sensor: !include binary_sensor.yaml
+script: !include script.yaml
+```
+
+#### Option B: Single configuration.yaml
+
+If you prefer a single file, skip to the YAML sections below and add them to your `configuration.yaml`.
+
+---
+
+### Step 2: Helper Entity Files
+
+#### 📄 `input_boolean.yaml`
 
 ```yaml
 # ============================================
 # POWER MANAGEMENT HELPER ENTITIES
 # ============================================
 
-input_boolean:
-  # System Controls
-  power_management_enabled:
-    name: Power Management Enabled
-    icon: mdi:shield-check
-    initial: true
-  
-  peak_limiter_enabled:
-    name: Peak Power Limiter Enabled
-    icon: mdi:chart-bell-curve
-    initial: true
-  
-  price_optimizer_enabled:
-    name: Price Optimizer Enabled
-    icon: mdi:cash-multiple
-    initial: true
-  
-  load_balancer_manual_mode:
-    name: Manual Override Mode
-    icon: mdi:hand-back-right
-    initial: false
-  
-  quiet_hours_enabled:
-    name: Quiet Hours (No Notifications)
-    icon: mdi:bell-sleep
-    initial: false
+# System Controls
+power_management_enabled:
+  name: Power Management Enabled
+  icon: mdi:shield-check
+  initial: true
+
+peak_limiter_enabled:
+  name: Peak Power Limiter Enabled
+  icon: mdi:chart-bell-curve
+  initial: true
+
+price_optimizer_enabled:
+  name: Price Optimizer Enabled
+  icon: mdi:cash-multiple
+  initial: true
+
+load_balancer_manual_mode:
+  name: Manual Override Mode
+  icon: mdi:hand-back-right
+  initial: false
+
+quiet_hours_enabled:
+  name: Quiet Hours (No Notifications)
+  icon: mdi:bell-sleep
+  initial: false
+```
+
+---
+
+#### 📄 `input_number.yaml`
+
+```yaml
+# ============================================
+# POWER MANAGEMENT NUMBER INPUTS
+# ============================================
 
 input_number:
-  # Peak Power Settings
-  peak_power_threshold:
-    name: Peak Power Threshold
-    min: 6
-    max: 12
-    step: 0.5
-    unit_of_measurement: kW
-    icon: mdi:flash
-    initial: 8.0
-  
-  peak_warning_level:
-    name: Peak Warning Level
-    min: 5
-    max: 10
-    step: 0.5
-    unit_of_measurement: kW
-    icon: mdi:alert
-    initial: 7.5
-  
-  peak_caution_level:
-    name: Peak Caution Level
-    min: 5
-    max: 9
-    step: 0.5
-    unit_of_measurement: kW
-    icon: mdi:information
-    initial: 7.0
-  
-  # Temperature Settings (Already exist, included for reference)
-  yllapitolampo:
-    name: Eco Temperature
-    min: 15
-    max: 23
-    step: 0.5
-    unit_of_measurement: °C
-    icon: mdi:thermometer-low
-  
-  normaalilampo_presence:
-    name: Normal Temperature
-    min: 18
-    max: 25
-    step: 0.5
-    unit_of_measurement: °C
-    icon: mdi:thermometer
-  
-  tehostuslampo:
-    name: Boost Temperature
-    min: 20
-    max: 27
-    step: 0.5
-    unit_of_measurement: °C
-    icon: mdi:thermometer-high
-  
-  # Price Rank Slider (Already exists)
-  shf_rank_slider:
-    name: Boiler Price Rank Threshold
-    min: 1
-    max: 24
-    step: 1
-    icon: mdi:cash-clock
-  
-  # Notification Settings
-  notification_rate_limit_emergency:
-    name: Emergency Alert Interval
-    min: 1
-    max: 60
-    step: 1
-    unit_of_measurement: min
-    icon: mdi:alarm-light
-    initial: 5
-  
-  notification_rate_limit_warning:
-    name: Warning Alert Interval
-    min: 5
-    max: 120
-    step: 5
-    unit_of_measurement: min
-    icon: mdi:alarm
-    initial: 15
-
-input_datetime:
-  quiet_hours_start:
-    name: Quiet Hours Start
-    has_time: true
-    has_date: false
-    initial: "22:00"
-  
-  quiet_hours_end:
-    name: Quiet Hours End
-    has_time: true
-    has_date: false
-    initial: "07:00"
-
 # ============================================
-# TEMPLATE SENSORS FOR DASHBOARD
+# POWER MANAGEMENT NUMBER INPUTS
 # ============================================
 
-template:
-  - sensor:
-      # Current Total Power (A+B+C)
-      - name: "Total Power Consumption"
-        unique_id: total_power_consumption
-        unit_of_measurement: "kW"
-        device_class: power
-        state_class: measurement
-        state: >
-          {% set a = states('sensor.shellyem3_channel_a_power') | float(0) %}
-          {% set b = states('sensor.shellyem3_channel_b_power') | float(0) %}
-          {% set c = states('sensor.shellyem3_channel_c_power') | float(0) %}
-          {{ ((a + b + c) / 1000) | round(2) }}
-        icon: mdi:flash
-      
-      # 60-Minute Rolling Average (from Node-RED flow context)
-      - name: "Power 60min Average"
-        unique_id: power_60min_average
-        unit_of_measurement: "kW"
-        device_class: power
-        state_class: measurement
-        state: >
-          {{ states('sensor.nodered_60min_avg') | float(0) | round(2) }}
-        icon: mdi:chart-line
-        attributes:
-          buffer_size: "{{ state_attr('sensor.nodered_60min_avg', 'buffer_size') }}"
-          predicted_peak: "{{ state_attr('sensor.nodered_60min_avg', 'predicted_peak') }}"
-      
-      # Monthly Peak Power
-      - name: "Monthly Peak Power"
-        unique_id: monthly_peak_power
-        unit_of_measurement: "kW"
-        device_class: power
-        state: >
-          {{ states('sensor.nodered_monthly_peak') | float(0) | round(2) }}
-        icon: mdi:chart-bell-curve-cumulative
-        attributes:
-          timestamp: "{{ state_attr('sensor.nodered_monthly_peak', 'timestamp') }}"
-          over_threshold: >
-            {% set peak = states('sensor.nodered_monthly_peak') | float(0) %}
-            {% set threshold = states('input_number.peak_power_threshold') | float(8) %}
-            {{ (peak - threshold) | round(2) if peak > threshold else 0 }}
-      
-      # Monthly Power Fee
-      - name: "Monthly Power Fee"
-        unique_id: monthly_power_fee
-        unit_of_measurement: "€"
-        device_class: monetary
-        state: >
+# Peak Power Settings
+peak_power_threshold:
+  name: Peak Power Threshold
+  min: 6
+  max: 12
+  step: 0.5
+  unit_of_measurement: kW
+  icon: mdi:flash
+  initial: 8.0
+
+peak_warning_level:
+  name: Peak Warning Level
+  min: 5
+  max: 10
+  step: 0.5
+  unit_of_measurement: kW
+  icon: mdi:alert
+  initial: 7.5
+
+peak_caution_level:
+  name: Peak Caution Level
+  min: 5
+  max: 9
+  step: 0.5
+  unit_of_measurement: kW
+  icon: mdi:information
+  initial: 7.0
+
+# Temperature Settings (Already exist, included for reference)
+yllapitolampo:
+  name: Eco Temperature
+  min: 15
+  max: 23
+  step: 0.5
+  unit_of_measurement: °C
+  icon: mdi:thermometer-low
+
+normaalilampo_presence:
+  name: Normal Temperature
+  min: 18
+  max: 25
+  step: 0.5
+  unit_of_measurement: °C
+  icon: mdi:thermometer
+
+tehostuslampo:
+  name: Boost Temperature
+  min: 20
+  max: 27
+  step: 0.5
+  unit_of_measurement: °C
+  icon: mdi:thermometer-high
+
+# Price Rank Slider (Already exists)
+shf_rank_slider:
+  name: Boiler Price Rank Threshold
+  min: 1
+  max: 24
+  step: 1
+  icon: mdi:cash-clock
+
+# Notification Settings
+notification_rate_limit_emergency:
+  name: Emergency Alert Interval
+  min: 1
+  max: 60
+  step: 1
+  unit_of_measurement: min
+  icon: mdi:alarm-light
+  initial: 5
+
+notification_rate_limit_warning:
+  name: Warning Alert Interval
+  min: 5
+  max: 120
+  step: 5
+  unit_of_measurement: min
+  icon: mdi:alarm
+  initial: 15
+```
+
+---
+
+#### 📄 `input_datetime.yaml`
+
+```yaml
+# ============================================
+# POWER MANAGEMENT TIME INPUTS
+# ============================================
+
+quiet_hours_start:
+  name: Quiet Hours Start
+  has_time: true
+  has_date: false
+  initial: "22:00"
+
+quiet_hours_end:
+  name: Quiet Hours End
+  has_time: true
+  has_date: false
+  initial: "07:00"
+```
+
+---
+
+#### 📄 `template.yaml`
+
+```yaml
+# ============================================
+# POWER MANAGEMENT TEMPLATE SENSORS
+# ============================================
+
+- sensor:
+# ============================================
+# POWER MANAGEMENT TEMPLATE SENSORS
+# ============================================
+
+- sensor:
+    # Current Total Power (A+B+C)
+    - name: "Total Power Consumption"
+      unique_id: total_power_consumption
+      unit_of_measurement: "kW"
+      device_class: power
+      state_class: measurement
+      state: >
+        {% set a = states('sensor.shellyem3_channel_a_power') | float(0) %}
+        {% set b = states('sensor.shellyem3_channel_b_power') | float(0) %}
+        {% set c = states('sensor.shellyem3_channel_c_power') | float(0) %}
+        {{ ((a + b + c) / 1000) | round(2) }}
+      icon: mdi:flash
+    
+    # 60-Minute Rolling Average (from Node-RED flow context)
+    - name: "Power 60min Average"
+      unique_id: power_60min_average
+      unit_of_measurement: "kW"
+      device_class: power
+      state_class: measurement
+      state: >
+        {{ states('sensor.nodered_60min_avg') | float(0) | round(2) }}
+      icon: mdi:chart-line
+      attributes:
+        buffer_size: "{{ state_attr('sensor.nodered_60min_avg', 'buffer_size') }}"
+        predicted_peak: "{{ state_attr('sensor.nodered_60min_avg', 'predicted_peak') }}"
+    
+    # Monthly Peak Power
+    - name: "Monthly Peak Power"
+      unique_id: monthly_peak_power
+      unit_of_measurement: "kW"
+      device_class: power
+      state: >
+        {{ states('sensor.nodered_monthly_peak') | float(0) | round(2) }}
+      icon: mdi:chart-bell-curve-cumulative
+      attributes:
+        timestamp: "{{ state_attr('sensor.nodered_monthly_peak', 'timestamp') }}"
+        over_threshold: >
           {% set peak = states('sensor.nodered_monthly_peak') | float(0) %}
           {% set threshold = states('input_number.peak_power_threshold') | float(8) %}
-          {% set rate = 2.0 %}
-          {{ ((peak - threshold) * rate) | round(2) if peak > threshold else 0 }}
-        icon: mdi:currency-eur
-      
-      # Monthly Savings
-      - name: "Monthly Power Savings"
-        unique_id: monthly_power_savings
-        unit_of_measurement: "€"
-        device_class: monetary
-        state: >
-          {{ states('sensor.nodered_saved_euros') | float(0) | round(2) }}
-        icon: mdi:piggy-bank
-      
-      # System Status
-      - name: "Power Management Status"
-        unique_id: power_management_status
-        state: >
+          {{ (peak - threshold) | round(2) if peak > threshold else 0 }}
+    
+    # Monthly Power Fee
+    - name: "Monthly Power Fee"
+      unique_id: monthly_power_fee
+      unit_of_measurement: "€"
+      device_class: monetary
+      state: >
+        {% set peak = states('sensor.nodered_monthly_peak') | float(0) %}
+        {% set threshold = states('input_number.peak_power_threshold') | float(8) %}
+        {% set rate = 2.0 %}
+        {{ ((peak - threshold) * rate) | round(2) if peak > threshold else 0 }}
+      icon: mdi:currency-eur
+    
+    # Monthly Savings
+    - name: "Monthly Power Savings"
+      unique_id: monthly_power_savings
+      unit_of_measurement: "€"
+      device_class: monetary
+      state: >
+        {{ states('sensor.nodered_saved_euros') | float(0) | round(2) }}
+      icon: mdi:piggy-bank
+    
+    # System Status
+    - name: "Power Management Status"
+      unique_id: power_management_status
+      state: >
           {% if not is_state('input_boolean.power_management_enabled', 'on') %}
             Disabled
           {% elif is_state('binary_sensor.peak_limit_active', 'on') %}
@@ -343,39 +407,46 @@ template:
         unit_of_measurement: "€"
         device_class: monetary
         state: >
-          {% set saved = states('sensor.monthly_power_savings') | float(0) %}
-          {% set fee = states('sensor.monthly_power_fee') | float(0) %}
-          {{ (saved - fee) | round(2) }}
-        icon: mdi:cash-plus
+        {% set saved = states('sensor.monthly_power_savings') | float(0) %}
+        {% set fee = states('sensor.monthly_power_fee') | float(0) %}
+        {{ (saved - fee) | round(2) }}
+      icon: mdi:cash-plus
 
-  - binary_sensor:
-      # Peak Limit Active (from Node-RED flow context)
-      - name: "Peak Limit Active"
-        unique_id: peak_limit_active
-        device_class: running
-        state: >
-          {{ is_state('sensor.nodered_peak_limit_active', 'true') }}
-      
-      # Load Balancer Active
-      - name: "Load Balancer Active"
-        unique_id: load_balancer_active
-        device_class: running
-        state: >
-          {{ states('sensor.total_power_consumption') | float(0) > 14.5 }}
-      
-      # System Health
-      - name: "Power Management Healthy"
-        unique_id: power_management_healthy
-        device_class: problem
-        state: >
-          {% set flows_ok = states('binary_sensor.nodered_flows_active') == 'on' %}
-          {% set sensors_ok = not is_state('sensor.total_power_consumption', 'unavailable') %}
-          {{ flows_ok and sensors_ok }}
+- binary_sensor:
+    # Peak Limit Active (from Node-RED flow context)
+    - name: "Peak Limit Active"
+      unique_id: peak_limit_active
+      device_class: running
+      state: >
+        {{ is_state('sensor.nodered_peak_limit_active', 'true') }}
+    
+    # Load Balancer Active
+    - name: "Load Balancer Active"
+      unique_id: load_balancer_active
+      device_class: running
+      state: >
+        {{ states('sensor.total_power_consumption') | float(0) > 14.5 }}
+    
+    # System Health
+    - name: "Power Management Healthy"
+      unique_id: power_management_healthy
+      device_class: problem
+      state: >
+        {% set flows_ok = states('binary_sensor.nodered_flows_active') == 'on' %}
+        {% set sensors_ok = not is_state('sensor.total_power_consumption', 'unavailable') %}
+        {{ flows_ok and sensors_ok }}
 ```
+
+> **Note:** If using a separate `binary_sensor.yaml` file, copy only the content under `- binary_sensor:` without the header line.
 
 ---
 
-## 📱 Dashboard YAML Configuration
+#### � `script.yaml`
+
+```yaml
+# ============================================
+# POWER MANAGEMENT SCRIPTS
+# ============================================
 
 ### Main Power Management Dashboard
 
@@ -916,11 +987,6 @@ Optional but Recommended:
 
 ---
 
-## 🤖 Automation Scripts
-
-Add these scripts to `scripts.yaml`:
-
-```yaml
 # ============================================
 # POWER MANAGEMENT SCRIPTS
 # ============================================
@@ -993,9 +1059,35 @@ test_telegram_notification:
   icon: mdi:test-tube
 ```
 
+> **Note:** Copy this entire section to your `script.yaml` file.
+
 ---
 
-## 📊 Additional Statistics Dashboard
+### Step 3: Verify Configuration
+
+After creating/updating the files, verify your configuration:
+
+```bash
+# Check configuration
+ha core check
+
+# Or in Home Assistant UI:
+# Developer Tools → YAML → Check Configuration
+```
+
+---
+
+### Step 4: Restart Home Assistant
+
+After all files are created and verified:
+1. Go to **Developer Tools** → **YAML**
+2. Click **Restart** (or use `ha core restart`)
+3. Wait for Home Assistant to fully restart
+4. Verify all entities are created in **Developer Tools** → **States**
+
+---
+
+## 📱 Dashboard YAML Configuration
 
 Create a second view for detailed statistics:
 
