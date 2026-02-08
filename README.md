@@ -13,9 +13,8 @@ A collection of professional Home Assistant automations, integrations, and confi
 A comprehensive 4-flow Node-RED automation system that prevents main fuse burnout, eliminates peak power fees (tehomaksu), optimizes electricity costs, and monitors electrical system health.
 
 #### Key Features:
-- 💰 **270-510€ annual savings** through intelligent power management (up to 550€ with professional charts)
-- 🔒 **Fuse protection** - Priority-based load balancing for high-power devices
-- 📊 **Tehomaksu prevention** - Eliminates peak power fees (50-150€/year savings)
+-  **Fuse protection** - Priority-based load balancing for high-power devices
+- 📊 **Tehomaksu prevention** - Eliminates peak power fees through intelligent monitoring
 - 💡 **Price optimization** - Schedules devices based on Nordpool electricity prices
 - 📈 **Phase monitoring** - Real-time voltage and load monitoring with alerts
 - ⚡ **Power factor tracking** - Device-level efficiency monitoring with 6 professional charts

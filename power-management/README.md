@@ -2,7 +2,7 @@
 
 A complete, production-ready Node-RED automation system for Home Assistant featuring intelligent power management, tehomaksu (peak power fee) elimination, and advanced heating optimization.
 
-**💰 Annual Savings: 150-250€** | **🔋 4 Integrated Flows** | **📊 Professional Dashboard** | **⚡ Real-time Monitoring**
+** 4 Integrated Flows** | **📊 Professional Dashboard** | **⚡ Real-time Monitoring** | **🎛️ Complete Control**
 
 ---
 
@@ -45,9 +45,8 @@ Complete intelligent power management to prevent fuse overload, eliminate peak p
 - **Monitors 60-minute rolling average** - Tracks power consumption continuously
 - **Prevents monthly peak fees** - Keeps consumption under 8 kW threshold
 - **Predictive algorithm** - Forecasts peaks 5/10/15/30 minutes ahead
-- **Saves 50-150€ per year** - Automatic prevention of tehomaksu charges
 - **Intelligent reduction** - Minimal disruption, prioritizes user comfort
-- **Monthly tracking** - Reports peak usage and savings
+- **Monthly tracking** - Reports peak usage trends
 
 ### 3. Price-Based Optimizer
 - **Heat pump control** - 6/12/6 hour temperature optimization based on electricity prices
@@ -107,7 +106,7 @@ Complete Lovelace dashboard for monitoring and controlling the entire system:
 
 ### Power Management Dashboard
 - **Real-time power monitoring** - Live phase power, total consumption, 60-min average
-- **Peak power tracker** - Current month peak, projected fees, savings counter
+- **Peak power tracker** - Current month peak, projected fees, intervention counter
 - **System status cards** - Load balancer state, peak limiter active, optimizer mode
 - **Quick controls** - Override switches, emergency controls, manual mode toggles
 - **Historical graphs** - 24-hour power consumption, peak history, cost trends
@@ -119,8 +118,8 @@ Complete Lovelace dashboard for monitoring and controlling the entire system:
 - **Notification settings** - Alert levels, quiet hours, report frequency
 
 ### Statistics & Reports
-- **Daily summary** - Peak power, interventions, savings
-- **Monthly overview** - Tehomaksu charges, total savings, efficiency metrics
+- **Daily summary** - Peak power, interventions, system health
+- **Monthly overview** - Tehomaksu charges, efficiency metrics
 - **Device runtime** - Usage hours per device, cost breakdown
 - **Optimization score** - System efficiency rating, recommendations
 
@@ -151,7 +150,7 @@ Complete Lovelace dashboard for monitoring and controlling the entire system:
 
 ### Core System (4 Flows)
 1. **priority-load-balancer.json** (10.5 KB) - Fuse protection & device coordination
-2. **peak-power-limiter.json** (15.2 KB) - Tehomaksu elimination (saves 50-150€/year)
+2. **peak-power-limiter.json** (15.2 KB) - Tehomaksu elimination & peak prevention
 3. **price-based-optimizer.json** (8.7 KB) - Daily cost optimization
 4. **phase-monitor-alerts.json** (9.2 KB) - System health monitoring
 
@@ -169,7 +168,7 @@ Complete Lovelace dashboard for monitoring and controlling the entire system:
 - Room-by-room temperature control
 - Eco mode and presence detection
 
-**Total Setup Time:** 90 minutes | **Maintenance:** Zero | **ROI:** Immediate
+**Total Setup Time:** 90 minutes | **Maintenance:** Zero
 
 ---
 
@@ -202,8 +201,8 @@ Recommended:
 ### 3. Expected Results
 ```
 Week 1:  First interventions, system learning
-Month 1: 15-30€ saved, smooth operation
-Year 1:  150-250€ saved, "set and forget"
+Month 1: System optimized, smooth operation
+Year 1:  "Set and forget" automation! 🎉
 ```
 
 ---
@@ -225,7 +224,7 @@ Year 1:  150-250€ saved, "set and forget"
 - **Professional dashboard** - Monitor everything at a glance
 - **Clear notifications** - Know exactly what's happening and why
 - **Configurable sliders** - Adjust settings without coding
-- **Daily/monthly reports** - Track savings automatically
+- **Daily/monthly reports** - Track system performance automatically
 
 ### Production-Ready
 - **All entity IDs configured** - Ready for your system
@@ -244,7 +243,7 @@ A complete Lovelace dashboard provides centralized control and monitoring:
 - **System status** - Visual indicators for all automation systems
 - **Device control** - Quick toggles for sauna, car, boiler, heat pump
 - **Interactive graphs** - 24-hour power consumption with ApexCharts
-- **Financial tracking** - Monthly fees, savings, and interventions
+- **Financial tracking** - Monthly fees and intervention tracking
 - **Configuration controls** - Adjust all thresholds and temperatures
 - **Mobile optimized** - Responsive design for phone and tablet
 - **Professional appearance** - Color-coded status, smooth animations
@@ -300,31 +299,6 @@ A complete Lovelace dashboard provides centralized control and monitoring:
 - **[NODERED_VS_HA.md](NODERED_VS_HA.md)** - Why Node-RED vs YAML
 - **[SUMMARY.md](SUMMARY.md)** - System overview
 - **[FILE_STRUCTURE.md](FILE_STRUCTURE.md)** - Repository navigation
-
----
-
-## 💰 Return on Investment
-
-### Annual Savings Breakdown:
-```
-Tehomaksu Prevention:      100-150€/year
-Price Optimization:         50-100€/year
-Power Factor Optimization:  50-100€/year (with professional charts)
-Avoided Electrician Calls:  50-100€/year (prevented issues)
-Load Shifting Benefits:     20-30€/year (pattern-based optimization)
-────────────────────────────────────────
-Total Value:               270-510€/year
-
-With Professional Charts:   300-550€/year
-
-Investment:
-  Setup Time:              90 minutes (system) + 60 minutes (charts)
-  Cost:                    0€ (free!)
-  Maintenance:             0 hours/month
-  
-ROI: IMMEDIATE! ∞%
-5-Year Savings: 1,500-2,750€
-```
 
 ---
 
@@ -397,10 +371,9 @@ ROI: IMMEDIATE! ∞%
 ### Step 5: Monitor & Enjoy
 ```bash
 Day 1:   Watch it learn your patterns
-Week 1:  First savings visible
-Month 1: 15-30€ saved, smooth operation
-Year 1:  270-510€ total value delivered! 🎉
-         (300-550€ with professional charts)
+Week 1:  First interventions visible
+Month 1: System optimized, smooth operation
+Year 1:  Complete automation achieved! 🎉
 ```
 
 ---
@@ -464,10 +437,9 @@ You now have everything for a **professional-grade power management system**:
 - ✅ 6 professional ApexCharts with power factor monitoring
 - ✅ Complete migration guides for legacy systems
 - ✅ Visual design mockups and patterns
-- ✅ 270-510€ annual value (up to 550€ with charts)
 - ✅ Zero ongoing maintenance
 
-**Time to save money and automate your home!** 🏠⚡💰
+**Time to automate your home!** 🏠⚡
 
 ---
 
