@@ -1,0 +1,590 @@
+# ============================================================================
+# PROFESSIONAL MAGIC MIRROR DASHBOARD - FULL HD (1920x1080)
+# ============================================================================
+# Optimized for hallway information display with Phase 2 power management
+# All content fits in one view without scrolling
+# ============================================================================
+
+kiosk_mode:
+  non_admin_settings:
+    kiosk: true
+    ignore_entity_settings: true
+  entity_settings:
+    - entity:
+        input_boolean.kiosk_mode: 'on'
+      hide_header: true
+    - entity:
+        input_boolean.kiosk_mode: 'off'
+      hide_header: false
+
+views:
+  - title: Home
+    type: sections
+    max_columns: 3
+    cards: []
+    sections:
+      # ========================================================================
+      # LEFT COLUMN - Time, Weather, Camera, Calendar
+      # ========================================================================
+      - type: grid
+        cards:
+          # Clock & Key Info
+          - type: horizontal-stack
+            cards:
+              - type: custom:digital-clock
+                clock_style: digital
+                clock_size: large
+                time_format: HH:mm
+                time_zone: Europe/Helsinki
+                show_seconds: false
+                date_format: DD.MM.YYYY
+                no_background: false
+                face_style: markers
+              - type: vertical-stack
+                cards:
+                  - type: entity
+                    entity: sensor.tesla_model_3_battery
+                    name: Tesla
+                    icon: mdi:car-electric
+                  - type: entity
+                    entity: sensor.aqara_ulko_temperature
+                    name: Ulkolämpö
+                    icon: mdi:thermometer
+          
+          # Weather & Sun/Moon
+          - type: custom:horizon-card
+            title: null
+            moon: true
+            language: fi
+            fields:
+              sunrise: true
+              sunset: true
+              dawn: false
+              noon: false
+              dusk: false
+              moonrise: true
+              moonset: false
+              moon_phase: true
+              time: false
+          
+          # Front Door Camera
+          - type: custom:frigate-card
+            cameras:
+              - camera_entity: camera.qvr_etupiha
+                hide: false
+            view:
+              update_cycle_camera: true
+            live:
+              preload: true
+            performance:
+              profile: high
+          
+          # Calendar
+          - type: custom:atomic-calendar-revive
+            enableModeChange: false
+            entities:
+              - entity: calendar.luca
+                name: Luca
+              - entity: calendar.perhe_kalenteri
+                name: Perhe
+              - entity: calendar.perhejoronen_gmail_com
+                name: Joronen
+            dimFinishedEvents: true
+            disableCalLink: true
+            showDatePerEvent: false
+            showCalendarName: true
+            showMonth: false
+            disableEventLink: true
+            showDescription: false
+            showAllDayHours: false
+            name: Kalenteri
+            maxDaysToShow: 3
+            refreshInterval: 30
+            showDate: true
+            showLoader: false
+            showDeclined: false
+            maxEventCount: 6
+        column_span: 1
+
+      # ========================================================================
+      # CENTER COLUMN - Power Management & Energy
+      # ========================================================================
+      - type: grid
+        cards:
+          # Real-time Power Consumption with Phase Breakdown
+          - type: custom:apexcharts-card
+            header:
+              show: true
+              title: ⚡ Tehonkulutus Reaaliaikaisesti
+              show_states: true
+              colorize_states: true
+            graph_span: 30min
+            span:
+              start: minute
+              offset: -30min
+            now:
+              show: true
+              label: Nyt
+            yaxis:
+              - id: power
+                min: 0
+                max: 18
+                decimals: 1
+                apex_config:
+                  tickAmount: 6
+            apex_config:
+              chart:
+                height: 280
+              stroke:
+                width: 3
+              fill:
+                type: gradient
+                gradient:
+                  shadeIntensity: 0.4
+                  opacityFrom: 0.8
+                  opacityTo: 0.3
+              legend:
+                show: true
+                position: top
+              tooltip:
+                shared: true
+            series:
+              - entity: sensor.total_power_kw
+                name: Kokonaisteho
+                type: area
+                color: '#FF6B6B'
+                stroke_width: 3
+                show:
+                  in_header: true
+                  legend_value: true
+                color_threshold:
+                  - value: 0
+                    color: '#4ECDC4'
+                  - value: 8
+                    color: '#FFE66D'
+                  - value: 12
+                    color: '#FF6B6B'
+                  - value: 15
+                    color: '#FF0000'
+              - entity: sensor.shellyem3_channel_a_power
+                name: Vaihe A
+                type: line
+                stroke_width: 2
+                color: '#95E1D3'
+                opacity: 0.6
+                transform: 'return x / 1000;'
+              - entity: sensor.shellyem3_channel_b_power
+                name: Vaihe B
+                type: line
+                stroke_width: 2
+                color: '#F38181'
+                opacity: 0.6
+                transform: 'return x / 1000;'
+              - entity: sensor.shellyem3_channel_c_power
+                name: Vaihe C
+                type: line
+                stroke_width: 2
+                color: '#AA96DA'
+                opacity: 0.6
+                transform: 'return x / 1000;'
+
+          # Power Gauges - Current State
+          - type: horizontal-stack
+            cards:
+              - type: gauge
+                entity: sensor.total_power_kw
+                name: Teho nyt
+                min: 0
+                max: 17.25
+                needle: true
+                severity:
+                  green: 0
+                  yellow: 8
+                  red: 12
+                segments:
+                  - from: 0
+                    color: '#4ECDC4'
+                  - from: 8
+                    color: '#FFE66D'
+                  - from: 12
+                    color: '#FF6B6B'
+                  - from: 15
+                    color: '#FF0000'
+              - type: gauge
+                entity: sensor.average_power_factor
+                name: Tehokerroin
+                min: 0
+                max: 1
+                needle: true
+                severity:
+                  red: 0
+                  yellow: 0.85
+                  green: 0.95
+              - type: gauge
+                entity: sensor.current_electricity_cost_rate
+                name: Hinta nyt
+                min: 0
+                max: 50
+                needle: true
+                unit: c/kWh
+                severity:
+                  green: 0
+                  yellow: 15
+                  red: 25
+
+          # Electricity Price Chart - 48h with Rank
+          - type: custom:apexcharts-card
+            header:
+              show: true
+              title: 💰 Sähkön hinta 48h
+              show_states: true
+              colorize_states: true
+            graph_span: 48h
+            span:
+              start: hour
+              offset: -2h
+            now:
+              show: true
+              label: Nyt
+            yaxis:
+              - id: price
+                min: 0
+                max: ~50
+                decimals: 1
+              - id: rank
+                opposite: true
+                min: 0
+                max: 24
+                decimals: 0
+            apex_config:
+              chart:
+                height: 260
+              legend:
+                show: true
+                position: top
+              dataLabels:
+                enabled: false
+              stroke:
+                curve: smooth
+              tooltip:
+                shared: true
+                x:
+                  format: 'dd.MM HH:mm'
+            series:
+              - entity: sensor.electricity_total_price_cents
+                name: Kokonaishinta
+                type: column
+                group_by:
+                  func: last
+                  duration: 1h
+                color_threshold:
+                  - value: 0
+                    color: '#4ECDC4'
+                  - value: 12
+                    color: '#95E1D3'
+                  - value: 16
+                    color: '#FFE66D'
+                  - value: 20
+                    color: '#FF9A76'
+                  - value: 25
+                    color: '#FF6B6B'
+                  - value: 35
+                    color: '#FF0000'
+                show:
+                  in_header: true
+                  extremas: time
+              - entity: sensor.sahkon_myyntihinta_c_kwh
+                name: Myynti
+                type: line
+                stroke_width: 2
+                color: '#0066CC'
+                show:
+                  in_header: true
+                  in_chart: false
+              - entity: sensor.sahko_siirtohinta
+                name: Siirto
+                type: line
+                stroke_width: 2
+                color: '#00CC66'
+                show:
+                  in_header: true
+                  in_chart: false
+              - entity: sensor.nordpool_kwh_fi_eur_4_10_0
+                name: Tuntiarvo
+                yaxis_id: rank
+                type: line
+                stroke_width: 2
+                color: '#AA96DA'
+                curve: stepline
+                attribute: rank
+                show:
+                  in_header: false
+                  legend_value: false
+
+          # Daily & Monthly Consumption
+          - type: horizontal-stack
+            cards:
+              - type: gauge
+                entity: sensor.talon_kokonaiskulutus_paiva_kwh
+                name: Päivä
+                min: 0
+                max: 120
+                needle: true
+                segments:
+                  - from: 0
+                    color: '#4ECDC4'
+                  - from: 40
+                    color: '#95E1D3'
+                  - from: 60
+                    color: '#FFE66D'
+                  - from: 80
+                    color: '#FF9A76'
+                  - from: 100
+                    color: '#FF6B6B'
+              - type: gauge
+                entity: sensor.sahko_hinnan_korjaus_kuukausi
+                name: Kuukausi
+                min: 0
+                max: 500
+                needle: true
+                unit: '€'
+                segments:
+                  - from: 0
+                    color: '#4ECDC4'
+                  - from: 200
+                    color: '#95E1D3'
+                  - from: 300
+                    color: '#FFE66D'
+                  - from: 400
+                    color: '#FF9A76'
+                  - from: 450
+                    color: '#FF6B6B'
+        column_span: 1
+
+      # ========================================================================
+      # RIGHT COLUMN - Heating Control, Temperatures, Device Status
+      # ========================================================================
+      - type: grid
+        cards:
+          # Phase 2 Radiator Control Dashboard
+          - type: markdown
+            content: |
+              ## 🏠 Lämmityshallinta
+              
+              <ha-icon icon="mdi:home-account"></ha-icon> **Lapset kotona:** {{ states('input_boolean.kids_home') | upper }}
+              
+              ---
+              
+              ### 🌡️ Huoneiden lämpötilat
+              
+              | Huone | Lämpö | Patteri | Tavoite |
+              |-------|-------|---------|---------|
+              | 🛏️ MH1 | {{ states('sensor.aqara_makuuhuone_temperature') }}°C | {{ states('switch.mh1') | upper }} | {{ states('input_number.mh1_target_temp') }}°C |
+              | 👦 Tuomas | {{ states('sensor.aqara_poikienhuone_temperature') }}°C | {{ states('switch.shellypro4pm_ec62609fd3dc_switch_1') | upper }} | {{ states('input_number.kids_rooms_target_temp') }}°C |
+              | 👧 Sara | {{ states('sensor.aqara_saranhuone_temperature') }}°C | {{ states('switch.shellypro4pm_ec62609fd3dc_switch_0') | upper }} | {{ states('input_number.kids_rooms_target_temp') }}°C |
+              
+              ---
+              
+              ⏰ **MH1 aikataulu:** {{ states('input_datetime.mh1_start_time')[:5] }} - {{ states('input_datetime.mh1_end_time')[:5] }}
+              
+              🔧 **Manual override:** {{ states('input_boolean.mh1_manual_override') | upper }}
+            card_mod:
+              style: |
+                ha-card {
+                  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                  color: white;
+                  font-size: 14px;
+                }
+                ha-markdown {
+                  padding: 16px !important;
+                }
+
+          # All Room Temperatures
+          - type: custom:apexcharts-card
+            header:
+              show: true
+              title: 🌡️ Huoneiden lämpötilat 24h
+              show_states: true
+              colorize_states: true
+            graph_span: 24h
+            span:
+              start: hour
+            now:
+              show: true
+            yaxis:
+              - id: temp
+                min: 15
+                max: 25
+                decimals: 1
+            apex_config:
+              chart:
+                height: 240
+              stroke:
+                width: 2
+                curve: smooth
+              legend:
+                show: true
+                position: top
+              tooltip:
+                shared: true
+            series:
+              - entity: sensor.aqara_makuuhuone_temperature
+                name: MH1
+                color: '#FF6B6B'
+                stroke_width: 3
+              - entity: sensor.aqara_poikienhuone_temperature
+                name: Tuomas
+                color: '#4ECDC4'
+              - entity: sensor.aqara_saranhuone_temperature
+                name: Sara
+                color: '#FFE66D'
+              - entity: sensor.aqara_olohuone_temperature
+                name: Olohuone
+                color: '#95E1D3'
+                opacity: 0.6
+              - entity: sensor.aqara_keittio_temperature
+                name: Keittiö
+                color: '#AA96DA'
+                opacity: 0.6
+
+          # Device Control Panel
+          - type: entities
+            title: 🔌 Laiteohjaus
+            show_header_toggle: false
+            card_mod:
+              style: |
+                ha-card {
+                  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                  color: white;
+                }
+            entities:
+              - entity: input_boolean.kids_home
+                name: 👨‍👩‍👧‍👦 Lapset kotona
+                icon: mdi:home-account
+              - type: divider
+              - entity: switch.tesla_model_3_charger
+                name: 🚗 Tesla lataus
+                secondary_info: last-changed
+              - entity: number.tesla_model_3_charging_amps
+                name: Latausvirta
+                icon: mdi:current-ac
+              - type: divider
+              - entity: switch.shellypro4pm_ec62609fd3dc_switch_2
+                name: 💧 Lämminvesivaraaja
+                icon: mdi:water-boiler
+              - entity: climate.mitsu_ilp
+                name: 🔥 Ilmalämpöpumppu
+              - type: divider
+              - entity: switch.mh1
+                name: 🌡️ MH1 patteri
+                icon: mdi:radiator
+              - entity: switch.shellypro4pm_ec62609fd3dc_switch_1
+                name: 🌡️ Tuomas patteri
+                icon: mdi:radiator
+              - entity: switch.shellypro4pm_ec62609fd3dc_switch_0
+                name: 🌡️ Sara patteri
+                icon: mdi:radiator
+
+          # Power Factor & Phase Health
+          - type: horizontal-stack
+            cards:
+              - type: gauge
+                entity: sensor.shellyem3_channel_a_voltage
+                name: Vaihe A
+                min: 200
+                max: 250
+                needle: true
+                severity:
+                  red: 200
+                  yellow: 220
+                  green: 225
+                unit: V
+              - type: gauge
+                entity: sensor.shellyem3_channel_b_voltage
+                name: Vaihe B
+                min: 200
+                max: 250
+                needle: true
+                severity:
+                  red: 200
+                  yellow: 220
+                  green: 225
+                unit: V
+              - type: gauge
+                entity: sensor.shellyem3_channel_c_voltage
+                name: Vaihe C
+                min: 200
+                max: 250
+                needle: true
+                severity:
+                  red: 200
+                  yellow: 220
+                  green: 225
+                unit: V
+
+          # Best Charging Window
+          - type: markdown
+            content: |
+              ## ⚡ Paras latausaika huomenna
+              
+              {{ states('sensor.best_charging_window_tomorrow') }}
+              
+              🕐 **Aika:** {{ state_attr('sensor.best_charging_window_tomorrow', 'start_time') }} - {{ state_attr('sensor.best_charging_window_tomorrow', 'end_time') }}
+              
+              💰 **Keskihinta:** {{ state_attr('sensor.best_charging_window_tomorrow', 'average_price') }} c/kWh
+              
+              💵 **Säästö:** {{ state_attr('sensor.best_charging_window_tomorrow', 'savings') }} € verrattuna kalleimpaan
+            card_mod:
+              style: |
+                ha-card {
+                  background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
+                  font-size: 14px;
+                }
+                ha-markdown {
+                  padding: 16px !important;
+                }
+
+          # Sauna Status (conditional)
+          - type: conditional
+            conditions:
+              - condition: state
+                entity: binary_sensor.kiuas_tilatieto
+                state: 'on'
+            card:
+              type: horizontal-stack
+              cards:
+                - type: gauge
+                  entity: sensor.sauna_temperature
+                  name: 🧖 Sauna
+                  min: 10
+                  max: 100
+                  needle: true
+                  segments:
+                    - from: 10
+                      color: '#0000FF'
+                    - from: 40
+                      color: '#00FFFF'
+                    - from: 60
+                      color: '#FFFF00'
+                    - from: 70
+                      color: '#FF8800'
+                    - from: 80
+                      color: '#FF0000'
+                - type: entity
+                  entity: binary_sensor.doorsensor_sauna_contact
+                  name: Saunan ovi
+                  icon: mdi:door
+
+        column_span: 1
+
+# ============================================================================
+# CARD-MOD STYLING (if you have card-mod installed)
+# ============================================================================
+# Add this to your themes for even better look:
+#
+# card-mod-theme: magic-mirror
+# card-mod-view-yaml: |
+#   .: |
+#     hui-sections-view {
+#       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+#     }
