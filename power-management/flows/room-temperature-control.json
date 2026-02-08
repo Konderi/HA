@@ -271,7 +271,6 @@
     "entityidfilter": "binary_sensor.living_room_motion",
     "entityidfiltertype": "exact",
     "outputinitially": false,
-    "state_type": "str",
     "haltifstate": "on",
     "halt_if_type": "str",
     "halt_if_compare": "is",

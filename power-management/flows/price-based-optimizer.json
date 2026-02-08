@@ -27,7 +27,6 @@
     "entityidfilter": "sensor.shf_rank_now",
     "entityidfiltertype": "exact",
     "outputinitially": true,
-    "state_type": "num",
     "haltifstate": "",
     "halt_if_type": "str",
     "halt_if_compare": "is",
@@ -178,7 +177,6 @@
     "halt_if_type": "str",
     "halt_if_compare": "is",
     "entity_id": "sensor.shf_rank_now",
-    "state_type": "num",
     "blockInputOverrides": false,
     "outputProperties": [
       {
@@ -225,7 +223,6 @@
     "entityidfilter": "switch.shellypro4pm_ec62609fd3dc_switch_2",
     "entityidfiltertype": "exact",
     "outputinitially": true,
-    "state_type": "str",
     "haltifstate": "",
     "halt_if_type": "str",
     "halt_if_compare": "is",

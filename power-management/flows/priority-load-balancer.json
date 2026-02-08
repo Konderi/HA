@@ -27,7 +27,6 @@
     "entityidfilter": "binary_sensor.kiuas_tilatieto",
     "entityidfiltertype": "exact",
     "outputinitially": true,
-    "state_type": "str",
     "haltifstate": "",
     "halt_if_type": "str",
     "halt_if_compare": "is",

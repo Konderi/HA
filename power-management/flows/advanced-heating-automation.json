@@ -27,7 +27,6 @@
     "entityidfilter": "person.user",
     "entityidfiltertype": "exact",
     "outputinitially": false,
-    "state_type": "str",
     "haltifstate": "",
     "halt_if_type": "str",
     "halt_if_compare": "is",
@@ -160,7 +159,6 @@
     "halt_if_type": "str",
     "halt_if_compare": "is",
     "entity_id": "person.user",
-    "state_type": "str",
     "blockInputOverrides": false,
     "outputProperties": [
       {
@@ -221,7 +219,6 @@
     "halt_if_type": "str",
     "halt_if_compare": "is",
     "entity_id": "weather.home",
-    "state_type": "str",
     "blockInputOverrides": false,
     "outputProperties": [
       {
@@ -340,7 +337,6 @@
     "entityidfilter": "climate.living_room",
     "entityidfiltertype": "exact",
     "outputinitially": false,
-    "state_type": "str",
     "haltifstate": "",
     "halt_if_type": "str",
     "halt_if_compare": "is",
