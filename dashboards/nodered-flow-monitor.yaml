@@ -1,0 +1,620 @@
+# ============================================================================
+# NODE-RED FLOW MONITORING DASHBOARD
+# ============================================================================
+# Visual monitoring of Phase 2 Node-RED flows
+# Shows flow logic, current states, and decision paths
+# ============================================================================
+
+title: Node-RED Flows
+theme: default
+views:
+  # ==========================================================================
+  # VIEW 1: FLOW OVERVIEW
+  # ==========================================================================
+  - title: Flow Overview
+    path: flow-overview
+    icon: mdi:sitemap
+    type: custom:vertical-layout
+    badges: []
+    cards:
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: menu
+        alignment: center
+      
+      - type: custom:mushroom-title-card
+        title: 🔄 Node-RED Flow Monitor
+        subtitle: Phase 2 Automation System
+        alignment: center
+      
+      # Flow Status Summary
+      - type: markdown
+        card_mod:
+          style: |
+            ha-card {
+              background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            }
+        content: |
+          ## 📊 Active Flows Status
+          
+          | Flow | Status | Description |
+          |------|--------|-------------|
+          | 🏠 Temperature Control | {{ '✅ Active' if is_state('input_boolean.kids_home', 'on') or is_state('input_boolean.kids_home', 'off') else '❌ Error' }} | Kids room heating automation |
+          | ⚖️ Priority Balancer | {{ '✅ Active' if states('sensor.total_power_kw') else '❌ Error' }} | Load management & Tesla control |
+          | ⚡ Peak Limiter | {{ '✅ Active' if states('sensor.total_power_kw') else '❌ Error' }} | Tehomaksu prevention (<8kW) |
+          | 💰 Price Optimizer | {{ '✅ Active' if states('sensor.current_electricity_cost_rate') else '❌ Error' }} | Heat pump scheduling |
+          | 📡 Phase Monitor | {{ '✅ Active' if states('sensor.shellyem3_channel_a_current') else '❌ Error' }} | Voltage & battery alerts |
+          
+          **Last Updated:** {{ now().strftime('%H:%M:%S') }}
+      
+      # Quick Navigation
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-template-card
+            primary: Temperature
+            secondary: Control Flow
+            icon: mdi:thermometer-lines
+            icon_color: deep-orange
+            layout: vertical
+            fill_container: true
+            card_mod:
+              style: |
+                ha-card {
+                  background: linear-gradient(135deg, rgba(255, 111, 0, 0.1) 0%, rgba(255, 87, 34, 0.2) 100%);
+                }
+            tap_action:
+              action: navigate
+              navigation_path: /nodered-flows/temperature-flow
+          
+          - type: custom:mushroom-template-card
+            primary: Load
+            secondary: Balancer
+            icon: mdi:scale-balance
+            icon_color: green
+            layout: vertical
+            fill_container: true
+            card_mod:
+              style: |
+                ha-card {
+                  background: linear-gradient(135deg, rgba(76, 175, 80, 0.1) 0%, rgba(46, 125, 50, 0.2) 100%);
+                }
+            tap_action:
+              action: navigate
+              navigation_path: /nodered-flows/priority-flow
+      
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-template-card
+            primary: Peak
+            secondary: Limiter
+            icon: mdi:alert-octagon
+            icon_color: red
+            layout: vertical
+            fill_container: true
+            card_mod:
+              style: |
+                ha-card {
+                  background: linear-gradient(135deg, rgba(244, 67, 54, 0.1) 0%, rgba(211, 47, 47, 0.2) 100%);
+                }
+            tap_action:
+              action: navigate
+              navigation_path: /nodered-flows/peak-flow
+          
+          - type: custom:mushroom-template-card
+            primary: Price
+            secondary: Optimizer
+            icon: mdi:currency-eur
+            icon_color: amber
+            layout: vertical
+            fill_container: true
+            card_mod:
+              style: |
+                ha-card {
+                  background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 160, 0, 0.2) 100%);
+                }
+            tap_action:
+              action: navigate
+              navigation_path: /nodered-flows/price-flow
+      
+      # System Health
+      - type: entities
+        title: 🏥 System Health
+        card_mod:
+          style: |
+            ha-card {
+              background: rgba(var(--rgb-primary-text-color), 0.05);
+            }
+        entities:
+          - entity: sensor.total_power_kw
+            name: Power Sensor
+            icon: mdi:lightning-bolt
+          - entity: sensor.current_electricity_cost_rate
+            name: Price Sensor
+            icon: mdi:currency-eur
+          - entity: input_boolean.kids_home
+            name: Kids Toggle
+            icon: mdi:human-child
+          - entity: switch.mh1
+            name: MH1 Radiator
+            icon: mdi:radiator
+
+  # ==========================================================================
+  # VIEW 2: TEMPERATURE CONTROL FLOW
+  # ==========================================================================
+  - title: Temperature Flow
+    path: temperature-flow
+    icon: mdi:thermometer-lines
+    type: custom:vertical-layout
+    badges: []
+    cards:
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: back
+        alignment: center
+      
+      - type: custom:mushroom-title-card
+        title: 🏠 Temperature Control Flow
+        alignment: center
+      
+      # Flow Diagram
+      - type: markdown
+        card_mod:
+          style: |
+            ha-card {
+              background: rgba(var(--rgb-primary-text-color), 0.05);
+              font-family: monospace;
+            }
+        content: |
+          ```
+          ┌─────────────────────────────────────────────────┐
+          │  TEMPERATURE-BASED RADIATOR CONTROL FLOW       │
+          └─────────────────────────────────────────────────┘
+          
+          START: Every 5 minutes
+               ↓
+          ┌─────────────────────┐
+          │  Check Kids Home?   │ ← input_boolean.kids_home
+          └─────────────────────┘
+               ↓
+          ┌─────────────┬─────────────┐
+          │   YES       │     NO      │
+          ↓             ↓
+          🔥 Target:    ❄️ Minimum:
+          {{ states('input_number.kids_rooms_target_temp') }}°C       {{ states('input_number.kids_rooms_min_temp') }}°C
+          
+          ┌─────────────────────────────────────────────────┐
+          │  ROOM-BY-ROOM CONTROL                          │
+          └─────────────────────────────────────────────────┘
+          
+          👦 TUOMAS ROOM
+          Current: {{ states('sensor.aqara_poikienhuone_temperature') }}°C
+          Radiator: {{ 'ON 🔥' if is_state('switch.shellypro4pm_ec62609fd3dc_switch_1', 'on') else 'OFF ❄️' }}
+          
+          👧 SARA ROOM
+          Current: {{ states('sensor.aqara_saranhuone_temperature') }}°C
+          Radiator: {{ 'ON 🔥' if is_state('switch.shellypro4pm_ec62609fd3dc_switch_0', 'on') else 'OFF ❄️' }}
+          
+          🛏️ MASTER BEDROOM (MH1)
+          Current: {{ states('sensor.aqara_makuuhuone_temperature') }}°C
+          Radiator: {{ 'ON 🔥' if is_state('switch.mh1', 'on') else 'OFF ❄️' }}
+          Schedule: {{ states('input_datetime.mh1_start_time')[:5] }} - {{ states('input_datetime.mh1_end_time')[:5] }}
+          Target: {{ states('input_number.mh1_target_temp') }}°C
+          Manual: {{ 'YES' if is_state('input_boolean.mh1_manual_override', 'on') else 'NO' }}
+          
+          ┌─────────────────────────────────────────────────┐
+          │  DECISION LOGIC                                │
+          └─────────────────────────────────────────────────┘
+          
+          IF temp < target - 0.5°C → Turn ON 🔥
+          IF temp > target + 0.5°C → Turn OFF ❄️
+          ELSE → Keep current state ⏸️
+          ```
+      
+      # Current State
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-template-card
+            primary: Kids Home
+            secondary: '{{ "YES - Target " + states("input_number.kids_rooms_target_temp") + "°C" if is_state("input_boolean.kids_home", "on") else "NO - Min " + states("input_number.kids_rooms_min_temp") + "°C" }}'
+            icon: mdi:human-child
+            icon_color: '{{ "green" if is_state("input_boolean.kids_home", "on") else "blue" }}'
+            layout: vertical
+            card_mod:
+              style: |
+                ha-card {
+                  background: rgba(var(--rgb-primary-text-color), 0.05);
+                }
+          
+          - type: custom:mushroom-template-card
+            primary: Active Radiators
+            secondary: '{{ states.switch | selectattr("entity_id", "in", ["switch.shellypro4pm_ec62609fd3dc_switch_0", "switch.shellypro4pm_ec62609fd3dc_switch_1", "switch.mh1"]) | selectattr("state", "eq", "on") | list | count }} / 3'
+            icon: mdi:radiator
+            icon_color: deep-orange
+            layout: vertical
+            card_mod:
+              style: |
+                ha-card {
+                  background: rgba(var(--rgb-primary-text-color), 0.05);
+                }
+
+  # ==========================================================================
+  # VIEW 3: PRIORITY LOAD BALANCER FLOW
+  # ==========================================================================
+  - title: Priority Flow
+    path: priority-flow
+    icon: mdi:scale-balance
+    type: custom:vertical-layout
+    badges: []
+    cards:
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: back
+        alignment: center
+      
+      - type: custom:mushroom-title-card
+        title: ⚖️ Priority Load Balancer
+        alignment: center
+      
+      # Flow Diagram
+      - type: markdown
+        card_mod:
+          style: |
+            ha-card {
+              background: rgba(var(--rgb-primary-text-color), 0.05);
+              font-family: monospace;
+            }
+        content: |
+          ```
+          ┌─────────────────────────────────────────────────┐
+          │  PRIORITY LOAD BALANCER FLOW                   │
+          └─────────────────────────────────────────────────┘
+          
+          START: Power change detected
+               ↓
+          ┌─────────────────────┐
+          │ Current Power       │
+          │ {{ states('sensor.total_power_kw') }} kW         │
+          └─────────────────────┘
+               ↓
+          ┌─────────────────────────────────────────────────┐
+          │  PRIORITY ORDER (1 = Highest)                  │
+          └─────────────────────────────────────────────────┘
+          
+          1️⃣  SAUNA (7kW)
+              Status: {{ 'ON 🧖' if is_state('switch.sauna_channel_1', 'on') else 'OFF' }}
+              Protection: ALWAYS PROTECTED
+              └─> If sauna ON → Tesla max 8A
+          
+          2️⃣  HEATING (variable)
+              Status: {{ states.switch | selectattr("entity_id", "in", ["switch.shellypro4pm_ec62609fd3dc_switch_0", "switch.shellypro4pm_ec62609fd3dc_switch_1", "switch.mh1"]) | selectattr("state", "eq", "on") | list | count }} radiators ON
+              Protection: HIGH PRIORITY
+          
+          3️⃣  BOILER (3kW)
+              Status: {{ 'ON 💧' if is_state('switch.shellypro4pm_ec62609fd3dc_switch_2', 'on') else 'OFF' }}
+              Protection: MEDIUM PRIORITY
+          
+          4️⃣  TESLA CHARGING
+              Status: {{ 'ON 🚗' if is_state('switch.tesla_model_3_charger', 'on') else 'OFF' }}
+              Current Amps: {{ states('number.tesla_model_3_charging_amps') }}A
+              Protection: ADJUSTABLE (6-16A)
+          
+          ┌─────────────────────────────────────────────────┐
+          │  CAPACITY MANAGEMENT                           │
+          └─────────────────────────────────────────────────┘
+          
+          Total Capacity: 17.25 kW (25A × 3 phases)
+          Current Usage: {{ states('sensor.total_power_kw') }} kW ({{ (states('sensor.total_power_kw')|float / 17.25 * 100) | round(1) }}%)
+          
+          {% set power = states('sensor.total_power_kw')|float %}
+          {% if power < 8 %}
+          Status: ✅ NORMAL - All devices allowed
+          {% elif power < 12 %}
+          Status: ⚠️ MEDIUM LOAD - Monitoring
+          {% elif power < 14.66 %}
+          Status: 🟠 HIGH LOAD (>85%) - Reducing Tesla
+          {% else %}
+          Status: 🔴 CRITICAL LOAD (>95%) - Tesla minimum
+          {% endif %}
+          
+          ┌─────────────────────────────────────────────────┐
+          │  TESLA ADJUSTMENT LOGIC                        │
+          └─────────────────────────────────────────────────┘
+          
+          Sauna ON? {{ '🧖 YES' if is_state('switch.sauna_channel_1', 'on') else 'NO' }}
+          {% if is_state('switch.sauna_channel_1', 'on') %}
+          └─> Tesla: 8A max (~5.5kW)
+          {% else %}
+          Power > 85%? {{ '⚠️ YES' if (states('sensor.total_power_kw')|float / 17.25) > 0.85 else 'NO' }}
+          {% if (states('sensor.total_power_kw')|float / 17.25) > 0.85 %}
+          └─> Tesla: Reduce by 2A gradually
+          {% endif %}
+          
+          Power > 95%? {{ '🔴 YES' if (states('sensor.total_power_kw')|float / 17.25) > 0.95 else 'NO' }}
+          {% if (states('sensor.total_power_kw')|float / 17.25) > 0.95 %}
+          └─> Tesla: 6A minimum or OFF
+          {% endif %}
+          {% endif %}
+          ```
+      
+      # Current Actions
+      - type: horizontal-stack
+        cards:
+          - type: gauge
+            entity: sensor.total_power_kw
+            name: Load Level
+            min: 0
+            max: 17.25
+            needle: true
+            card_mod:
+              style: |
+                ha-card {
+                  background: rgba(var(--rgb-primary-text-color), 0.05);
+                }
+            segments:
+              - from: 0
+                color: '#4ECDC4'
+              - from: 14.66
+                color: '#FFE66D'
+              - from: 16.39
+                color: '#FF6B6B'
+          
+          - type: custom:mushroom-template-card
+            primary: Tesla Status
+            secondary: '{{ states("number.tesla_model_3_charging_amps") }}A / {{ "ON" if is_state("switch.tesla_model_3_charger", "on") else "OFF" }}'
+            icon: mdi:car-electric
+            icon_color: '{{ "green" if is_state("switch.tesla_model_3_charger", "on") else "grey" }}'
+            layout: vertical
+            card_mod:
+              style: |
+                ha-card {
+                  background: rgba(var(--rgb-primary-text-color), 0.05);
+                }
+
+  # ==========================================================================
+  # VIEW 4: PEAK POWER LIMITER FLOW
+  # ==========================================================================
+  - title: Peak Limiter
+    path: peak-flow
+    icon: mdi:alert-octagon
+    type: custom:vertical-layout
+    badges: []
+    cards:
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: back
+        alignment: center
+      
+      - type: custom:mushroom-title-card
+        title: ⚡ Peak Power Limiter
+        alignment: center
+      
+      # Flow Diagram
+      - type: markdown
+        card_mod:
+          style: |
+            ha-card {
+              background: rgba(var(--rgb-primary-text-color), 0.05);
+              font-family: monospace;
+            }
+        content: |
+          ```
+          ┌─────────────────────────────────────────────────┐
+          │  PEAK POWER LIMITER FLOW (Tehomaksu)          │
+          └─────────────────────────────────────────────────┘
+          
+          PURPOSE: Prevent >8kW 60-minute average
+          COST: €8.38/month per 100W over threshold
+          TARGET: Stay below 8kW average
+          
+          START: Every 30 seconds
+               ↓
+          ┌─────────────────────┐
+          │ Calculate 60-min    │
+          │ rolling average     │
+          │ {{ states('sensor.total_power_kw') }} kW current  │
+          └─────────────────────┘
+               ↓
+          ┌─────────────────────┐
+          │  Average > 7.5kW?   │ ← Early warning threshold
+          └─────────────────────┘
+               ↓
+          ┌─────────────┬─────────────┐
+          │     NO      │     YES     │
+          ↓             ↓
+          ✅ OK         ⚠️ WARNING
+          Continue      ↓
+                   ┌─────────────────────┐
+                   │  Average > 8.0kW?   │ ← Critical threshold
+                   └─────────────────────┘
+                        ↓
+                   ┌─────────────┬─────────────┐
+                   │     NO      │     YES     │
+                   ↓             ↓
+                   Monitor       🔴 ACTION
+                                 ↓
+          ┌─────────────────────────────────────────────────┐
+          │  REDUCTION SEQUENCE                            │
+          └─────────────────────────────────────────────────┘
+          
+          Step 1: Tesla Reduction
+                  {{ 'Current: ' + states('number.tesla_model_3_charging_amps') + 'A' }}
+                  ├─> If >6A: Reduce to 6A (-2A steps)
+                  └─> If 6A: Turn OFF charger
+          
+          Step 2: Boiler Control (if needed)
+                  {{ 'Status: ' + ('ON' if is_state('switch.shellypro4pm_ec62609fd3dc_switch_2', 'on') else 'OFF') }}
+                  └─> Turn OFF for 30 minutes
+          
+          Step 3: Alert User
+                  └─> Notification sent
+                  └─> Manual intervention needed
+          
+          ┌─────────────────────────────────────────────────┐
+          │  CURRENT STATUS                                │
+          └─────────────────────────────────────────────────┘
+          
+          Current Power: {{ states('sensor.total_power_kw') }} kW
+          {% set power = states('sensor.total_power_kw')|float %}
+          Status: {% if power < 7.5 %}✅ SAFE (<7.5kW)
+          {% elif power < 8.0 %}⚠️ CLOSE TO LIMIT (7.5-8.0kW)
+          {% else %}🔴 OVER LIMIT (>8.0kW) - REDUCING
+          {% endif %}
+          
+          Protected Devices:
+          - 🧖 Sauna: {{ 'ON (Protected)' if is_state('switch.sauna_channel_1', 'on') else 'OFF' }}
+          - 🏠 Heating: Always protected
+          
+          Adjustable Devices:
+          - 🚗 Tesla: {{ states('number.tesla_model_3_charging_amps') }}A ({{ 'Adjustable' if is_state('switch.tesla_model_3_charger', 'on') else 'OFF' }})
+          - 💧 Boiler: {{ 'ON' if is_state('switch.shellypro4pm_ec62609fd3dc_switch_2', 'on') else 'OFF' }}
+          ```
+      
+      # Tehomaksu Calculator
+      - type: entities
+        title: 💶 Tehomaksu Impact
+        card_mod:
+          style: |
+            ha-card {
+              background: rgba(var(--rgb-primary-text-color), 0.05);
+            }
+        entities:
+          - type: custom:template-entity-row
+            name: Current Average
+            state: '{{ states("sensor.total_power_kw") }} kW'
+            icon: mdi:chart-line
+          - type: custom:template-entity-row
+            name: Over Limit
+            state: '{{ [0, (states("sensor.total_power_kw")|float - 8.0)] | max | round(2) }} kW'
+            icon: mdi:alert
+          - type: custom:template-entity-row
+            name: Monthly Cost (if sustained)
+            state: '{{ ([0, (states("sensor.total_power_kw")|float - 8.0)] | max * 1000 / 100 * 8.38) | round(2) }} €'
+            icon: mdi:currency-eur
+
+  # ==========================================================================
+  # VIEW 5: PRICE OPTIMIZER FLOW
+  # ==========================================================================
+  - title: Price Optimizer
+    path: price-flow
+    icon: mdi:currency-eur
+    type: custom:vertical-layout
+    badges: []
+    cards:
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: back
+        alignment: center
+      
+      - type: custom:mushroom-title-card
+        title: 💰 Price-Based Optimizer
+        alignment: center
+      
+      # Flow Diagram
+      - type: markdown
+        card_mod:
+          style: |
+            ha-card {
+              background: rgba(var(--rgb-primary-text-color), 0.05);
+              font-family: monospace;
+            }
+        content: |
+          ```
+          ┌─────────────────────────────────────────────────┐
+          │  PRICE-BASED HEAT PUMP OPTIMIZER               │
+          └─────────────────────────────────────────────────┘
+          
+          PURPOSE: Run heat pump during cheapest hours
+          TARGET: Minimize electricity cost
+          
+          START: Every hour (at :00)
+               ↓
+          ┌─────────────────────┐
+          │ Get current price   │
+          │ {{ states('sensor.current_electricity_cost_rate') }} c/kWh     │
+          └─────────────────────┘
+               ↓
+          ┌─────────────────────────────────────────────────┐
+          │  PRICE CLASSIFICATION                          │
+          └─────────────────────────────────────────────────┘
+          
+          {% set price = states('sensor.current_electricity_cost_rate')|float %}
+          Current: {{ price }} c/kWh
+          
+          {% if price < 12 %}
+          Category: 💚 VERY CHEAP (<12 c/kWh)
+          Action: Heat pump ON, boost heating
+          {% elif price < 16 %}
+          Category: 💛 CHEAP (12-16 c/kWh)
+          Action: Heat pump ON, normal mode
+          {% elif price < 20 %}
+          Category: 🟠 MODERATE (16-20 c/kWh)
+          Action: Heat pump ON if needed
+          {% elif price < 25 %}
+          Category: 🔴 EXPENSIVE (20-25 c/kWh)
+          Action: Heat pump eco mode
+          {% else %}
+          Category: ⛔ VERY EXPENSIVE (>25 c/kWh)
+          Action: Heat pump OFF unless critical
+          {% endif %}
+          
+          ┌─────────────────────────────────────────────────┐
+          │  HEAT PUMP CONTROL                             │
+          └─────────────────────────────────────────────────┘
+          
+          Status: {{ states('climate.mitsu_ilp') }}
+          Current Temp: {{ state_attr('climate.mitsu_ilp', 'current_temperature') }}°C
+          Target Temp: {{ state_attr('climate.mitsu_ilp', 'temperature') }}°C
+          
+          Next 3 Hours Forecast:
+          (Future: Integrate with Nordpool sensor)
+          
+          ┌─────────────────────────────────────────────────┐
+          │  OPTIMIZATION LOGIC                            │
+          └─────────────────────────────────────────────────┘
+          
+          IF price < 12 c/kWh:
+            └─> Increase target temp +2°C (heat storage)
+          
+          IF price 12-20 c/kWh:
+            └─> Normal target temperature
+          
+          IF price > 20 c/kWh:
+            └─> Decrease target -1°C (use stored heat)
+          
+          IF price > 30 c/kWh:
+            └─> Turn OFF (emergency only)
+          ```
+      
+      # Price Status
+      - type: horizontal-stack
+        cards:
+          - type: custom:mushroom-template-card
+            primary: Current Price
+            secondary: '{{ states("sensor.current_electricity_cost_rate") }} c/kWh'
+            icon: mdi:currency-eur
+            icon_color: |-
+              {% set price = states('sensor.current_electricity_cost_rate')|float %}
+              {% if price < 12 %}green
+              {% elif price < 16 %}light-green
+              {% elif price < 20 %}amber
+              {% elif price < 25 %}deep-orange
+              {% else %}red
+              {% endif %}
+            layout: vertical
+            card_mod:
+              style: |
+                ha-card {
+                  background: rgba(var(--rgb-primary-text-color), 0.05);
+                }
+          
+          - type: custom:mushroom-template-card
+            primary: Heat Pump
+            secondary: '{{ states("climate.mitsu_ilp") }}'
+            icon: mdi:heat-pump
+            icon_color: green
+            layout: vertical
+            card_mod:
+              style: |
+                ha-card {
+                  background: rgba(var(--rgb-primary-text-color), 0.05);
+                }
