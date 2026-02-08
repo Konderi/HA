@@ -1,0 +1,22 @@
+# Centralized electricity pricing constants
+# Modern HA 2026.6+ compatible configuration
+# Created: 2026-02-08
+
+homeassistant:
+  customize:
+    package.node_anchors:
+      # Electricity pricing components (c/kWh)
+      # Update these values according to your contract
+      
+      electricity_energy_price: &electricity_energy_price
+        day: 0.44    # Day tariff (07:00-22:00) c/kWh
+        night: 0.37  # Night tariff (22:00-07:00) c/kWh
+      
+      electricity_transfer_price: &electricity_transfer_price
+        day: 4.92    # Day transfer tariff c/kWh
+        night: 3.01  # Night transfer tariff c/kWh
+      
+      # Fixed components
+      electricity_tax: &electricity_tax 2.79372        # Electricity tax (c/kWh)
+      electricity_vat: &electricity_vat 1.255          # VAT multiplier (25.5%)
+      electricity_margin: &electricity_margin 0.25     # Supplier margin (c/kWh)

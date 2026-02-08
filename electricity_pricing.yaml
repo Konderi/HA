@@ -1,0 +1,37 @@
+# Modern electricity price sensors using centralized constants
+# HA 2026.6+ compatible - uses template: instead of platform: template
+# Created: 2026-02-08
+
+template:
+  - sensor:
+      # Total electricity price (all components combined)
+      - name: "Electricity Total Price (cents)"
+        unique_id: electricity_total_price_cents
+        unit_of_measurement: "c/kWh"
+        device_class: monetary
+        state_class: measurement
+        state: >
+          {% set nordpool = states('sensor.nordpool_kwh_fi_eur_4_10_0') | float(0) %}
+          {% set hour = now().hour %}
+          {% set is_day_tariff = hour >= 7 and hour < 22 %}
+          
+          {# Base components from constants #}
+          {% set energy_price = 0.44 if is_day_tariff else 0.37 %}
+          {% set transfer_price = 4.92 if is_day_tariff else 3.01 %}
+          {% set tax = 2.79372 %}
+          {% set margin = 0.25 %}
+          
+          {# Calculate total price in cents/kWh #}
+          {% set total_before_vat = (nordpool * 100) + energy_price + transfer_price + tax + margin %}
+          {% set total_with_vat = total_before_vat * 1.255 %}
+          
+          {{ total_with_vat | round(2) }}
+        attributes:
+          nordpool_price_cents: "{{ (states('sensor.nordpool_kwh_fi_eur_4_10_0') | float(0) * 100) | round(2) }}"
+          energy_price: "{{ 0.44 if now().hour >= 7 and now().hour < 22 else 0.37 }}"
+          transfer_price: "{{ 4.92 if now().hour >= 7 and now().hour < 22 else 3.01 }}"
+          tax: 2.79372
+          margin: 0.25
+          vat_multiplier: 1.255
+          tariff_type: "{{ 'day' if now().hour >= 7 and now().hour < 22 else 'night' }}"
+          calculation: "nordpool + energy + transfer + tax + margin, then × VAT"
