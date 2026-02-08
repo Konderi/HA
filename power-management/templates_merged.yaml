@@ -109,8 +109,8 @@
         tariff_type: >
           {% set hour = now().hour %}
           {% if 7 <= hour < 22 %}day{% else %}night{% endif %}
-        day_tariff: 4.92
-        night_tariff: 3.01
+        day_tariff: "4.92"
+        night_tariff: "3.01"
         schedule: "07:00-22:00 = day, 22:00-07:00 = night"
         
     # For ApexCharts - Total electricity price in c/kWh
@@ -276,9 +276,9 @@
       attributes:
         consumption_liters: "{{ states('sensor.water_consumption') | float(0) | round(0) }}"
         consumption_m3: "{{ (states('sensor.water_consumption') | float(0) / 1000) | round(3) }}"
-        water_fee_eur_m3: 1.45
-        wastewater_fee_eur_m3: 2.32
-        vat_multiplier: 1.24
+        water_fee_eur_m3: "1.45"
+        wastewater_fee_eur_m3: "2.32"
+        vat_multiplier: "1.24"
         total_cost_breakdown: "{{ (states('sensor.water_consumption') | float(0) / 1000) | round(3) }} m3 * (1.45 + 2.32) * 1.24 = {{ states('sensor.water_total_cost') }} EUR"
         
     # Best 5-hour charging window for tomorrow
@@ -303,7 +303,7 @@
         {% endif %}
       icon: mdi:clock-start
       attributes:
-        window_hours: 5
+        window_hours: "5"
         end_time: >
           {% set start = states('sensor.best_charging_window_tomorrow') | as_timestamp %}
           {{ (start + 5 * 3600) | timestamp_local }}
