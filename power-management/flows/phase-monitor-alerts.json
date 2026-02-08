@@ -1,0 +1,624 @@
+[
+  {
+    "id": "phase_monitor_flow",
+    "type": "tab",
+    "label": "Phase Monitor & Alerts",
+    "disabled": false,
+    "info": "Monitors phase voltages, power balance, and sends alerts for electrical issues"
+  },
+  {
+    "id": "phase_a_voltage",
+    "type": "server-state-changed",
+    "z": "phase_monitor_flow",
+    "name": "Phase A Voltage",
+    "server": "home_assistant",
+    "version": 4,
+    "exposeToHomeAssistant": false,
+    "haConfig": [
+      {
+        "property": "name",
+        "value": ""
+      },
+      {
+        "property": "icon",
+        "value": ""
+      }
+    ],
+    "entityidfilter": "sensor.shellyem3_channel_a_voltage",
+    "entityidfiltertype": "exact",
+    "outputinitially": true,
+    "state_type": "num",
+    "haltifstate": "",
+    "halt_if_type": "str",
+    "halt_if_compare": "is",
+    "outputs": 1,
+    "output_only_on_state_change": false,
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "ignorePrevStateNull": false,
+    "ignorePrevStateUnknown": false,
+    "ignorePrevStateUnavailable": false,
+    "ignoreCurrentStateUnknown": false,
+    "ignoreCurrentStateUnavailable": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      }
+    ],
+    "x": 130,
+    "y": 80,
+    "wires": [
+      [
+        "check_voltage_a"
+      ]
+    ]
+  },
+  {
+    "id": "phase_b_voltage",
+    "type": "server-state-changed",
+    "z": "phase_monitor_flow",
+    "name": "Phase B Voltage",
+    "server": "home_assistant",
+    "version": 4,
+    "exposeToHomeAssistant": false,
+    "haConfig": [
+      {
+        "property": "name",
+        "value": ""
+      },
+      {
+        "property": "icon",
+        "value": ""
+      }
+    ],
+    "entityidfilter": "sensor.shellyem3_channel_b_voltage",
+    "entityidfiltertype": "exact",
+    "outputinitially": true,
+    "state_type": "num",
+    "haltifstate": "",
+    "halt_if_type": "str",
+    "halt_if_compare": "is",
+    "outputs": 1,
+    "output_only_on_state_change": false,
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "ignorePrevStateNull": false,
+    "ignorePrevStateUnknown": false,
+    "ignorePrevStateUnavailable": false,
+    "ignoreCurrentStateUnknown": false,
+    "ignoreCurrentStateUnavailable": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      }
+    ],
+    "x": 130,
+    "y": 140,
+    "wires": [
+      [
+        "check_voltage_b"
+      ]
+    ]
+  },
+  {
+    "id": "phase_c_voltage",
+    "type": "server-state-changed",
+    "z": "phase_monitor_flow",
+    "name": "Phase C Voltage",
+    "server": "home_assistant",
+    "version": 4,
+    "exposeToHomeAssistant": false,
+    "haConfig": [
+      {
+        "property": "name",
+        "value": ""
+      },
+      {
+        "property": "icon",
+        "value": ""
+      }
+    ],
+    "entityidfilter": "sensor.shellyem3_channel_c_voltage",
+    "entityidfiltertype": "exact",
+    "outputinitially": true,
+    "state_type": "num",
+    "haltifstate": "",
+    "halt_if_type": "str",
+    "halt_if_compare": "is",
+    "outputs": 1,
+    "output_only_on_state_change": false,
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "ignorePrevStateNull": false,
+    "ignorePrevStateUnknown": false,
+    "ignorePrevStateUnavailable": false,
+    "ignoreCurrentStateUnknown": false,
+    "ignoreCurrentStateUnavailable": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      }
+    ],
+    "x": 130,
+    "y": 200,
+    "wires": [
+      [
+        "check_voltage_c"
+      ]
+    ]
+  },
+  {
+    "id": "check_voltage_a",
+    "type": "function",
+    "z": "phase_monitor_flow",
+    "name": "Check Phase A Voltage",
+    "func": "const voltage = parseFloat(msg.payload);\nconst minVoltage = 200;\nconst maxVoltage = 250;\nconst normalMin = 220;\nconst normalMax = 240;\n\nmsg.phase = 'A';\nmsg.voltage = voltage;\n\nif (voltage < minVoltage) {\n    msg.level = 'critical';\n    msg.alert = `🚨 CRITICAL: Phase A voltage LOW: ${voltage}V (< 200V)`;\n    node.status({\n        fill: 'red',\n        shape: 'ring',\n        text: `CRITICAL: ${voltage}V`\n    });\n    return [msg, null];\n    \n} else if (voltage > maxVoltage) {\n    msg.level = 'critical';\n    msg.alert = `🚨 CRITICAL: Phase A voltage HIGH: ${voltage}V (> 250V)`;\n    node.status({\n        fill: 'red',\n        shape: 'ring',\n        text: `CRITICAL: ${voltage}V`\n    });\n    return [msg, null];\n    \n} else if (voltage < normalMin || voltage > normalMax) {\n    msg.level = 'warning';\n    msg.alert = `⚠️ Warning: Phase A voltage abnormal: ${voltage}V (Normal: 220-240V)`;\n    node.status({\n        fill: 'yellow',\n        shape: 'dot',\n        text: `Warning: ${voltage}V`\n    });\n    return [null, msg];\n    \n} else {\n    node.status({\n        fill: 'green',\n        shape: 'dot',\n        text: `OK: ${voltage}V`\n    });\n    return null;\n}",
+    "outputs": 2,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 360,
+    "y": 80,
+    "wires": [
+      [
+        "send_critical_alert"
+      ],
+      [
+        "send_warning_alert"
+      ]
+    ],
+    "outputLabels": [
+      "Critical",
+      "Warning"
+    ]
+  },
+  {
+    "id": "check_voltage_b",
+    "type": "function",
+    "z": "phase_monitor_flow",
+    "name": "Check Phase B Voltage",
+    "func": "const voltage = parseFloat(msg.payload);\nconst minVoltage = 200;\nconst maxVoltage = 250;\nconst normalMin = 220;\nconst normalMax = 240;\n\nmsg.phase = 'B';\nmsg.voltage = voltage;\n\nif (voltage < minVoltage) {\n    msg.level = 'critical';\n    msg.alert = `🚨 CRITICAL: Phase B voltage LOW: ${voltage}V (< 200V)`;\n    node.status({\n        fill: 'red',\n        shape: 'ring',\n        text: `CRITICAL: ${voltage}V`\n    });\n    return [msg, null];\n    \n} else if (voltage > maxVoltage) {\n    msg.level = 'critical';\n    msg.alert = `🚨 CRITICAL: Phase B voltage HIGH: ${voltage}V (> 250V)`;\n    node.status({\n        fill: 'red',\n        shape: 'ring',\n        text: `CRITICAL: ${voltage}V`\n    });\n    return [msg, null];\n    \n} else if (voltage < normalMin || voltage > normalMax) {\n    msg.level = 'warning';\n    msg.alert = `⚠️ Warning: Phase B voltage abnormal: ${voltage}V (Normal: 220-240V)`;\n    node.status({\n        fill: 'yellow',\n        shape: 'dot',\n        text: `Warning: ${voltage}V`\n    });\n    return [null, msg];\n    \n} else {\n    node.status({\n        fill: 'green',\n        shape: 'dot',\n        text: `OK: ${voltage}V`\n    });\n    return null;\n}",
+    "outputs": 2,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 360,
+    "y": 140,
+    "wires": [
+      [
+        "send_critical_alert"
+      ],
+      [
+        "send_warning_alert"
+      ]
+    ],
+    "outputLabels": [
+      "Critical",
+      "Warning"
+    ]
+  },
+  {
+    "id": "check_voltage_c",
+    "type": "function",
+    "z": "phase_monitor_flow",
+    "name": "Check Phase C Voltage",
+    "func": "const voltage = parseFloat(msg.payload);\nconst minVoltage = 200;\nconst maxVoltage = 250;\nconst normalMin = 220;\nconst normalMax = 240;\n\nmsg.phase = 'C';\nmsg.voltage = voltage;\n\nif (voltage < minVoltage) {\n    msg.level = 'critical';\n    msg.alert = `🚨 CRITICAL: Phase C voltage LOW: ${voltage}V (< 200V)`;\n    node.status({\n        fill: 'red',\n        shape: 'ring',\n        text: `CRITICAL: ${voltage}V`\n    });\n    return [msg, null];\n    \n} else if (voltage > maxVoltage) {\n    msg.level = 'critical';\n    msg.alert = `🚨 CRITICAL: Phase C voltage HIGH: ${voltage}V (> 250V)`;\n    node.status({\n        fill: 'red',\n        shape: 'ring',\n        text: `CRITICAL: ${voltage}V`\n    });\n    return [msg, null];\n    \n} else if (voltage < normalMin || voltage > normalMax) {\n    msg.level = 'warning';\n    msg.alert = `⚠️ Warning: Phase C voltage abnormal: ${voltage}V (Normal: 220-240V)`;\n    node.status({\n        fill: 'yellow',\n        shape: 'dot',\n        text: `Warning: ${voltage}V`\n    });\n    return [null, msg];\n    \n} else {\n    node.status({\n        fill: 'green',\n        shape: 'dot',\n        text: `OK: ${voltage}V`\n    });\n    return null;\n}",
+    "outputs": 2,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 360,
+    "y": 200,
+    "wires": [
+      [
+        "send_critical_alert"
+      ],
+      [
+        "send_warning_alert"
+      ]
+    ],
+    "outputLabels": [
+      "Critical",
+      "Warning"
+    ]
+  },
+  {
+    "id": "phase_power_monitor",
+    "type": "inject",
+    "z": "phase_monitor_flow",
+    "name": "Check Every 2 min",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "120",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "5",
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 140,
+    "y": 300,
+    "wires": [
+      [
+        "get_phase_powers"
+      ]
+    ]
+  },
+  {
+    "id": "get_phase_powers",
+    "type": "function",
+    "z": "phase_monitor_flow",
+    "name": "Get All Phase Powers",
+    "func": "const phaseA = parseFloat(global.get('homeassistant.homeAssistant.states[\"sensor.shellyem3_channel_a_power\"].state'));\nconst phaseB = parseFloat(global.get('homeassistant.homeAssistant.states[\"sensor.shellyem3_channel_b_power\"].state'));\nconst phaseC = parseFloat(global.get('homeassistant.homeAssistant.states[\"sensor.shellyem3_channel_c_power\"].state'));\n\nmsg.phaseA = phaseA;\nmsg.phaseB = phaseB;\nmsg.phaseC = phaseC;\nmsg.total = phaseA + phaseB + phaseC;\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 360,
+    "y": 300,
+    "wires": [
+      [
+        "check_phase_balance",
+        "check_phase_overload"
+      ]
+    ]
+  },
+  {
+    "id": "check_phase_balance",
+    "type": "function",
+    "z": "phase_monitor_flow",
+    "name": "Check Phase Balance",
+    "func": "const phaseA = msg.phaseA;\nconst phaseB = msg.phaseB;\nconst phaseC = msg.phaseC;\n\nconst avg = (phaseA + phaseB + phaseC) / 3;\nconst maxPhase = Math.max(phaseA, phaseB, phaseC);\nconst minPhase = Math.min(phaseA, phaseB, phaseC);\n\nconst imbalance = ((maxPhase - minPhase) / avg * 100).toFixed(1);\n\nmsg.imbalance = imbalance;\n\nif (imbalance > 50) {\n    // Significant imbalance\n    msg.alert = `⚠️ Phase imbalance detected: ${imbalance}%\\n` +\n                `Phase A: ${phaseA}W\\n` +\n                `Phase B: ${phaseB}W\\n` +\n                `Phase C: ${phaseC}W`;\n    \n    node.status({\n        fill: 'yellow',\n        shape: 'dot',\n        text: `Imbalance: ${imbalance}%`\n    });\n    \n    return msg;\n    \n} else {\n    node.status({\n        fill: 'green',\n        shape: 'dot',\n        text: `Balanced: ${imbalance}%`\n    });\n    \n    return null;\n}",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 600,
+    "y": 280,
+    "wires": [
+      [
+        "send_warning_alert"
+      ]
+    ]
+  },
+  {
+    "id": "check_phase_overload",
+    "type": "function",
+    "z": "phase_monitor_flow",
+    "name": "Check Phase Overload",
+    "func": "const phaseA = msg.phaseA;\nconst phaseB = msg.phaseB;\nconst phaseC = msg.phaseC;\n\nconst maxPerPhase = 5750; // 25A × 230V\nconst warningThreshold = maxPerPhase * 0.9; // 90%\n\nconst phases = [\n    { name: 'A', power: phaseA },\n    { name: 'B', power: phaseB },\n    { name: 'C', power: phaseC }\n];\n\nconst overloaded = [];\nconst warnings = [];\n\nphases.forEach(phase => {\n    const percent = (phase.power / maxPerPhase * 100).toFixed(1);\n    \n    if (phase.power >= maxPerPhase) {\n        overloaded.push(`Phase ${phase.name}: ${phase.power}W (${percent}%)`);\n    } else if (phase.power >= warningThreshold) {\n        warnings.push(`Phase ${phase.name}: ${phase.power}W (${percent}%)`);\n    }\n});\n\nif (overloaded.length > 0) {\n    msg.alert = `🚨 PHASE OVERLOAD!\\n${overloaded.join('\\n')}`;\n    msg.level = 'critical';\n    \n    node.status({\n        fill: 'red',\n        shape: 'ring',\n        text: 'PHASE OVERLOAD!'\n    });\n    \n    return [msg, null];\n    \n} else if (warnings.length > 0) {\n    msg.alert = `⚠️ Phase high load warning:\\n${warnings.join('\\n')}`;\n    msg.level = 'warning';\n    \n    node.status({\n        fill: 'yellow',\n        shape: 'dot',\n        text: 'High load warning'\n    });\n    \n    return [null, msg];\n    \n} else {\n    node.status({\n        fill: 'green',\n        shape: 'dot',\n        text: 'All phases OK'\n    });\n    \n    return null;\n}",
+    "outputs": 2,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 600,
+    "y": 320,
+    "wires": [
+      [
+        "send_critical_alert"
+      ],
+      [
+        "send_warning_alert"
+      ]
+    ],
+    "outputLabels": [
+      "Critical",
+      "Warning"
+    ]
+  },
+  {
+    "id": "send_critical_alert",
+    "type": "function",
+    "z": "phase_monitor_flow",
+    "name": "Rate Limit Critical",
+    "func": "// Prevent spam - only send critical alerts every 5 minutes\nconst alertKey = `critical_${msg.phase || 'general'}`;\nconst lastAlert = flow.get(alertKey) || 0;\nconst now = Date.now();\nconst minInterval = 5 * 60 * 1000; // 5 minutes\n\nif (now - lastAlert > minInterval) {\n    flow.set(alertKey, now);\n    \n    msg.payload = {\n        data: {\n            message: msg.alert\n        }\n    };\n    \n    return msg;\n}\n\nreturn null;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 820,
+    "y": 140,
+    "wires": [
+      [
+        "telegram_critical"
+      ]
+    ]
+  },
+  {
+    "id": "send_warning_alert",
+    "type": "function",
+    "z": "phase_monitor_flow",
+    "name": "Rate Limit Warning",
+    "func": "// Prevent spam - only send warnings every 15 minutes\nconst alertKey = `warning_${msg.phase || 'general'}`;\nconst lastAlert = flow.get(alertKey) || 0;\nconst now = Date.now();\nconst minInterval = 15 * 60 * 1000; // 15 minutes\n\nif (now - lastAlert > minInterval) {\n    flow.set(alertKey, now);\n    \n    msg.payload = {\n        data: {\n            message: msg.alert\n        }\n    };\n    \n    return msg;\n}\n\nreturn null;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 820,
+    "y": 280,
+    "wires": [
+      [
+        "telegram_warning"
+      ]
+    ]
+  },
+  {
+    "id": "telegram_critical",
+    "type": "api-call-service",
+    "z": "phase_monitor_flow",
+    "name": "Telegram CRITICAL",
+    "server": "home_assistant",
+    "version": 5,
+    "debugenabled": false,
+    "domain": "notify",
+    "service": "telegram",
+    "areaId": [],
+    "deviceId": [],
+    "entityId": [],
+    "data": "{\"message\": payload.data.message}",
+    "dataType": "jsonata",
+    "mergeContext": "",
+    "mustacheAltTags": false,
+    "outputProperties": [],
+    "queue": "none",
+    "x": 1060,
+    "y": 140,
+    "wires": [
+      [
+        "debug_alerts"
+      ]
+    ]
+  },
+  {
+    "id": "telegram_warning",
+    "type": "api-call-service",
+    "z": "phase_monitor_flow",
+    "name": "Telegram Warning",
+    "server": "home_assistant",
+    "version": 5,
+    "debugenabled": false,
+    "domain": "notify",
+    "service": "telegram",
+    "areaId": [],
+    "deviceId": [],
+    "entityId": [],
+    "data": "{\"message\": payload.data.message}",
+    "dataType": "jsonata",
+    "mergeContext": "",
+    "mustacheAltTags": false,
+    "outputProperties": [],
+    "queue": "none",
+    "x": 1060,
+    "y": 280,
+    "wires": [
+      [
+        "debug_alerts"
+      ]
+    ]
+  },
+  {
+    "id": "device_state_alerts",
+    "type": "comment",
+    "z": "phase_monitor_flow",
+    "name": "Additional Alert Types",
+    "info": "Other useful alerts to implement:\n\n1. Sauna left on too long (>4 hours)\n2. Car charging completed\n3. Water boiler failed to reach minimum hours\n4. Unusual power consumption spike\n5. Device unexpectedly offline\n6. Price spike alert\n7. Daily energy consumption summary",
+    "x": 150,
+    "y": 420,
+    "wires": []
+  },
+  {
+    "id": "sauna_timer_alert",
+    "type": "server-state-changed",
+    "z": "phase_monitor_flow",
+    "name": "Sauna State",
+    "server": "home_assistant",
+    "version": 4,
+    "exposeToHomeAssistant": false,
+    "haConfig": [
+      {
+        "property": "name",
+        "value": ""
+      },
+      {
+        "property": "icon",
+        "value": ""
+      }
+    ],
+    "entityidfilter": "binary_sensor.kiuas_tilatieto",
+    "entityidfiltertype": "exact",
+    "outputinitially": false,
+    "state_type": "str",
+    "haltifstate": "on",
+    "halt_if_type": "str",
+    "halt_if_compare": "is",
+    "outputs": 2,
+    "output_only_on_state_change": true,
+    "for": "4",
+    "forType": "num",
+    "forUnits": "hours",
+    "ignorePrevStateNull": false,
+    "ignorePrevStateUnknown": false,
+    "ignorePrevStateUnavailable": false,
+    "ignoreCurrentStateUnknown": false,
+    "ignoreCurrentStateUnavailable": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      }
+    ],
+    "x": 130,
+    "y": 480,
+    "wires": [
+      [
+        "sauna_warning"
+      ],
+      []
+    ]
+  },
+  {
+    "id": "sauna_warning",
+    "type": "function",
+    "z": "phase_monitor_flow",
+    "name": "Sauna Too Long Warning",
+    "func": "msg.alert = '⚠️ Sauna has been ON for over 4 hours! Please check if it should be turned off.';\n\nmsg.payload = {\n    data: {\n        message: msg.alert\n    }\n};\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 360,
+    "y": 480,
+    "wires": [
+      [
+        "telegram_warning"
+      ]
+    ]
+  },
+  {
+    "id": "car_charge_complete",
+    "type": "server-state-changed",
+    "z": "phase_monitor_flow",
+    "name": "Car Battery Level",
+    "server": "home_assistant",
+    "version": 4,
+    "exposeToHomeAssistant": false,
+    "haConfig": [
+      {
+        "property": "name",
+        "value": ""
+      },
+      {
+        "property": "icon",
+        "value": ""
+      }
+    ],
+    "entityidfilter": "sensor.tesla_model_3_battery",
+    "entityidfiltertype": "exact",
+    "outputinitially": false,
+    "state_type": "num",
+    "haltifstate": "90",
+    "halt_if_type": "num",
+    "halt_if_compare": "gte",
+    "outputs": 2,
+    "output_only_on_state_change": true,
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "ignorePrevStateNull": false,
+    "ignorePrevStateUnknown": false,
+    "ignorePrevStateUnavailable": false,
+    "ignoreCurrentStateUnknown": false,
+    "ignoreCurrentStateUnavailable": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      }
+    ],
+    "x": 140,
+    "y": 540,
+    "wires": [
+      [
+        "car_charged_notification"
+      ],
+      []
+    ]
+  },
+  {
+    "id": "car_charged_notification",
+    "type": "function",
+    "z": "phase_monitor_flow",
+    "name": "Car Charged Notification",
+    "func": "const battery = msg.payload;\nconst charging = global.get('homeassistant.homeAssistant.states[\"switch.tesla_model_3_charger\"].state');\n\nif (charging === 'on') {\n    msg.alert = `✅ Tesla charged to ${battery}% - Charging can be stopped if desired.`;\n    \n    msg.payload = {\n        data: {\n            message: msg.alert\n        }\n    };\n    \n    return msg;\n}\n\nreturn null;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 390,
+    "y": 540,
+    "wires": [
+      [
+        "telegram_warning"
+      ]
+    ]
+  },
+  {
+    "id": "debug_alerts",
+    "type": "debug",
+    "z": "phase_monitor_flow",
+    "name": "Alert Debug",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "true",
+    "targetType": "full",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 1270,
+    "y": 200,
+    "wires": []
+  },
+  {
+    "id": "home_assistant",
+    "type": "server",
+    "name": "Home Assistant",
+    "version": 5,
+    "addon": true,
+    "rejectUnauthorizedCerts": true,
+    "ha_boolean": "y|yes|true|on|home|open",
+    "connectionDelay": true,
+    "cacheJson": true,
+    "heartbeat": false,
+    "heartbeatInterval": 30,
+    "areaSelector": "friendlyName",
+    "deviceSelector": "friendlyName",
+    "entitySelector": "friendlyName",
+    "statusSeparator": "at: ",
+    "statusYear": "hidden",
+    "statusMonth": "short",
+    "statusDay": "numeric",
+    "statusHourCycle": "h23",
+    "statusTimeFormat": "h:m",
+    "enableGlobalContextStore": true
+  }
+]

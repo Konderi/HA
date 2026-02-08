@@ -1,0 +1,178 @@
+[
+  {
+    "id": "basic_heating_flow",
+    "type": "tab",
+    "label": "Basic Heating Schedule",
+    "disabled": false,
+    "info": "Simple time-based heating control with day/night temperatures"
+  },
+  {
+    "id": "morning_schedule",
+    "type": "inject",
+    "z": "basic_heating_flow",
+    "name": "Morning - 6:00 AM",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "00 06 * * *",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "21",
+    "payloadType": "num",
+    "x": 140,
+    "y": 100,
+    "wires": [
+      [
+        "set_temperature"
+      ]
+    ]
+  },
+  {
+    "id": "day_schedule",
+    "type": "inject",
+    "z": "basic_heating_flow",
+    "name": "Day - 8:00 AM",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "00 08 * * *",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "20",
+    "payloadType": "num",
+    "x": 140,
+    "y": 160,
+    "wires": [
+      [
+        "set_temperature"
+      ]
+    ]
+  },
+  {
+    "id": "evening_schedule",
+    "type": "inject",
+    "z": "basic_heating_flow",
+    "name": "Evening - 5:00 PM",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "00 17 * * *",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "22",
+    "payloadType": "num",
+    "x": 140,
+    "y": 220,
+    "wires": [
+      [
+        "set_temperature"
+      ]
+    ]
+  },
+  {
+    "id": "night_schedule",
+    "type": "inject",
+    "z": "basic_heating_flow",
+    "name": "Night - 10:00 PM",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "00 22 * * *",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "18",
+    "payloadType": "num",
+    "x": 140,
+    "y": 280,
+    "wires": [
+      [
+        "set_temperature"
+      ]
+    ]
+  },
+  {
+    "id": "set_temperature",
+    "type": "api-call-service",
+    "z": "basic_heating_flow",
+    "name": "Set Climate Temperature",
+    "server": "home_assistant",
+    "version": 5,
+    "debugenabled": false,
+    "domain": "climate",
+    "service": "set_temperature",
+    "areaId": [],
+    "deviceId": [],
+    "entityId": [
+      "climate.living_room"
+    ],
+    "data": "{\"temperature\": \"{{ payload }}\"}",
+    "dataType": "jsonata",
+    "mergeContext": "",
+    "mustacheAltTags": false,
+    "outputProperties": [],
+    "queue": "none",
+    "x": 430,
+    "y": 200,
+    "wires": [
+      [
+        "debug_output"
+      ]
+    ]
+  },
+  {
+    "id": "debug_output",
+    "type": "debug",
+    "z": "basic_heating_flow",
+    "name": "Temperature Set",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 680,
+    "y": 200,
+    "wires": []
+  },
+  {
+    "id": "home_assistant",
+    "type": "server",
+    "name": "Home Assistant",
+    "version": 5,
+    "addon": true,
+    "rejectUnauthorizedCerts": true,
+    "ha_boolean": "y|yes|true|on|home|open",
+    "connectionDelay": true,
+    "cacheJson": true,
+    "heartbeat": false,
+    "heartbeatInterval": 30,
+    "areaSelector": "friendlyName",
+    "deviceSelector": "friendlyName",
+    "entitySelector": "friendlyName",
+    "statusSeparator": "at: ",
+    "statusYear": "hidden",
+    "statusMonth": "short",
+    "statusDay": "numeric",
+    "statusHourCycle": "h23",
+    "statusTimeFormat": "h:m",
+    "enableGlobalContextStore": true
+  }
+]

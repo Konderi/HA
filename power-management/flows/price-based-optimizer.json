@@ -1,0 +1,433 @@
+[
+  {
+    "id": "price_optimizer_flow",
+    "type": "tab",
+    "label": "Price-Based Optimizer",
+    "disabled": false,
+    "info": "Manages water boiler and heat pump based on electricity price ranks"
+  },
+  {
+    "id": "price_rank_monitor",
+    "type": "server-state-changed",
+    "z": "price_optimizer_flow",
+    "name": "Price Rank Changed",
+    "server": "home_assistant",
+    "version": 4,
+    "exposeToHomeAssistant": false,
+    "haConfig": [
+      {
+        "property": "name",
+        "value": ""
+      },
+      {
+        "property": "icon",
+        "value": ""
+      }
+    ],
+    "entityidfilter": "sensor.shf_rank_now",
+    "entityidfiltertype": "exact",
+    "outputinitially": true,
+    "state_type": "num",
+    "haltifstate": "",
+    "halt_if_type": "str",
+    "halt_if_compare": "is",
+    "outputs": 1,
+    "output_only_on_state_change": true,
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "ignorePrevStateNull": false,
+    "ignorePrevStateUnknown": false,
+    "ignorePrevStateUnavailable": false,
+    "ignoreCurrentStateUnknown": false,
+    "ignoreCurrentStateUnavailable": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      }
+    ],
+    "x": 140,
+    "y": 80,
+    "wires": [
+      [
+        "evaluate_price_actions"
+      ]
+    ]
+  },
+  {
+    "id": "evaluate_price_actions",
+    "type": "function",
+    "z": "price_optimizer_flow",
+    "name": "Evaluate Price-Based Actions",
+    "func": "const priceRank = parseInt(msg.payload);\nconst boilerRankSlider = parseInt(global.get('homeassistant.homeAssistant.states[\"input_number.shf_rank_slider\"].state'));\n\n// Get temperature sliders for heat pump\nconst tempExpensive = parseFloat(global.get('homeassistant.homeAssistant.states[\"input_number.yllapitolampo\"].state'));\nconst tempNormal = parseFloat(global.get('homeassistant.homeAssistant.states[\"input_number.normaalilampo_presence\"].state'));\nconst tempCheap = parseFloat(global.get('homeassistant.homeAssistant.states[\"input_number.tehostuslampo\"].state'));\n\nmsg.priceRank = priceRank;\nmsg.boilerRankThreshold = boilerRankSlider;\n\n// Determine heat pump temperature based on rank\nif (priceRank <= 6) {\n    // 6 cheapest hours - BOOST\n    msg.heatpumpTemp = tempCheap;\n    msg.heatpumpMode = 'boost';\n    msg.priceCategory = 'cheap';\n} else if (priceRank >= 19) {\n    // 6 most expensive hours (24-6+1 = 19)\n    msg.heatpumpTemp = tempExpensive;\n    msg.heatpumpMode = 'eco';\n    msg.priceCategory = 'expensive';\n} else {\n    // 12 middle hours - NORMAL\n    msg.heatpumpTemp = tempNormal;\n    msg.heatpumpMode = 'normal';\n    msg.priceCategory = 'normal';\n}\n\n// Determine if water boiler should run\nmsg.shouldRunBoiler = (priceRank <= boilerRankSlider);\n\n// Determine if garage heater should run (6 cheapest hours)\nmsg.shouldRunGarage = (priceRank <= 6);\n\nnode.status({\n    fill: priceRank <= 6 ? 'green' : priceRank >= 19 ? 'red' : 'yellow',\n    shape: 'dot',\n    text: `Rank ${priceRank} - ${msg.priceCategory.toUpperCase()}`\n});\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 400,
+    "y": 80,
+    "wires": [
+      [
+        "control_heatpump",
+        "control_boiler",
+        "control_garage"
+      ]
+    ]
+  },
+  {
+    "id": "control_heatpump",
+    "type": "function",
+    "z": "price_optimizer_flow",
+    "name": "Control Heat Pump Temperature",
+    "func": "const targetTemp = msg.heatpumpTemp;\nconst mode = msg.heatpumpMode;\n\nmsg.payload = {\n    domain: 'climate',\n    service: 'set_temperature',\n    data: {\n        entity_id: 'climate.mitsu_ilp',\n        temperature: targetTemp\n    }\n};\n\nmsg.notification = `🌡️ Heat Pump set to ${targetTemp}°C (${mode} mode - Rank ${msg.priceRank})`;\n\nnode.status({\n    fill: mode === 'boost' ? 'green' : mode === 'eco' ? 'red' : 'yellow',\n    shape: 'dot',\n    text: `${targetTemp}°C - ${mode}`\n});\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 700,
+    "y": 60,
+    "wires": [
+      [
+        "execute_service",
+        "send_notification"
+      ]
+    ]
+  },
+  {
+    "id": "control_boiler",
+    "type": "function",
+    "z": "price_optimizer_flow",
+    "name": "Control Water Boiler",
+    "func": "const shouldRun = msg.shouldRunBoiler;\nconst saunaActive = flow.get('sauna_active') || false;\nconst carCharging = global.get('homeassistant.homeAssistant.states[\"switch.tesla_model_3_charger\"].state');\nconst boilerCurrentState = global.get('homeassistant.homeAssistant.states[\"switch.shellypro4pm_ec62609fd3dc_switch_2\"].state');\n\n// Check conflicts\nif (shouldRun) {\n    if (saunaActive) {\n        // Don't run if sauna is active\n        msg.boilerAction = 'off';\n        msg.reason = 'Sauna active';\n    } else if (carCharging === 'on') {\n        // Car is charging - check if we can run together\n        const currentAmps = parseFloat(global.get('homeassistant.homeAssistant.states[\"number.tesla_model_3_charging_amps\"].state'));\n        \n        if (currentAmps <= 12) {\n            // Car at reduced power, can run boiler\n            msg.boilerAction = 'on';\n            msg.reason = 'Cheap hour + car at reduced power';\n        } else {\n            // Ask load balancer to reduce car first\n            msg.boilerAction = 'wait';\n            msg.reason = 'Waiting for car to reduce';\n            return null;\n        }\n    } else {\n        // No conflicts, turn on\n        msg.boilerAction = 'on';\n        msg.reason = `Rank ${msg.priceRank} ≤ ${msg.boilerRankThreshold}`;\n    }\n} else {\n    // Outside cheap hours\n    msg.boilerAction = 'off';\n    msg.reason = `Rank ${msg.priceRank} > ${msg.boilerRankThreshold}`;\n}\n\n// Only send command if state needs to change\nif ((msg.boilerAction === 'on' && boilerCurrentState !== 'on') ||\n    (msg.boilerAction === 'off' && boilerCurrentState === 'on')) {\n    \n    msg.payload = {\n        domain: 'switch',\n        service: `turn_${msg.boilerAction}`,\n        data: {\n            entity_id: 'switch.shellypro4pm_ec62609fd3dc_switch_2'\n        }\n    };\n    \n    msg.notification = `💧 Water Boiler ${msg.boilerAction.toUpperCase()} - ${msg.reason}`;\n    \n    node.status({\n        fill: msg.boilerAction === 'on' ? 'green' : 'grey',\n        shape: 'dot',\n        text: `Boiler ${msg.boilerAction} - ${msg.reason}`\n    });\n    \n    return msg;\n}\n\nreturn null;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 680,
+    "y": 100,
+    "wires": [
+      [
+        "execute_service",
+        "send_notification"
+      ]
+    ]
+  },
+  {
+    "id": "control_garage",
+    "type": "function",
+    "z": "price_optimizer_flow",
+    "name": "Control Garage Heater",
+    "func": "const shouldRun = msg.shouldRunGarage;\nconst garageTemp = parseFloat(global.get('homeassistant.homeAssistant.states[\"sensor.garage_temperature\"].state'));\nconst minTemp = 6;\n\n// CHANGE THESE TO YOUR ACTUAL ENTITIES WHEN READY\nconst garageHeaterEntity = 'switch.garage_heater'; // PLACEHOLDER\nconst garageTempEntity = 'sensor.garage_temperature'; // PLACEHOLDER\n\nif (shouldRun && garageTemp < minTemp) {\n    // Cheap hour and temperature below minimum\n    msg.payload = {\n        domain: 'switch',\n        service: 'turn_on',\n        data: {\n            entity_id: garageHeaterEntity\n        }\n    };\n    \n    msg.notification = `🔋 Garage heater ON - Temp ${garageTemp}°C (Rank ${msg.priceRank})`;\n    \n    node.status({\n        fill: 'green',\n        shape: 'dot',\n        text: `Heating - ${garageTemp}°C`\n    });\n    \n    return msg;\n    \n} else if (!shouldRun || garageTemp >= minTemp + 1) {\n    // Not cheap hour or temperature OK\n    msg.payload = {\n        domain: 'switch',\n        service: 'turn_off',\n        data: {\n            entity_id: garageHeaterEntity\n        }\n    };\n    \n    node.status({\n        fill: 'grey',\n        shape: 'dot',\n        text: `OFF - ${garageTemp}°C`\n    });\n    \n    return msg;\n}\n\nreturn null;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 680,
+    "y": 140,
+    "wires": [
+      [
+        "execute_service"
+      ]
+    ]
+  },
+  {
+    "id": "periodic_check",
+    "type": "inject",
+    "z": "price_optimizer_flow",
+    "name": "Every 15 minutes",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "900",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "10",
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 140,
+    "y": 140,
+    "wires": [
+      [
+        "get_current_rank"
+      ]
+    ]
+  },
+  {
+    "id": "get_current_rank",
+    "type": "api-current-state",
+    "z": "price_optimizer_flow",
+    "name": "Get Current Rank",
+    "server": "home_assistant",
+    "version": 3,
+    "outputs": 1,
+    "halt_if": "",
+    "halt_if_type": "str",
+    "halt_if_compare": "is",
+    "entity_id": "sensor.shf_rank_now",
+    "state_type": "num",
+    "blockInputOverrides": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      }
+    ],
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "override_topic": false,
+    "state_location": "payload",
+    "override_payload": "msg",
+    "entity_location": "data",
+    "override_data": "msg",
+    "x": 360,
+    "y": 140,
+    "wires": [
+      [
+        "evaluate_price_actions"
+      ]
+    ]
+  },
+  {
+    "id": "boiler_runtime_tracker",
+    "type": "server-state-changed",
+    "z": "price_optimizer_flow",
+    "name": "Boiler State Tracker",
+    "server": "home_assistant",
+    "version": 4,
+    "exposeToHomeAssistant": false,
+    "haConfig": [
+      {
+        "property": "name",
+        "value": ""
+      },
+      {
+        "property": "icon",
+        "value": ""
+      }
+    ],
+    "entityidfilter": "switch.shellypro4pm_ec62609fd3dc_switch_2",
+    "entityidfiltertype": "exact",
+    "outputinitially": true,
+    "state_type": "str",
+    "haltifstate": "",
+    "halt_if_type": "str",
+    "halt_if_compare": "is",
+    "outputs": 1,
+    "output_only_on_state_change": true,
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "ignorePrevStateNull": false,
+    "ignorePrevStateUnknown": false,
+    "ignorePrevStateUnavailable": false,
+    "ignoreCurrentStateUnknown": false,
+    "ignoreCurrentStateUnavailable": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      }
+    ],
+    "x": 150,
+    "y": 240,
+    "wires": [
+      [
+        "track_boiler_runtime"
+      ]
+    ]
+  },
+  {
+    "id": "track_boiler_runtime",
+    "type": "function",
+    "z": "price_optimizer_flow",
+    "name": "Track Boiler Runtime",
+    "func": "const state = msg.payload;\nconst now = Date.now();\n\nlet boilerStats = flow.get('boiler_stats') || {\n    todayRuntime: 0,\n    lastStart: null,\n    dailyReset: new Date().toDateString()\n};\n\n// Check if it's a new day\nconst today = new Date().toDateString();\nif (boilerStats.dailyReset !== today) {\n    boilerStats.todayRuntime = 0;\n    boilerStats.dailyReset = today;\n}\n\nif (state === 'on' && !boilerStats.lastStart) {\n    // Boiler turned on\n    boilerStats.lastStart = now;\n    \n} else if (state === 'off' && boilerStats.lastStart) {\n    // Boiler turned off - calculate runtime\n    const runtimeMs = now - boilerStats.lastStart;\n    const runtimeHours = runtimeMs / (1000 * 60 * 60);\n    \n    boilerStats.todayRuntime += runtimeHours;\n    boilerStats.lastStart = null;\n    \n    const totalHours = boilerStats.todayRuntime.toFixed(1);\n    \n    msg.notification = `💧 Boiler OFF - Today's total: ${totalHours} hours`;\n    \n    // Alert if below minimum\n    if (totalHours < 2) {\n        const hour = new Date().getHours();\n        if (hour >= 20) {\n            msg.alert = `⚠️ Water boiler only ran ${totalHours} hours today (minimum 2h recommended)`;\n        }\n    }\n}\n\nflow.set('boiler_stats', boilerStats);\n\nnode.status({\n    fill: state === 'on' ? 'green' : 'grey',\n    shape: 'dot',\n    text: `${state.toUpperCase()} - Today: ${boilerStats.todayRuntime.toFixed(1)}h`\n});\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 400,
+    "y": 240,
+    "wires": [
+      [
+        "send_notification"
+      ]
+    ]
+  },
+  {
+    "id": "daily_summary",
+    "type": "inject",
+    "z": "price_optimizer_flow",
+    "name": "Daily Summary - 9 PM",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "00 21 * * *",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 160,
+    "y": 300,
+    "wires": [
+      [
+        "generate_daily_summary"
+      ]
+    ]
+  },
+  {
+    "id": "generate_daily_summary",
+    "type": "function",
+    "z": "price_optimizer_flow",
+    "name": "Generate Daily Summary",
+    "func": "const boilerStats = flow.get('boiler_stats') || { todayRuntime: 0 };\nconst totalHours = boilerStats.todayRuntime.toFixed(1);\n\nlet status = '';\nlet emoji = '';\n\nif (totalHours >= 4) {\n    status = 'Excellent';\n    emoji = '✅';\n} else if (totalHours >= 3) {\n    status = 'Good';\n    emoji = '👍';\n} else if (totalHours >= 2) {\n    status = 'Acceptable';\n    emoji = '⚠️';\n} else {\n    status = 'Low';\n    emoji = '❌';\n}\n\nmsg.notification = `📊 Daily Summary\\n` +\n                   `${emoji} Water Boiler: ${totalHours} hours (${status})\\n` +\n                   `Target: 2-4 hours during cheap electricity`;\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 410,
+    "y": 300,
+    "wires": [
+      [
+        "send_notification"
+      ]
+    ]
+  },
+  {
+    "id": "execute_service",
+    "type": "api-call-service",
+    "z": "price_optimizer_flow",
+    "name": "Execute Service",
+    "server": "home_assistant",
+    "version": 5,
+    "debugenabled": false,
+    "domain": "",
+    "service": "",
+    "areaId": [],
+    "deviceId": [],
+    "entityId": [],
+    "data": "",
+    "dataType": "jsonata",
+    "mergeContext": "",
+    "mustacheAltTags": false,
+    "outputProperties": [],
+    "queue": "none",
+    "x": 970,
+    "y": 100,
+    "wires": [
+      [
+        "debug_output"
+      ]
+    ]
+  },
+  {
+    "id": "send_notification",
+    "type": "function",
+    "z": "price_optimizer_flow",
+    "name": "Prepare Notification",
+    "func": "if (msg.notification || msg.alert) {\n    const message = msg.alert || msg.notification;\n    msg.payload = {\n        data: {\n            message: message\n        }\n    };\n    return msg;\n}\nreturn null;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 720,
+    "y": 240,
+    "wires": [
+      [
+        "telegram_notify"
+      ]
+    ]
+  },
+  {
+    "id": "telegram_notify",
+    "type": "api-call-service",
+    "z": "price_optimizer_flow",
+    "name": "Send to Telegram",
+    "server": "home_assistant",
+    "version": 5,
+    "debugenabled": false,
+    "domain": "notify",
+    "service": "telegram",
+    "areaId": [],
+    "deviceId": [],
+    "entityId": [],
+    "data": "{\"message\": payload.data.message}",
+    "dataType": "jsonata",
+    "mergeContext": "",
+    "mustacheAltTags": false,
+    "outputProperties": [],
+    "queue": "none",
+    "x": 960,
+    "y": 240,
+    "wires": [[]]
+  },
+  {
+    "id": "debug_output",
+    "type": "debug",
+    "z": "price_optimizer_flow",
+    "name": "Price Optimizer Debug",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "true",
+    "targetType": "full",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 1190,
+    "y": 100,
+    "wires": []
+  },
+  {
+    "id": "home_assistant",
+    "type": "server",
+    "name": "Home Assistant",
+    "version": 5,
+    "addon": true,
+    "rejectUnauthorizedCerts": true,
+    "ha_boolean": "y|yes|true|on|home|open",
+    "connectionDelay": true,
+    "cacheJson": true,
+    "heartbeat": false,
+    "heartbeatInterval": 30,
+    "areaSelector": "friendlyName",
+    "deviceSelector": "friendlyName",
+    "entitySelector": "friendlyName",
+    "statusSeparator": "at: ",
+    "statusYear": "hidden",
+    "statusMonth": "short",
+    "statusDay": "numeric",
+    "statusHourCycle": "h23",
+    "statusTimeFormat": "h:m",
+    "enableGlobalContextStore": true
+  }
+]

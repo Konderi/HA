@@ -1,0 +1,362 @@
+[
+  {
+    "id": "room_control_flow",
+    "type": "tab",
+    "label": "Multi-Room Temperature Control",
+    "disabled": false,
+    "info": "Independent temperature control for multiple rooms with priority management"
+  },
+  {
+    "id": "living_room_schedule",
+    "type": "inject",
+    "z": "room_control_flow",
+    "name": "Living Room Schedule",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "room",
+        "v": "living_room",
+        "vt": "str"
+      }
+    ],
+    "repeat": "1800",
+    "crontab": "",
+    "once": true,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 140,
+    "y": 80,
+    "wires": [
+      [
+        "living_room_logic"
+      ]
+    ]
+  },
+  {
+    "id": "living_room_logic",
+    "type": "function",
+    "z": "room_control_flow",
+    "name": "Living Room Temperature Logic",
+    "func": "const now = new Date();\nconst hour = now.getHours();\n\nlet targetTemp;\n\n// Living room is main space - comfortable most of the day\nif (hour >= 7 && hour < 23) {\n    targetTemp = 21;\n} else {\n    targetTemp = 18;\n}\n\nmsg.payload = targetTemp;\nmsg.room = 'living_room';\nmsg.entity_id = 'climate.living_room';\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 400,
+    "y": 80,
+    "wires": [
+      [
+        "set_room_temp"
+      ]
+    ]
+  },
+  {
+    "id": "bedroom_schedule",
+    "type": "inject",
+    "z": "room_control_flow",
+    "name": "Bedroom Schedule",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "room",
+        "v": "bedroom",
+        "vt": "str"
+      }
+    ],
+    "repeat": "1800",
+    "crontab": "",
+    "once": true,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 140,
+    "y": 160,
+    "wires": [
+      [
+        "bedroom_logic"
+      ]
+    ]
+  },
+  {
+    "id": "bedroom_logic",
+    "type": "function",
+    "z": "room_control_flow",
+    "name": "Bedroom Temperature Logic",
+    "func": "const now = new Date();\nconst hour = now.getHours();\n\nlet targetTemp;\n\n// Bedroom - cooler during sleep, warm in morning\nif (hour >= 6 && hour < 8) {\n    targetTemp = 20; // Morning warmup\n} else if (hour >= 8 && hour < 22) {\n    targetTemp = 19; // Day - lower temp\n} else {\n    targetTemp = 17; // Sleep temperature\n}\n\nmsg.payload = targetTemp;\nmsg.room = 'bedroom';\nmsg.entity_id = 'climate.bedroom';\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 380,
+    "y": 160,
+    "wires": [
+      [
+        "set_room_temp"
+      ]
+    ]
+  },
+  {
+    "id": "office_schedule",
+    "type": "inject",
+    "z": "room_control_flow",
+    "name": "Office Schedule",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "room",
+        "v": "office",
+        "vt": "str"
+      }
+    ],
+    "repeat": "1800",
+    "crontab": "",
+    "once": true,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 140,
+    "y": 240,
+    "wires": [
+      [
+        "office_logic"
+      ]
+    ]
+  },
+  {
+    "id": "office_logic",
+    "type": "function",
+    "z": "room_control_flow",
+    "name": "Office Temperature Logic",
+    "func": "const now = new Date();\nconst hour = now.getHours();\nconst day = now.getDay();\n\nlet targetTemp;\n\n// Office - heated during work hours on weekdays\nconst isWeekday = (day >= 1 && day <= 5);\n\nif (isWeekday && hour >= 8 && hour < 18) {\n    targetTemp = 21; // Work hours\n} else {\n    targetTemp = 18; // Off hours\n}\n\nmsg.payload = targetTemp;\nmsg.room = 'office';\nmsg.entity_id = 'climate.office';\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 360,
+    "y": 240,
+    "wires": [
+      [
+        "set_room_temp"
+      ]
+    ]
+  },
+  {
+    "id": "bathroom_schedule",
+    "type": "inject",
+    "z": "room_control_flow",
+    "name": "Bathroom Schedule",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "room",
+        "v": "bathroom",
+        "vt": "str"
+      }
+    ],
+    "repeat": "1800",
+    "crontab": "",
+    "once": true,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 140,
+    "y": 320,
+    "wires": [
+      [
+        "bathroom_logic"
+      ]
+    ]
+  },
+  {
+    "id": "bathroom_logic",
+    "type": "function",
+    "z": "room_control_flow",
+    "name": "Bathroom Temperature Logic",
+    "func": "const now = new Date();\nconst hour = now.getHours();\n\nlet targetTemp;\n\n// Bathroom - warmer in morning and evening\nif ((hour >= 6 && hour < 9) || (hour >= 21 && hour < 23)) {\n    targetTemp = 22; // Shower times\n} else {\n    targetTemp = 19; // Rest of day\n}\n\nmsg.payload = targetTemp;\nmsg.room = 'bathroom';\nmsg.entity_id = 'climate.bathroom';\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 380,
+    "y": 320,
+    "wires": [
+      [
+        "set_room_temp"
+      ]
+    ]
+  },
+  {
+    "id": "set_room_temp",
+    "type": "api-call-service",
+    "z": "room_control_flow",
+    "name": "Set Room Temperature",
+    "server": "home_assistant",
+    "version": 5,
+    "debugenabled": false,
+    "domain": "climate",
+    "service": "set_temperature",
+    "areaId": [],
+    "deviceId": [],
+    "entityId": [],
+    "data": "{\"entity_id\": entity_id, \"temperature\": payload}",
+    "dataType": "jsonata",
+    "mergeContext": "",
+    "mustacheAltTags": false,
+    "outputProperties": [],
+    "queue": "none",
+    "x": 680,
+    "y": 200,
+    "wires": [
+      [
+        "debug_room"
+      ]
+    ]
+  },
+  {
+    "id": "debug_room",
+    "type": "debug",
+    "z": "room_control_flow",
+    "name": "Room Status",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "true",
+    "targetType": "full",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 910,
+    "y": 200,
+    "wires": []
+  },
+  {
+    "id": "motion_living",
+    "type": "server-state-changed",
+    "z": "room_control_flow",
+    "name": "Living Room Motion",
+    "server": "home_assistant",
+    "version": 4,
+    "exposeToHomeAssistant": false,
+    "haConfig": [
+      {
+        "property": "name",
+        "value": ""
+      },
+      {
+        "property": "icon",
+        "value": ""
+      }
+    ],
+    "entityidfilter": "binary_sensor.living_room_motion",
+    "entityidfiltertype": "exact",
+    "outputinitially": false,
+    "state_type": "str",
+    "haltifstate": "on",
+    "halt_if_type": "str",
+    "halt_if_compare": "is",
+    "outputs": 2,
+    "output_only_on_state_change": true,
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "ignorePrevStateNull": false,
+    "ignorePrevStateUnknown": false,
+    "ignorePrevStateUnavailable": false,
+    "ignoreCurrentStateUnknown": false,
+    "ignoreCurrentStateUnavailable": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      }
+    ],
+    "x": 140,
+    "y": 440,
+    "wires": [
+      [
+        "boost_living_temp"
+      ],
+      []
+    ]
+  },
+  {
+    "id": "boost_living_temp",
+    "type": "change",
+    "z": "room_control_flow",
+    "name": "Boost to 22°C",
+    "rules": [
+      {
+        "t": "set",
+        "p": "payload",
+        "pt": "msg",
+        "to": "22",
+        "tot": "num"
+      },
+      {
+        "t": "set",
+        "p": "entity_id",
+        "pt": "msg",
+        "to": "climate.living_room",
+        "tot": "str"
+      }
+    ],
+    "action": "",
+    "property": "",
+    "from": "",
+    "to": "",
+    "reg": false,
+    "x": 390,
+    "y": 440,
+    "wires": [
+      [
+        "set_room_temp"
+      ]
+    ]
+  },
+  {
+    "id": "home_assistant",
+    "type": "server",
+    "name": "Home Assistant",
+    "version": 5,
+    "addon": true,
+    "rejectUnauthorizedCerts": true,
+    "ha_boolean": "y|yes|true|on|home|open",
+    "connectionDelay": true,
+    "cacheJson": true,
+    "heartbeat": false,
+    "heartbeatInterval": 30,
+    "areaSelector": "friendlyName",
+    "deviceSelector": "friendlyName",
+    "entitySelector": "friendlyName",
+    "statusSeparator": "at: ",
+    "statusYear": "hidden",
+    "statusMonth": "short",
+    "statusDay": "numeric",
+    "statusHourCycle": "h23",
+    "statusTimeFormat": "h:m",
+    "enableGlobalContextStore": true
+  }
+]

@@ -1,0 +1,409 @@
+[
+  {
+    "id": "eco_mode_flow",
+    "type": "tab",
+    "label": "Eco Mode & Energy Optimization",
+    "disabled": false,
+    "info": "Energy-saving heating optimization based on electricity prices and usage patterns"
+  },
+  {
+    "id": "electricity_price_check",
+    "type": "server-state-changed",
+    "z": "eco_mode_flow",
+    "name": "Electricity Price",
+    "server": "home_assistant",
+    "version": 4,
+    "exposeToHomeAssistant": false,
+    "haConfig": [
+      {
+        "property": "name",
+        "value": ""
+      },
+      {
+        "property": "icon",
+        "value": ""
+      }
+    ],
+    "entityidfilter": "sensor.electricity_price",
+    "entityidfiltertype": "exact",
+    "outputinitially": true,
+    "state_type": "num",
+    "haltifstate": "",
+    "halt_if_type": "str",
+    "halt_if_compare": "is",
+    "outputs": 1,
+    "output_only_on_state_change": true,
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "ignorePrevStateNull": false,
+    "ignorePrevStateUnknown": false,
+    "ignorePrevStateUnavailable": false,
+    "ignoreCurrentStateUnknown": false,
+    "ignoreCurrentStateUnavailable": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      },
+      {
+        "property": "data",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entity"
+      }
+    ],
+    "x": 130,
+    "y": 80,
+    "wires": [
+      [
+        "price_evaluation"
+      ]
+    ]
+  },
+  {
+    "id": "price_evaluation",
+    "type": "function",
+    "z": "eco_mode_flow",
+    "name": "Evaluate Price Level",
+    "func": "const price = parseFloat(msg.payload);\n\n// Define price thresholds (adjust based on your region)\nconst HIGH_PRICE = 0.25; // €/kWh\nconst MEDIUM_PRICE = 0.15; // €/kWh\n\nlet priceLevel;\nlet tempReduction = 0;\n\nif (price >= HIGH_PRICE) {\n    priceLevel = 'high';\n    tempReduction = 2; // Reduce by 2°C during high prices\n} else if (price >= MEDIUM_PRICE) {\n    priceLevel = 'medium';\n    tempReduction = 1; // Reduce by 1°C during medium prices\n} else {\n    priceLevel = 'low';\n    tempReduction = 0; // No reduction during low prices\n}\n\nmsg.priceLevel = priceLevel;\nmsg.tempReduction = tempReduction;\nmsg.currentPrice = price;\n\nnode.status({\n    fill: priceLevel === 'high' ? 'red' : priceLevel === 'medium' ? 'yellow' : 'green',\n    shape: 'dot',\n    text: `Price: €${price.toFixed(3)}/kWh - Reduction: ${tempReduction}°C`\n});\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 360,
+    "y": 80,
+    "wires": [
+      [
+        "apply_eco_adjustment"
+      ]
+    ]
+  },
+  {
+    "id": "apply_eco_adjustment",
+    "type": "function",
+    "z": "eco_mode_flow",
+    "name": "Apply Eco Adjustment",
+    "func": "// Get current target temperature from context or use default\nlet baseTemp = flow.get('target_temperature') || 21;\n\n// Apply price-based reduction\nlet adjustedTemp = baseTemp - msg.tempReduction;\n\n// Ensure minimum comfort level (don't go below 17°C)\nadjustedTemp = Math.max(17, adjustedTemp);\n\nmsg.payload = adjustedTemp;\nmsg.adjustment = {\n    base: baseTemp,\n    reduction: msg.tempReduction,\n    final: adjustedTemp,\n    reason: 'eco_mode_price'\n};\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 600,
+    "y": 80,
+    "wires": [
+      [
+        "set_eco_temp"
+      ]
+    ]
+  },
+  {
+    "id": "set_eco_temp",
+    "type": "api-call-service",
+    "z": "eco_mode_flow",
+    "name": "Set Eco Temperature",
+    "server": "home_assistant",
+    "version": 5,
+    "debugenabled": false,
+    "domain": "climate",
+    "service": "set_temperature",
+    "areaId": [],
+    "deviceId": [],
+    "entityId": [
+      "climate.living_room"
+    ],
+    "data": "{\"temperature\": payload}",
+    "dataType": "jsonata",
+    "mergeContext": "",
+    "mustacheAltTags": false,
+    "outputProperties": [],
+    "queue": "none",
+    "x": 840,
+    "y": 80,
+    "wires": [
+      [
+        "debug_eco"
+      ]
+    ]
+  },
+  {
+    "id": "debug_eco",
+    "type": "debug",
+    "z": "eco_mode_flow",
+    "name": "Eco Status",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "true",
+    "targetType": "full",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 1050,
+    "y": 80,
+    "wires": []
+  },
+  {
+    "id": "eco_mode_toggle",
+    "type": "server-state-changed",
+    "z": "eco_mode_flow",
+    "name": "Eco Mode Switch",
+    "server": "home_assistant",
+    "version": 4,
+    "exposeToHomeAssistant": false,
+    "haConfig": [
+      {
+        "property": "name",
+        "value": ""
+      },
+      {
+        "property": "icon",
+        "value": ""
+      }
+    ],
+    "entityidfilter": "input_boolean.eco_mode",
+    "entityidfiltertype": "exact",
+    "outputinitially": true,
+    "state_type": "str",
+    "haltifstate": "",
+    "halt_if_type": "str",
+    "halt_if_compare": "is",
+    "outputs": 1,
+    "output_only_on_state_change": true,
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "ignorePrevStateNull": false,
+    "ignorePrevStateUnknown": false,
+    "ignorePrevStateUnavailable": false,
+    "ignoreCurrentStateUnknown": false,
+    "ignoreCurrentStateUnavailable": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      }
+    ],
+    "x": 130,
+    "y": 200,
+    "wires": [
+      [
+        "check_eco_state"
+      ]
+    ]
+  },
+  {
+    "id": "check_eco_state",
+    "type": "switch",
+    "z": "eco_mode_flow",
+    "name": "Eco On/Off?",
+    "property": "payload",
+    "propertyType": "msg",
+    "rules": [
+      {
+        "t": "eq",
+        "v": "on",
+        "vt": "str"
+      },
+      {
+        "t": "eq",
+        "v": "off",
+        "vt": "str"
+      }
+    ],
+    "checkall": "true",
+    "repair": false,
+    "outputs": 2,
+    "x": 330,
+    "y": 200,
+    "wires": [
+      [
+        "eco_active"
+      ],
+      [
+        "eco_inactive"
+      ]
+    ]
+  },
+  {
+    "id": "eco_active",
+    "type": "change",
+    "z": "eco_mode_flow",
+    "name": "Eco Mode Active",
+    "rules": [
+      {
+        "t": "set",
+        "p": "payload",
+        "pt": "msg",
+        "to": "19",
+        "tot": "num"
+      }
+    ],
+    "action": "",
+    "property": "",
+    "from": "",
+    "to": "",
+    "reg": false,
+    "x": 550,
+    "y": 180,
+    "wires": [
+      [
+        "set_eco_temp"
+      ]
+    ]
+  },
+  {
+    "id": "eco_inactive",
+    "type": "change",
+    "z": "eco_mode_flow",
+    "name": "Normal Mode",
+    "rules": [
+      {
+        "t": "set",
+        "p": "payload",
+        "pt": "msg",
+        "to": "21",
+        "tot": "num"
+      }
+    ],
+    "action": "",
+    "property": "",
+    "from": "",
+    "to": "",
+    "reg": false,
+    "x": 550,
+    "y": 220,
+    "wires": [
+      [
+        "set_eco_temp"
+      ]
+    ]
+  },
+  {
+    "id": "solar_production",
+    "type": "server-state-changed",
+    "z": "eco_mode_flow",
+    "name": "Solar Production",
+    "server": "home_assistant",
+    "version": 4,
+    "exposeToHomeAssistant": false,
+    "haConfig": [
+      {
+        "property": "name",
+        "value": ""
+      },
+      {
+        "property": "icon",
+        "value": ""
+      }
+    ],
+    "entityidfilter": "sensor.solar_power",
+    "entityidfiltertype": "exact",
+    "outputinitially": false,
+    "state_type": "num",
+    "haltifstate": "",
+    "halt_if_type": "str",
+    "halt_if_compare": "is",
+    "outputs": 1,
+    "output_only_on_state_change": false,
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "ignorePrevStateNull": false,
+    "ignorePrevStateUnknown": false,
+    "ignorePrevStateUnavailable": false,
+    "ignoreCurrentStateUnknown": false,
+    "ignoreCurrentStateUnavailable": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      }
+    ],
+    "x": 130,
+    "y": 320,
+    "wires": [
+      [
+        "check_solar"
+      ]
+    ]
+  },
+  {
+    "id": "check_solar",
+    "type": "function",
+    "z": "eco_mode_flow",
+    "name": "Check Solar Excess",
+    "func": "const solarProduction = parseFloat(msg.payload);\n\n// If producing more than 2kW, boost heating to use excess\nif (solarProduction > 2000) {\n    msg.payload = 23; // Boost temperature\n    msg.reason = 'solar_excess';\n    \n    node.status({\n        fill: 'green',\n        shape: 'dot',\n        text: `Solar boost: ${(solarProduction/1000).toFixed(1)}kW`\n    });\n    \n    return msg;\n}\n\nreturn null; // Don't adjust if no excess",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 350,
+    "y": 320,
+    "wires": [
+      [
+        "set_eco_temp"
+      ]
+    ]
+  },
+  {
+    "id": "night_setback",
+    "type": "inject",
+    "z": "eco_mode_flow",
+    "name": "Night Setback - 11 PM",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "00 23 * * *",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "17",
+    "payloadType": "num",
+    "x": 160,
+    "y": 440,
+    "wires": [
+      [
+        "set_eco_temp"
+      ]
+    ]
+  },
+  {
+    "id": "home_assistant",
+    "type": "server",
+    "name": "Home Assistant",
+    "version": 5,
+    "addon": true,
+    "rejectUnauthorizedCerts": true,
+    "ha_boolean": "y|yes|true|on|home|open",
+    "connectionDelay": true,
+    "cacheJson": true,
+    "heartbeat": false,
+    "heartbeatInterval": 30,
+    "areaSelector": "friendlyName",
+    "deviceSelector": "friendlyName",
+    "entitySelector": "friendlyName",
+    "statusSeparator": "at: ",
+    "statusYear": "hidden",
+    "statusMonth": "short",
+    "statusDay": "numeric",
+    "statusHourCycle": "h23",
+    "statusTimeFormat": "h:m",
+    "enableGlobalContextStore": true
+  }
+]

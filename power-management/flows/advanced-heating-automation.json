@@ -1,0 +1,433 @@
+[
+  {
+    "id": "advanced_heating_flow",
+    "type": "tab",
+    "label": "Advanced Heating Automation",
+    "disabled": false,
+    "info": "Complete heating automation with presence detection, weather adaptation, and schedules"
+  },
+  {
+    "id": "presence_sensor",
+    "type": "server-state-changed",
+    "z": "advanced_heating_flow",
+    "name": "Home Presence",
+    "server": "home_assistant",
+    "version": 4,
+    "exposeToHomeAssistant": false,
+    "haConfig": [
+      {
+        "property": "name",
+        "value": ""
+      },
+      {
+        "property": "icon",
+        "value": ""
+      }
+    ],
+    "entityidfilter": "person.user",
+    "entityidfiltertype": "exact",
+    "outputinitially": false,
+    "state_type": "str",
+    "haltifstate": "",
+    "halt_if_type": "str",
+    "halt_if_compare": "is",
+    "outputs": 1,
+    "output_only_on_state_change": true,
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "ignorePrevStateNull": false,
+    "ignorePrevStateUnknown": false,
+    "ignorePrevStateUnavailable": false,
+    "ignoreCurrentStateUnknown": false,
+    "ignoreCurrentStateUnavailable": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      },
+      {
+        "property": "data",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "eventData"
+      }
+    ],
+    "x": 120,
+    "y": 100,
+    "wires": [
+      [
+        "check_presence"
+      ]
+    ]
+  },
+  {
+    "id": "check_presence",
+    "type": "switch",
+    "z": "advanced_heating_flow",
+    "name": "Home or Away?",
+    "property": "payload",
+    "propertyType": "msg",
+    "rules": [
+      {
+        "t": "eq",
+        "v": "home",
+        "vt": "str"
+      },
+      {
+        "t": "eq",
+        "v": "not_home",
+        "vt": "str"
+      }
+    ],
+    "checkall": "true",
+    "repair": false,
+    "outputs": 2,
+    "x": 310,
+    "y": 100,
+    "wires": [
+      [
+        "get_schedule_temp"
+      ],
+      [
+        "set_away_mode"
+      ]
+    ]
+  },
+  {
+    "id": "set_away_mode",
+    "type": "change",
+    "z": "advanced_heating_flow",
+    "name": "Away Temperature",
+    "rules": [
+      {
+        "t": "set",
+        "p": "payload",
+        "pt": "msg",
+        "to": "16",
+        "tot": "num"
+      }
+    ],
+    "action": "",
+    "property": "",
+    "from": "",
+    "to": "",
+    "reg": false,
+    "x": 530,
+    "y": 140,
+    "wires": [
+      [
+        "set_climate_service"
+      ]
+    ]
+  },
+  {
+    "id": "time_trigger",
+    "type": "inject",
+    "z": "advanced_heating_flow",
+    "name": "Every 30 min",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "1800",
+    "crontab": "",
+    "once": true,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 120,
+    "y": 240,
+    "wires": [
+      [
+        "get_presence_state"
+      ]
+    ]
+  },
+  {
+    "id": "get_presence_state",
+    "type": "api-current-state",
+    "z": "advanced_heating_flow",
+    "name": "Check Presence",
+    "server": "home_assistant",
+    "version": 3,
+    "outputs": 2,
+    "halt_if": "home",
+    "halt_if_type": "str",
+    "halt_if_compare": "is",
+    "entity_id": "person.user",
+    "state_type": "str",
+    "blockInputOverrides": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      }
+    ],
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "override_topic": false,
+    "state_location": "payload",
+    "override_payload": "msg",
+    "entity_location": "data",
+    "override_data": "msg",
+    "x": 310,
+    "y": 240,
+    "wires": [
+      [
+        "get_schedule_temp"
+      ],
+      [
+        "set_away_mode"
+      ]
+    ]
+  },
+  {
+    "id": "get_schedule_temp",
+    "type": "function",
+    "z": "advanced_heating_flow",
+    "name": "Calculate Schedule Temp",
+    "func": "// Get current hour\nconst now = new Date();\nconst hour = now.getHours();\nconst day = now.getDay(); // 0 = Sunday, 6 = Saturday\n\n// Weekend or weekday\nconst isWeekend = (day === 0 || day === 6);\n\nlet targetTemp;\n\nif (isWeekend) {\n    // Weekend schedule\n    if (hour >= 7 && hour < 23) {\n        targetTemp = 21; // Comfortable all day\n    } else {\n        targetTemp = 18; // Night\n    }\n} else {\n    // Weekday schedule\n    if (hour >= 6 && hour < 8) {\n        targetTemp = 21; // Morning warmup\n    } else if (hour >= 8 && hour < 17) {\n        targetTemp = 19; // Day (might be at work)\n    } else if (hour >= 17 && hour < 22) {\n        targetTemp = 22; // Evening\n    } else {\n        targetTemp = 18; // Night\n    }\n}\n\nmsg.payload = targetTemp;\nmsg.schedule = {\n    hour: hour,\n    isWeekend: isWeekend,\n    targetTemp: targetTemp\n};\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 540,
+    "y": 60,
+    "wires": [
+      [
+        "get_weather"
+      ]
+    ]
+  },
+  {
+    "id": "get_weather",
+    "type": "api-current-state",
+    "z": "advanced_heating_flow",
+    "name": "Get Outdoor Temp",
+    "server": "home_assistant",
+    "version": 3,
+    "outputs": 1,
+    "halt_if": "",
+    "halt_if_type": "str",
+    "halt_if_compare": "is",
+    "entity_id": "weather.home",
+    "state_type": "str",
+    "blockInputOverrides": false,
+    "outputProperties": [
+      {
+        "property": "outdoor_temp",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      },
+      {
+        "property": "weather_data",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entity"
+      }
+    ],
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "override_topic": false,
+    "state_location": "payload",
+    "override_payload": "msg",
+    "entity_location": "data",
+    "override_data": "msg",
+    "x": 770,
+    "y": 60,
+    "wires": [
+      [
+        "weather_adjustment"
+      ]
+    ]
+  },
+  {
+    "id": "weather_adjustment",
+    "type": "function",
+    "z": "advanced_heating_flow",
+    "name": "Weather-based Adjustment",
+    "func": "// Get outdoor temperature from weather entity\nconst outdoorTemp = parseFloat(msg.weather_data.attributes.temperature);\nlet targetTemp = msg.payload;\n\n// Adjust temperature based on outdoor conditions\nif (outdoorTemp < -10) {\n    // Very cold outside, increase indoor temp by 1°C\n    targetTemp += 1;\n} else if (outdoorTemp < 0) {\n    // Cold outside, maintain target\n    // No adjustment\n} else if (outdoorTemp > 15) {\n    // Mild outside, reduce heating by 1°C\n    targetTemp -= 1;\n}\n\n// Ensure we stay within reasonable bounds\ntargetTemp = Math.max(16, Math.min(24, targetTemp));\n\nmsg.payload = targetTemp;\nmsg.adjustment = {\n    original: msg.schedule.targetTemp,\n    adjusted: targetTemp,\n    outdoorTemp: outdoorTemp\n};\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1010,
+    "y": 60,
+    "wires": [
+      [
+        "set_climate_service"
+      ]
+    ]
+  },
+  {
+    "id": "set_climate_service",
+    "type": "api-call-service",
+    "z": "advanced_heating_flow",
+    "name": "Set Temperature",
+    "server": "home_assistant",
+    "version": 5,
+    "debugenabled": false,
+    "domain": "climate",
+    "service": "set_temperature",
+    "areaId": [],
+    "deviceId": [],
+    "entityId": [
+      "climate.living_room"
+    ],
+    "data": "{\"temperature\": payload, \"hvac_mode\": \"heat\"}",
+    "dataType": "jsonata",
+    "mergeContext": "",
+    "mustacheAltTags": false,
+    "outputProperties": [],
+    "queue": "none",
+    "x": 1260,
+    "y": 100,
+    "wires": [
+      [
+        "debug_node"
+      ]
+    ]
+  },
+  {
+    "id": "debug_node",
+    "type": "debug",
+    "z": "advanced_heating_flow",
+    "name": "Heating Status",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "true",
+    "targetType": "full",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 1480,
+    "y": 100,
+    "wires": []
+  },
+  {
+    "id": "manual_override",
+    "type": "server-state-changed",
+    "z": "advanced_heating_flow",
+    "name": "Manual Temperature Change",
+    "server": "home_assistant",
+    "version": 4,
+    "exposeToHomeAssistant": false,
+    "haConfig": [
+      {
+        "property": "name",
+        "value": ""
+      },
+      {
+        "property": "icon",
+        "value": ""
+      }
+    ],
+    "entityidfilter": "climate.living_room",
+    "entityidfiltertype": "exact",
+    "outputinitially": false,
+    "state_type": "str",
+    "haltifstate": "",
+    "halt_if_type": "str",
+    "halt_if_compare": "is",
+    "outputs": 1,
+    "output_only_on_state_change": true,
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "ignorePrevStateNull": false,
+    "ignorePrevStateUnknown": false,
+    "ignorePrevStateUnavailable": false,
+    "ignoreCurrentStateUnknown": false,
+    "ignoreCurrentStateUnavailable": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      }
+    ],
+    "x": 160,
+    "y": 380,
+    "wires": [
+      [
+        "check_manual_change"
+      ]
+    ]
+  },
+  {
+    "id": "check_manual_change",
+    "type": "function",
+    "z": "advanced_heating_flow",
+    "name": "Detect Manual Override",
+    "func": "// Store override flag in context for 2 hours\nconst overrideUntil = new Date();\noverrideUntil.setHours(overrideUntil.getHours() + 2);\n\nflow.set('heating_override', true);\nflow.set('heating_override_until', overrideUntil.getTime());\n\nnode.status({\n    fill: 'yellow',\n    shape: 'dot',\n    text: 'Manual override active for 2h'\n});\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 430,
+    "y": 380,
+    "wires": [
+      [
+        "debug_override"
+      ]
+    ]
+  },
+  {
+    "id": "debug_override",
+    "type": "debug",
+    "z": "advanced_heating_flow",
+    "name": "Override Active",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 680,
+    "y": 380,
+    "wires": []
+  },
+  {
+    "id": "home_assistant",
+    "type": "server",
+    "name": "Home Assistant",
+    "version": 5,
+    "addon": true,
+    "rejectUnauthorizedCerts": true,
+    "ha_boolean": "y|yes|true|on|home|open",
+    "connectionDelay": true,
+    "cacheJson": true,
+    "heartbeat": false,
+    "heartbeatInterval": 30,
+    "areaSelector": "friendlyName",
+    "deviceSelector": "friendlyName",
+    "entitySelector": "friendlyName",
+    "statusSeparator": "at: ",
+    "statusYear": "hidden",
+    "statusMonth": "short",
+    "statusDay": "numeric",
+    "statusHourCycle": "h23",
+    "statusTimeFormat": "h:m",
+    "enableGlobalContextStore": true
+  }
+]

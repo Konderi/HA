@@ -1,0 +1,486 @@
+[
+  {
+    "id": "peak_limiter_flow",
+    "type": "tab",
+    "label": "Peak Power Limiter (Tehomaksu)",
+    "disabled": false,
+    "info": "Monitors 60-minute rolling average power to prevent tehomaksu (power peak fee). Keeps monthly peak under 8 kW threshold."
+  },
+  {
+    "id": "power_monitor_inject",
+    "type": "inject",
+    "z": "peak_limiter_flow",
+    "name": "Monitor Every Minute",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "60",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "10",
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 140,
+    "y": 80,
+    "wires": [
+      [
+        "get_phase_powers"
+      ]
+    ]
+  },
+  {
+    "id": "get_phase_powers",
+    "type": "function",
+    "z": "peak_limiter_flow",
+    "name": "Get All Phase Powers",
+    "func": "// Read power from all three phases\nconst phaseA = parseFloat(global.get('homeassistant.homeAssistant.states[\"sensor.shellyem3_channel_a_power\"].state')) || 0;\nconst phaseB = parseFloat(global.get('homeassistant.homeAssistant.states[\"sensor.shellyem3_channel_b_power\"].state')) || 0;\nconst phaseC = parseFloat(global.get('homeassistant.homeAssistant.states[\"sensor.shellyem3_channel_c_power\"].state')) || 0;\n\n// Calculate total power in kW\nconst totalPowerW = phaseA + phaseB + phaseC;\nconst totalPowerKW = totalPowerW / 1000;\n\nmsg.phaseA = phaseA;\nmsg.phaseB = phaseB;\nmsg.phaseC = phaseC;\nmsg.totalPowerW = totalPowerW;\nmsg.totalPowerKW = totalPowerKW;\nmsg.timestamp = new Date();\n\nnode.status({\n    fill: 'blue',\n    shape: 'dot',\n    text: `${totalPowerKW.toFixed(2)} kW`\n});\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 350,
+    "y": 80,
+    "wires": [
+      [
+        "update_power_buffer",
+        "debug_power"
+      ]
+    ]
+  },
+  {
+    "id": "update_power_buffer",
+    "type": "function",
+    "z": "peak_limiter_flow",
+    "name": "Update 60-Min Rolling Buffer",
+    "func": "// Get or initialize 60-minute buffer (60 readings, one per minute)\nlet powerBuffer = flow.get('power_buffer') || [];\n\n// Add current power reading\npowerBuffer.push({\n    power: msg.totalPowerKW,\n    timestamp: msg.timestamp\n});\n\n// Keep only last 60 minutes\nif (powerBuffer.length > 60) {\n    powerBuffer.shift();\n}\n\n// Save buffer\nflow.set('power_buffer', powerBuffer);\n\n// Calculate 60-minute rolling average\nconst sum = powerBuffer.reduce((acc, val) => acc + val.power, 0);\nconst average = sum / powerBuffer.length;\n\nmsg.powerBuffer = powerBuffer;\nmsg.bufferSize = powerBuffer.length;\nmsg.rolling60minAvg = average;\n\nnode.status({\n    fill: average > 8 ? 'red' : average > 7.5 ? 'yellow' : 'green',\n    shape: 'ring',\n    text: `60-min avg: ${average.toFixed(2)} kW (${powerBuffer.length}/60)`\n});\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 390,
+    "y": 160,
+    "wires": [
+      [
+        "predict_future_peak",
+        "update_monthly_peak"
+      ]
+    ]
+  },
+  {
+    "id": "predict_future_peak",
+    "type": "function",
+    "z": "peak_limiter_flow",
+    "name": "Predict Future Peak",
+    "func": "const currentAvg = msg.rolling60minAvg;\nconst currentPower = msg.totalPowerKW;\nconst bufferSize = msg.bufferSize;\n\n// Predict what average will be if current power continues\nfunction predictAverage(minutes) {\n    if (bufferSize < 60) {\n        // Still warming up, use conservative estimate\n        return Math.max(currentAvg, currentPower);\n    }\n    \n    // Calculate new average if current power continues for X minutes\n    const oldSum = currentAvg * 60;\n    const removedPower = msg.powerBuffer.slice(0, minutes).reduce((acc, val) => acc + val.power, 0);\n    const newSum = oldSum - removedPower + (currentPower * minutes);\n    return newSum / 60;\n}\n\n// Predict at different time intervals\nmsg.predicted5min = predictAverage(5);\nmsg.predicted10min = predictAverage(10);\nmsg.predicted15min = predictAverage(15);\nmsg.predicted30min = predictAverage(30);\n\n// Find worst case (highest prediction)\nmsg.worstCasePeak = Math.max(\n    msg.predicted5min,\n    msg.predicted10min,\n    msg.predicted15min,\n    msg.predicted30min\n);\n\n// Calculate potential monthly fee (assuming 2€/kW rate)\nconst threshold = 8.0; // kW\nconst ratePerKW = 2.0; // €/kW/month\n\nif (msg.worstCasePeak > threshold) {\n    msg.potentialFee = (msg.worstCasePeak - threshold) * ratePerKW;\n} else {\n    msg.potentialFee = 0;\n}\n\n// Determine action level\nif (msg.worstCasePeak > 8.0) {\n    msg.actionLevel = 'emergency';\n    msg.actionNeeded = true;\n} else if (msg.worstCasePeak > 7.5) {\n    msg.actionLevel = 'warning';\n    msg.actionNeeded = true;\n} else if (msg.worstCasePeak > 7.0) {\n    msg.actionLevel = 'caution';\n    msg.actionNeeded = false;\n} else {\n    msg.actionLevel = 'normal';\n    msg.actionNeeded = false;\n}\n\nnode.status({\n    fill: msg.actionLevel === 'emergency' ? 'red' : \n          msg.actionLevel === 'warning' ? 'yellow' : 'green',\n    shape: 'dot',\n    text: `Worst: ${msg.worstCasePeak.toFixed(2)} kW → ${msg.potentialFee.toFixed(2)}€`\n});\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 360,
+    "y": 260,
+    "wires": [
+      [
+        "action_decision"
+      ]
+    ]
+  },
+  {
+    "id": "action_decision",
+    "type": "switch",
+    "z": "peak_limiter_flow",
+    "name": "Decide Action",
+    "property": "actionLevel",
+    "propertyType": "msg",
+    "rules": [
+      {
+        "t": "eq",
+        "v": "emergency",
+        "vt": "str"
+      },
+      {
+        "t": "eq",
+        "v": "warning",
+        "vt": "str"
+      },
+      {
+        "t": "eq",
+        "v": "caution",
+        "vt": "str"
+      },
+      {
+        "t": "eq",
+        "v": "normal",
+        "vt": "str"
+      }
+    ],
+    "checkall": "false",
+    "repair": false,
+    "outputs": 4,
+    "x": 630,
+    "y": 260,
+    "wires": [
+      [
+        "emergency_reduction"
+      ],
+      [
+        "warning_reduction"
+      ],
+      [
+        "caution_monitor"
+      ],
+      [
+        "normal_operation"
+      ]
+    ],
+    "outputLabels": [
+      "Emergency (>8 kW)",
+      "Warning (>7.5 kW)",
+      "Caution (>7 kW)",
+      "Normal (<7 kW)"
+    ]
+  },
+  {
+    "id": "emergency_reduction",
+    "type": "function",
+    "z": "peak_limiter_flow",
+    "name": "Emergency Peak Reduction",
+    "func": "// CRITICAL: Projected 60-min average will exceed 8 kW\n// Take immediate action to prevent tehomaksu\n\nconst saunaActive = flow.get('sauna_active') || false;\nconst carCharging = global.get('homeassistant.homeAssistant.states[\"switch.tesla_model_3_charger\"].state');\nconst currentAmps = parseFloat(global.get('homeassistant.homeAssistant.states[\"number.tesla_model_3_charging_amps\"].state'));\nconst boilerOn = global.get('homeassistant.homeAssistant.states[\"switch.shellypro4pm_ec62609fd3dc_switch_2\"].state');\n\n// Calculate required reduction\nconst excessKW = msg.worstCasePeak - 8.0;\nconst requiredReduction = excessKW + 0.5; // Add 0.5 kW safety margin\n\nconst actions = [];\nlet totalReduction = 0;\n\n// Strategy: Reduce loads with least user impact\n// Priority: Keep sauna if user is in it, reduce car and boiler\n\n// 1. Turn off water boiler first (3 kW, low priority)\nif (boilerOn === 'on') {\n    actions.push({\n        payload: {\n            domain: 'switch',\n            service: 'turn_off',\n            data: {\n                entity_id: 'switch.shellypro4pm_ec62609fd3dc_switch_2'\n            }\n        },\n        device: 'boiler',\n        reduction: 3.0\n    });\n    totalReduction += 3.0;\n}\n\n// 2. Reduce car charging if not enough\nif (carCharging === 'on' && totalReduction < requiredReduction) {\n    if (currentAmps > 6) {\n        // Reduce to minimum 6A\n        const ampReduction = currentAmps - 6;\n        const powerReduction = ampReduction * 0.23; // ~0.23 kW per amp\n        \n        actions.push({\n            payload: {\n                domain: 'number',\n                service: 'set_value',\n                data: {\n                    entity_id: 'number.tesla_model_3_charging_amps',\n                    value: 6\n                }\n            },\n            device: 'car',\n            reduction: powerReduction\n        });\n        totalReduction += powerReduction;\n    }\n    \n    // 3. If still not enough, turn off car completely\n    if (totalReduction < requiredReduction) {\n        actions.push({\n            payload: {\n                domain: 'switch',\n                service: 'turn_off',\n                data: {\n                    entity_id: 'switch.tesla_model_3_charger'\n                }\n            },\n            device: 'car',\n            reduction: 1.38 // Remaining at 6A\n        });\n        totalReduction += 1.38;\n    }\n}\n\n// Set flag for other flows\nflow.set('peak_limit_active', true);\nflow.set('peak_limit_until', Date.now() + (15 * 60 * 1000)); // Active for 15 minutes\n\n// Track intervention\nconst interventions = flow.get('interventions_count') || 0;\nflow.set('interventions_count', interventions + 1);\n\nconst savedFee = msg.potentialFee;\nconst totalSaved = (flow.get('saved_euros') || 0) + savedFee;\nflow.set('saved_euros', totalSaved);\n\n// Prepare notification\nmsg.notification = `⚡ TEHOMAKSU ALERT!\\n` +\n    `60-min average: ${msg.rolling60minAvg.toFixed(2)} kW\\n` +\n    `Projected peak: ${msg.worstCasePeak.toFixed(2)} kW\\n` +\n    `Potential fee: ${msg.potentialFee.toFixed(2)}€/month\\n\\n` +\n    `🛡️ Emergency reduction activated:\\n` +\n    actions.map(a => `• ${a.device.toUpperCase()}: -${a.reduction.toFixed(1)} kW`).join('\\n') +\n    `\\n\\nTotal reduced: ${totalReduction.toFixed(1)} kW\\n` +\n    `Duration: ~15 minutes\\n` +\n    `Monthly savings: ${savedFee.toFixed(2)}€`;\n\nmsg.actions = actions;\nmsg.totalReduction = totalReduction;\n\nnode.status({\n    fill: 'red',\n    shape: 'ring',\n    text: `EMERGENCY: Reduced ${totalReduction.toFixed(1)} kW`\n});\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 890,
+    "y": 220,
+    "wires": [
+      [
+        "execute_actions",
+        "send_notification"
+      ]
+    ]
+  },
+  {
+    "id": "warning_reduction",
+    "type": "function",
+    "z": "peak_limiter_flow",
+    "name": "Warning - Preventive Reduction",
+    "func": "// WARNING: Projected 60-min average approaching 8 kW (7.5-8.0 kW)\n// Take preventive action to avoid hitting limit\n\nconst saunaActive = flow.get('sauna_active') || false;\nconst carCharging = global.get('homeassistant.homeAssistant.states[\"switch.tesla_model_3_charger\"].state');\nconst currentAmps = parseFloat(global.get('homeassistant.homeAssistant.states[\"number.tesla_model_3_charging_amps\"].state'));\nconst boilerOn = global.get('homeassistant.homeAssistant.states[\"switch.shellypro4pm_ec62609fd3dc_switch_2\"].state');\n\nconst actions = [];\nlet totalReduction = 0;\n\n// Calculate safety margin needed\nconst marginKW = msg.worstCasePeak - 7.5; // How much over 7.5 kW\nconst requiredReduction = marginKW + 0.3; // Add safety margin\n\n// Strategy: Gentle reduction, prioritize user comfort\n\n// 1. Delay boiler if on (can heat later)\nif (boilerOn === 'on') {\n    actions.push({\n        payload: {\n            domain: 'switch',\n            service: 'turn_off',\n            data: {\n                entity_id: 'switch.shellypro4pm_ec62609fd3dc_switch_2'\n            }\n        },\n        device: 'boiler',\n        reduction: 3.0\n    });\n    totalReduction += 3.0;\n}\n\n// 2. Reduce car charging if needed and possible\nif (carCharging === 'on' && totalReduction < requiredReduction && currentAmps > 8) {\n    // Reduce by 4A (gentle reduction)\n    const newAmps = Math.max(8, currentAmps - 4);\n    const powerReduction = (currentAmps - newAmps) * 0.23;\n    \n    actions.push({\n        payload: {\n            domain: 'number',\n            service: 'set_value',\n            data: {\n                entity_id: 'number.tesla_model_3_charging_amps',\n                value: newAmps\n            }\n        },\n        device: 'car',\n        reduction: powerReduction\n    });\n    totalReduction += powerReduction;\n}\n\nif (actions.length > 0) {\n    flow.set('peak_limit_active', true);\n    flow.set('peak_limit_until', Date.now() + (10 * 60 * 1000)); // Active for 10 minutes\n    \n    const interventions = flow.get('interventions_count') || 0;\n    flow.set('interventions_count', interventions + 1);\n    \n    const savedFee = msg.potentialFee;\n    const totalSaved = (flow.get('saved_euros') || 0) + savedFee;\n    flow.set('saved_euros', totalSaved);\n    \n    msg.notification = `⚠️ Tehomaksu Prevention\\n` +\n        `60-min average: ${msg.rolling60minAvg.toFixed(2)} kW\\n` +\n        `Projected: ${msg.worstCasePeak.toFixed(2)} kW\\n\\n` +\n        `Preventive reduction:\\n` +\n        actions.map(a => `• ${a.device}: -${a.reduction.toFixed(1)} kW`).join('\\n') +\n        `\\n\\nWill restore in ~10 minutes\\n` +\n        `Preventing: ${savedFee.toFixed(2)}€/month`;\n    \n    msg.actions = actions;\n    msg.totalReduction = totalReduction;\n    \n    node.status({\n        fill: 'yellow',\n        shape: 'dot',\n        text: `WARNING: Reduced ${totalReduction.toFixed(1)} kW`\n    });\n    \n    return msg;\n}\n\nreturn null;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 900,
+    "y": 260,
+    "wires": [
+      [
+        "execute_actions",
+        "send_notification"
+      ]
+    ]
+  },
+  {
+    "id": "caution_monitor",
+    "type": "function",
+    "z": "peak_limiter_flow",
+    "name": "Caution - Monitor Closely",
+    "func": "// CAUTION: Power elevated (7.0-7.5 kW) but not critical\n// Monitor but don't take action yet\n\nflow.set('peak_limit_active', false);\n\nnode.status({\n    fill: 'yellow',\n    shape: 'ring',\n    text: `Caution: ${msg.worstCasePeak.toFixed(2)} kW`\n});\n\n// Only send notification if sustained high power (>10 minutes)\nconst cautionStart = flow.get('caution_start') || Date.now();\n\nif (Date.now() - cautionStart > 10 * 60 * 1000) {\n    msg.notification = `ℹ️ Power Monitor\\n` +\n        `60-min average: ${msg.rolling60minAvg.toFixed(2)} kW\\n` +\n        `Current: ${msg.totalPowerKW.toFixed(2)} kW\\n` +\n        `Projected: ${msg.worstCasePeak.toFixed(2)} kW\\n\\n` +\n        `⚠️ Elevated but safe\\n` +\n        `Threshold: 8.0 kW\\n` +\n        `Margin: ${(8.0 - msg.worstCasePeak).toFixed(2)} kW`;\n    \n    flow.set('caution_start', Date.now()); // Reset timer\n    return msg;\n}\n\nflow.set('caution_start', cautionStart);\nreturn null;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 890,
+    "y": 300,
+    "wires": [
+      [
+        "send_notification"
+      ]
+    ]
+  },
+  {
+    "id": "normal_operation",
+    "type": "function",
+    "z": "peak_limiter_flow",
+    "name": "Normal - Check Recovery",
+    "func": "// NORMAL: Power well below threshold (<7 kW)\n// Check if we can restore previously reduced loads\n\nconst peakLimitActive = flow.get('peak_limit_active');\nconst peakLimitUntil = flow.get('peak_limit_until') || 0;\n\nif (peakLimitActive && Date.now() > peakLimitUntil) {\n    // Limit period expired and power is safe\n    flow.set('peak_limit_active', false);\n    \n    msg.notification = `✅ Peak Limit Cleared\\n` +\n        `60-min average: ${msg.rolling60minAvg.toFixed(2)} kW\\n` +\n        `Current: ${msg.totalPowerKW.toFixed(2)} kW\\n\\n` +\n        `System can resume normal operation.\\n` +\n        `Price optimizer will handle scheduling.`;\n    \n    node.status({\n        fill: 'green',\n        shape: 'dot',\n        text: `Restored: ${msg.rolling60minAvg.toFixed(2)} kW`\n    });\n    \n    return msg;\n}\n\nflow.set('peak_limit_active', false);\nflow.set('caution_start', Date.now()); // Reset caution timer\n\nnode.status({\n    fill: 'green',\n    shape: 'dot',\n    text: `Normal: ${msg.rolling60minAvg.toFixed(2)} kW`\n});\n\nreturn null;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 890,
+    "y": 340,
+    "wires": [
+      [
+        "send_notification"
+      ]
+    ]
+  },
+  {
+    "id": "execute_actions",
+    "type": "function",
+    "z": "peak_limiter_flow",
+    "name": "Execute All Actions",
+    "func": "// Execute all reduction actions\nif (msg.actions && msg.actions.length > 0) {\n    const messages = msg.actions.map(action => ({\n        payload: action.payload\n    }));\n    return [messages];\n}\nreturn null;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1140,
+    "y": 240,
+    "wires": [
+      [
+        "call_service"
+      ]
+    ]
+  },
+  {
+    "id": "call_service",
+    "type": "api-call-service",
+    "z": "peak_limiter_flow",
+    "name": "Call HA Service",
+    "server": "home_assistant",
+    "version": 5,
+    "debugenabled": false,
+    "domain": "{{payload.domain}}",
+    "service": "{{payload.service}}",
+    "areaId": [],
+    "deviceId": [],
+    "entityId": [],
+    "data": "{{payload.data}}",
+    "dataType": "json",
+    "mergeContext": "",
+    "mustacheAltTags": false,
+    "outputProperties": [],
+    "queue": "none",
+    "x": 1340,
+    "y": 240,
+    "wires": [
+      [
+        "debug_actions"
+      ]
+    ]
+  },
+  {
+    "id": "send_notification",
+    "type": "function",
+    "z": "peak_limiter_flow",
+    "name": "Prepare Telegram",
+    "func": "if (msg.notification) {\n    return {\n        payload: {\n            data: {\n                message: msg.notification\n            }\n        }\n    };\n}\nreturn null;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1140,
+    "y": 300,
+    "wires": [
+      [
+        "telegram_notify"
+      ]
+    ]
+  },
+  {
+    "id": "telegram_notify",
+    "type": "api-call-service",
+    "z": "peak_limiter_flow",
+    "name": "Send to Telegram",
+    "server": "home_assistant",
+    "version": 5,
+    "debugenabled": false,
+    "domain": "notify",
+    "service": "telegram",
+    "areaId": [],
+    "deviceId": [],
+    "entityId": [],
+    "data": "{\"message\": payload.data.message}",
+    "dataType": "jsonata",
+    "mergeContext": "",
+    "mustacheAltTags": false,
+    "outputProperties": [],
+    "queue": "none",
+    "x": 1340,
+    "y": 300,
+    "wires": [[]]
+  },
+  {
+    "id": "update_monthly_peak",
+    "type": "function",
+    "z": "peak_limiter_flow",
+    "name": "Track Monthly Peak",
+    "func": "// Track the highest 60-min average this month\nconst currentPeak = msg.rolling60minAvg;\nconst monthlyPeak = flow.get('monthly_peak') || 0;\nconst currentMonth = new Date().getMonth();\nconst trackedMonth = flow.get('tracked_month');\n\n// Reset if new month\nif (trackedMonth !== currentMonth) {\n    flow.set('monthly_peak', 0);\n    flow.set('monthly_peak_time', '');\n    flow.set('interventions_count', 0);\n    flow.set('saved_euros', 0);\n    flow.set('tracked_month', currentMonth);\n}\n\n// Update peak if higher\nif (currentPeak > monthlyPeak) {\n    flow.set('monthly_peak', currentPeak);\n    flow.set('monthly_peak_time', new Date().toISOString());\n    \n    // Calculate current month fee (2€/kW rate)\n    const threshold = 8.0;\n    const ratePerKW = 2.0;\n    const monthlyFee = Math.max(0, (currentPeak - threshold) * ratePerKW);\n    flow.set('monthly_fee', monthlyFee);\n    \n    node.status({\n        fill: currentPeak > 8 ? 'red' : 'green',\n        shape: 'ring',\n        text: `Month peak: ${currentPeak.toFixed(2)} kW → ${monthlyFee.toFixed(2)}€`\n    });\n}\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 660,
+    "y": 160,
+    "wires": [[]]
+  },
+  {
+    "id": "daily_summary_inject",
+    "type": "inject",
+    "z": "peak_limiter_flow",
+    "name": "Daily Summary (9 PM)",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "00 21 * * *",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 160,
+    "y": 400,
+    "wires": [
+      [
+        "generate_daily_summary"
+      ]
+    ]
+  },
+  {
+    "id": "generate_daily_summary",
+    "type": "function",
+    "z": "peak_limiter_flow",
+    "name": "Generate Daily Summary",
+    "func": "const monthlyPeak = flow.get('monthly_peak') || 0;\nconst monthlyPeakTime = flow.get('monthly_peak_time') || 'N/A';\nconst monthlyFee = flow.get('monthly_fee') || 0;\nconst interventions = flow.get('interventions_count') || 0;\nconst savedEuros = flow.get('saved_euros') || 0;\n\nconst peakDate = monthlyPeakTime !== 'N/A' ? new Date(monthlyPeakTime) : null;\nconst peakDateStr = peakDate ? \n    `${peakDate.getDate()}.${peakDate.getMonth()+1}. klo ${peakDate.getHours()}:${String(peakDate.getMinutes()).padStart(2, '0')}` : \n    'N/A';\n\nconst threshold = 8.0;\nconst overThreshold = Math.max(0, monthlyPeak - threshold);\n\nmsg.notification = `📊 TEHOMAKSU - Päivittäinen Yhteenveto\\n\\n` +\n    `═══════════════════════════\\n` +\n    `Kuukauden huipputeho:\\n` +\n    `• ${monthlyPeak.toFixed(2)} kW\\n` +\n    `• Aika: ${peakDateStr}\\n` +\n    `• Yli rajan: ${overThreshold.toFixed(2)} kW\\n\\n` +\n    `Kuluva maksu:\\n` +\n    `• ${monthlyFee.toFixed(2)} €/kk\\n` +\n    `  (${overThreshold.toFixed(2)} kW × 2,00€)\\n\\n` +\n    `═══════════════════════════\\n` +\n    `Suojaukset tänään:\\n` +\n    `• Interventioita: ${interventions} kpl\\n` +\n    `• Estetyt maksut: ${savedEuros.toFixed(2)} €\\n` +\n    `• Nettosäästö: ${(savedEuros - monthlyFee).toFixed(2)} €\\n\\n` +\n    (monthlyPeak > 8 ? \n        `⚠️ Huipputeho ylittänyt rajan!\\n` +\n        `Vältä yhdistelmää:\\n` +\n        `Sauna + Auto 16A + Varaaja` : \n        `✅ Huipputeho hallinnassa!`);\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 400,
+    "y": 400,
+    "wires": [
+      [
+        "send_notification"
+      ]
+    ]
+  },
+  {
+    "id": "monthly_report_inject",
+    "type": "inject",
+    "z": "peak_limiter_flow",
+    "name": "Monthly Report (1st, 8 AM)",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "",
+    "crontab": "00 08 1 * *",
+    "once": false,
+    "onceDelay": 0.1,
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 180,
+    "y": 460,
+    "wires": [
+      [
+        "generate_monthly_report"
+      ]
+    ]
+  },
+  {
+    "id": "generate_monthly_report",
+    "type": "function",
+    "z": "peak_limiter_flow",
+    "name": "Generate Monthly Report",
+    "func": "const monthlyPeak = flow.get('monthly_peak') || 0;\nconst monthlyFee = flow.get('monthly_fee') || 0;\nconst interventions = flow.get('interventions_count') || 0;\nconst savedEuros = flow.get('saved_euros') || 0;\n\nconst prevMonth = new Date();\nprevMonth.setMonth(prevMonth.getMonth() - 1);\nconst monthName = prevMonth.toLocaleString('fi-FI', { month: 'long' });\nconst year = prevMonth.getFullYear();\n\nmsg.notification = `📈 KUUKAUSIRAPORTTI - ${monthName} ${year}\\n\\n` +\n    `═══════════════════════════\\n` +\n    `TEHOMAKSU:\\n` +\n    `• Huipputeho: ${monthlyPeak.toFixed(2)} kW\\n` +\n    `• Tehomaksu: ${monthlyFee.toFixed(2)} €\\n\\n` +\n    `SUOJAUSJÄRJESTELMÄ:\\n` +\n    `• Interventioita: ${interventions} kpl\\n` +\n    `• Estetyt maksut: ${savedEuros.toFixed(2)} €\\n` +\n    `• Nettosäästö: ${(savedEuros - monthlyFee).toFixed(2)} €\\n\\n` +\n    `═══════════════════════════\\n` +\n    (monthlyFee === 0 ? \n        `🎉 Täydellinen kuukausi!\\n` +\n        `Pysyttiin 8 kW rajan alla koko ajan.` :\n        monthlyFee < 5 ? \n        `✅ Hyvä suoritus!\\n` +\n        `Tehomaksu pieni, jatkakaa samaan malliin.` :\n        `⚠️ Huomio!\\n` +\n        `Tehomaksu ${monthlyFee.toFixed(2)}€.\\n` +\n        `Harkitse laiteyhdistelmien tarkistusta.`);\n\n// Reset monthly stats\nflow.set('monthly_peak', 0);\nflow.set('monthly_peak_time', '');\nflow.set('interventions_count', 0);\nflow.set('saved_euros', 0);\nflow.set('monthly_fee', 0);\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 410,
+    "y": 460,
+    "wires": [
+      [
+        "send_notification"
+      ]
+    ]
+  },
+  {
+    "id": "debug_power",
+    "type": "debug",
+    "z": "peak_limiter_flow",
+    "name": "Power Debug",
+    "active": false,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "true",
+    "targetType": "full",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 610,
+    "y": 80,
+    "wires": []
+  },
+  {
+    "id": "debug_actions",
+    "type": "debug",
+    "z": "peak_limiter_flow",
+    "name": "Actions Debug",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "true",
+    "targetType": "full",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 1540,
+    "y": 240,
+    "wires": []
+  },
+  {
+    "id": "home_assistant",
+    "type": "server",
+    "name": "Home Assistant",
+    "version": 5,
+    "addon": true,
+    "rejectUnauthorizedCerts": true,
+    "ha_boolean": "y|yes|true|on|home|open",
+    "connectionDelay": true,
+    "cacheJson": true,
+    "heartbeat": false,
+    "heartbeatInterval": 30,
+    "areaSelector": "friendlyName",
+    "deviceSelector": "friendlyName",
+    "entitySelector": "friendlyName",
+    "statusSeparator": "at: ",
+    "statusYear": "hidden",
+    "statusMonth": "short",
+    "statusDay": "numeric",
+    "statusHourCycle": "h23",
+    "statusTimeFormat": "h:m",
+    "enableGlobalContextStore": true
+  }
+]

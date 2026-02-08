@@ -1,0 +1,522 @@
+[
+  {
+    "id": "load_balancer_flow",
+    "type": "tab",
+    "label": "Priority Load Balancer",
+    "disabled": false,
+    "info": "Manages Sauna, Car Charger, and Water Boiler to prevent fuse overload"
+  },
+  {
+    "id": "sauna_state_monitor",
+    "type": "server-state-changed",
+    "z": "load_balancer_flow",
+    "name": "Sauna State",
+    "server": "home_assistant",
+    "version": 4,
+    "exposeToHomeAssistant": false,
+    "haConfig": [
+      {
+        "property": "name",
+        "value": ""
+      },
+      {
+        "property": "icon",
+        "value": ""
+      }
+    ],
+    "entityidfilter": "binary_sensor.kiuas_tilatieto",
+    "entityidfiltertype": "exact",
+    "outputinitially": true,
+    "state_type": "str",
+    "haltifstate": "",
+    "halt_if_type": "str",
+    "halt_if_compare": "is",
+    "outputs": 1,
+    "output_only_on_state_change": true,
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "ignorePrevStateNull": false,
+    "ignorePrevStateUnknown": false,
+    "ignorePrevStateUnavailable": false,
+    "ignoreCurrentStateUnknown": false,
+    "ignoreCurrentStateUnavailable": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      }
+    ],
+    "x": 120,
+    "y": 80,
+    "wires": [
+      [
+        "check_sauna_on"
+      ]
+    ]
+  },
+  {
+    "id": "check_sauna_on",
+    "type": "switch",
+    "z": "load_balancer_flow",
+    "name": "Sauna ON?",
+    "property": "payload",
+    "propertyType": "msg",
+    "rules": [
+      {
+        "t": "eq",
+        "v": "on",
+        "vt": "str"
+      },
+      {
+        "t": "eq",
+        "v": "off",
+        "vt": "str"
+      }
+    ],
+    "checkall": "true",
+    "repair": false,
+    "outputs": 2,
+    "x": 310,
+    "y": 80,
+    "wires": [
+      [
+        "sauna_priority_handler"
+      ],
+      [
+        "resume_normal_operation"
+      ]
+    ]
+  },
+  {
+    "id": "sauna_priority_handler",
+    "type": "function",
+    "z": "load_balancer_flow",
+    "name": "Sauna Priority - Reduce Others",
+    "func": "// Sauna is ON (7kW) - Priority 1\n// Available power: 17250W - 7000W = 10250W\n\nconst saunaPower = 7000;\nconst totalCapacity = 17250;\nconst availablePower = totalCapacity - saunaPower;\n\n// Store sauna state\nflow.set('sauna_active', true);\n\n// Check if car is charging\nconst carCharging = global.get('homeassistant.homeAssistant.states[\"switch.tesla_model_3_charger\"].state');\nconst boilerOn = global.get('homeassistant.homeAssistant.states[\"switch.shellypro4pm_ec62609fd3dc_switch_2\"].state');\n\nconst messages = [];\n\n// Turn off water boiler if on\nif (boilerOn === 'on') {\n    messages.push({\n        payload: {\n            domain: 'switch',\n            service: 'turn_off',\n            data: {\n                entity_id: 'switch.shellypro4pm_ec62609fd3dc_switch_2'\n            }\n        },\n        notification: '🔥 Sauna ON - Water boiler turned OFF'\n    });\n}\n\n// Reduce car charging if active (max 8A = ~5.5kW to stay safe)\nif (carCharging === 'on') {\n    messages.push({\n        payload: {\n            domain: 'number',\n            service: 'set_value',\n            data: {\n                entity_id: 'number.tesla_model_3_charging_amps',\n                value: 8\n            }\n        },\n        notification: '🔥 Sauna ON - Car charging reduced to 8A (~5.5kW)'\n    });\n}\n\nnode.status({\n    fill: 'red',\n    shape: 'dot',\n    text: 'SAUNA PRIORITY - Others limited'\n});\n\nreturn [messages];",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 550,
+    "y": 60,
+    "wires": [
+      [
+        "execute_service",
+        "send_notification"
+      ]
+    ]
+  },
+  {
+    "id": "resume_normal_operation",
+    "type": "function",
+    "z": "load_balancer_flow",
+    "name": "Resume Normal Operation",
+    "func": "// Sauna turned OFF - resume normal load balancing\nflow.set('sauna_active', false);\n\nnode.status({\n    fill: 'green',\n    shape: 'dot',\n    text: 'Normal operation resumed'\n});\n\nmsg.payload = {\n    notification: '✅ Sauna OFF - Normal load balancing resumed'\n};\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 550,
+    "y": 100,
+    "wires": [
+      [
+        "send_notification",
+        "rebalance_loads"
+      ]
+    ]
+  },
+  {
+    "id": "power_monitor",
+    "type": "server-state-changed",
+    "z": "load_balancer_flow",
+    "name": "Total Power Monitor",
+    "server": "home_assistant",
+    "version": 4,
+    "exposeToHomeAssistant": false,
+    "haConfig": [
+      {
+        "property": "name",
+        "value": ""
+      },
+      {
+        "property": "icon",
+        "value": ""
+      }
+    ],
+    "entityidfilter": "sensor.sahko_kokonaiskulutus_teho",
+    "entityidfiltertype": "exact",
+    "outputinitially": false,
+    "state_type": "num",
+    "haltifstate": "",
+    "halt_if_type": "str",
+    "halt_if_compare": "is",
+    "outputs": 1,
+    "output_only_on_state_change": false,
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "ignorePrevStateNull": false,
+    "ignorePrevStateUnknown": false,
+    "ignorePrevStateUnavailable": false,
+    "ignoreCurrentStateUnknown": false,
+    "ignoreCurrentStateUnavailable": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      }
+    ],
+    "x": 140,
+    "y": 200,
+    "wires": [
+      [
+        "evaluate_load"
+      ]
+    ]
+  },
+  {
+    "id": "evaluate_load",
+    "type": "function",
+    "z": "load_balancer_flow",
+    "name": "Evaluate Total Load",
+    "func": "const totalPower = parseFloat(msg.payload);\nconst maxPower = 17250; // 3 x 25A x 230V\nconst warningThreshold = maxPower * 0.85; // 85% = 14662W\nconst criticalThreshold = maxPower * 0.95; // 95% = 16387W\n\nconst usagePercent = (totalPower / maxPower * 100).toFixed(1);\n\nmsg.totalPower = totalPower;\nmsg.maxPower = maxPower;\nmsg.usagePercent = usagePercent;\n\nif (totalPower >= criticalThreshold) {\n    // CRITICAL - Take immediate action\n    msg.level = 'critical';\n    msg.action = 'reduce_now';\n    \n    node.status({\n        fill: 'red',\n        shape: 'ring',\n        text: `CRITICAL: ${totalPower}W (${usagePercent}%)`\n    });\n    \n    return [msg, null, null];\n    \n} else if (totalPower >= warningThreshold) {\n    // WARNING - Prepare to reduce\n    msg.level = 'warning';\n    msg.action = 'prepare_reduction';\n    \n    node.status({\n        fill: 'yellow',\n        shape: 'dot',\n        text: `Warning: ${totalPower}W (${usagePercent}%)`\n    });\n    \n    return [null, msg, null];\n    \n} else {\n    // NORMAL - Can increase if needed\n    msg.level = 'normal';\n    msg.action = 'can_increase';\n    \n    node.status({\n        fill: 'green',\n        shape: 'dot',\n        text: `OK: ${totalPower}W (${usagePercent}%)`\n    });\n    \n    return [null, null, msg];\n}",
+    "outputs": 3,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 370,
+    "y": 200,
+    "wires": [
+      [
+        "emergency_reduction"
+      ],
+      [
+        "warning_reduction"
+      ],
+      [
+        "normal_operation"
+      ]
+    ],
+    "outputLabels": [
+      "Critical >95%",
+      "Warning >85%",
+      "Normal <85%"
+    ]
+  },
+  {
+    "id": "emergency_reduction",
+    "type": "function",
+    "z": "load_balancer_flow",
+    "name": "Emergency Load Reduction",
+    "func": "// CRITICAL - Reduce loads immediately\nconst saunaActive = flow.get('sauna_active') || false;\nconst carCharging = global.get('homeassistant.homeAssistant.states[\"switch.tesla_model_3_charger\"].state');\nconst boilerOn = global.get('homeassistant.homeAssistant.states[\"switch.shellypro4pm_ec62609fd3dc_switch_2\"].state');\n\nconst messages = [];\n\n// Priority: Keep Sauna, reduce everything else\nif (!saunaActive) {\n    // If sauna not active, reduce car first, then boiler\n    if (carCharging === 'on') {\n        messages.push({\n            payload: {\n                domain: 'number',\n                service: 'set_value',\n                data: {\n                    entity_id: 'number.tesla_model_3_charging_amps',\n                    value: 6  // Minimum charging\n                }\n            }\n        });\n    }\n    \n    if (boilerOn === 'on') {\n        messages.push({\n            payload: {\n                domain: 'switch',\n                service: 'turn_off',\n                data: {\n                    entity_id: 'switch.shellypro4pm_ec62609fd3dc_switch_2'\n                }\n            }\n        });\n    }\n} else {\n    // Sauna active - turn off both car and boiler\n    if (carCharging === 'on') {\n        messages.push({\n            payload: {\n                domain: 'switch',\n                service: 'turn_off',\n                data: {\n                    entity_id: 'switch.tesla_model_3_charger'\n                }\n            }\n        });\n    }\n    \n    if (boilerOn === 'on') {\n        messages.push({\n            payload: {\n                domain: 'switch',\n                service: 'turn_off',\n                data: {\n                    entity_id: 'switch.shellypro4pm_ec62609fd3dc_switch_2'\n                }\n            }\n        });\n    }\n}\n\nmessages.push({\n    notification: `⚠️ CRITICAL: Power at ${msg.usagePercent}% - Emergency load reduction activated!`,\n    level: 'critical'\n});\n\nreturn [messages];",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 630,
+    "y": 180,
+    "wires": [
+      [
+        "execute_service",
+        "send_notification"
+      ]
+    ]
+  },
+  {
+    "id": "warning_reduction",
+    "type": "function",
+    "z": "load_balancer_flow",
+    "name": "Warning - Prepare Reduction",
+    "func": "// WARNING - Gradually reduce car charging\nconst carCharging = global.get('homeassistant.homeAssistant.states[\"switch.tesla_model_3_charger\"].state');\nconst currentAmps = parseFloat(global.get('homeassistant.homeAssistant.states[\"number.tesla_model_3_charging_amps\"].state'));\n\nconst messages = [];\n\nif (carCharging === 'on' && currentAmps > 8) {\n    // Reduce car charging by 2A\n    const newAmps = Math.max(6, currentAmps - 2);\n    \n    messages.push({\n        payload: {\n            domain: 'number',\n            service: 'set_value',\n            data: {\n                entity_id: 'number.tesla_model_3_charging_amps',\n                value: newAmps\n            }\n        },\n        notification: `⚠️ Load at ${msg.usagePercent}% - Reducing car charging to ${newAmps}A`\n    });\n}\n\nreturn [messages];",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 640,
+    "y": 220,
+    "wires": [
+      [
+        "execute_service",
+        "send_notification"
+      ]
+    ]
+  },
+  {
+    "id": "normal_operation",
+    "type": "function",
+    "z": "load_balancer_flow",
+    "name": "Normal - Can Increase",
+    "func": "// Power usage is normal - can increase car charging if needed\nconst carCharging = global.get('homeassistant.homeAssistant.states[\"switch.tesla_model_3_charger\"].state');\nconst currentAmps = parseFloat(global.get('homeassistant.homeAssistant.states[\"number.tesla_model_3_charging_amps\"].state'));\nconst saunaActive = flow.get('sauna_active') || false;\nconst boilerOn = global.get('homeassistant.homeAssistant.states[\"switch.shellypro4pm_ec62609fd3dc_switch_2\"].state');\n\nconst availablePower = msg.maxPower - msg.totalPower;\n\nconst messages = [];\n\n// If car is charging and not at max, and no conflicts, increase charging\nif (carCharging === 'on' && currentAmps < 16 && !saunaActive) {\n    // Calculate how much we can increase\n    const powerPer1A = 230; // Watts per amp (simplified, single phase)\n    const canIncreaseAmps = Math.floor(availablePower / powerPer1A);\n    \n    if (canIncreaseAmps >= 2 && boilerOn !== 'on') {\n        const newAmps = Math.min(16, currentAmps + 2);\n        \n        messages.push({\n            payload: {\n                domain: 'number',\n                service: 'set_value',\n                data: {\n                    entity_id: 'number.tesla_model_3_charging_amps',\n                    value: newAmps\n                }\n            }\n        });\n    }\n}\n\nreturn [messages];",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 630,
+    "y": 260,
+    "wires": [
+      [
+        "execute_service"
+      ]
+    ]
+  },
+  {
+    "id": "car_charger_state",
+    "type": "server-state-changed",
+    "z": "load_balancer_flow",
+    "name": "Car Charger Connected",
+    "server": "home_assistant",
+    "version": 4,
+    "exposeToHomeAssistant": false,
+    "haConfig": [
+      {
+        "property": "name",
+        "value": ""
+      },
+      {
+        "property": "icon",
+        "value": ""
+      }
+    ],
+    "entityidfilter": "binary_sensor.tesla_model_3_charger",
+    "entityidfiltertype": "exact",
+    "outputinitially": true,
+    "state_type": "str",
+    "haltifstate": "",
+    "halt_if_type": "str",
+    "halt_if_compare": "is",
+    "outputs": 1,
+    "output_only_on_state_change": true,
+    "for": "0",
+    "forType": "num",
+    "forUnits": "minutes",
+    "ignorePrevStateNull": false,
+    "ignorePrevStateUnknown": false,
+    "ignorePrevStateUnavailable": false,
+    "ignoreCurrentStateUnknown": false,
+    "ignoreCurrentStateUnavailable": false,
+    "outputProperties": [
+      {
+        "property": "payload",
+        "propertyType": "msg",
+        "value": "",
+        "valueType": "entityState"
+      }
+    ],
+    "x": 150,
+    "y": 360,
+    "wires": [
+      [
+        "check_car_home_and_plugged"
+      ]
+    ]
+  },
+  {
+    "id": "check_car_home_and_plugged",
+    "type": "function",
+    "z": "load_balancer_flow",
+    "name": "Check Car Home & Plugged",
+    "func": "const plugged = msg.payload === 'on';\nconst location = global.get('homeassistant.homeAssistant.states[\"device_tracker.tesla_model_3_location_tracker\"].state');\nconst battery = parseFloat(global.get('homeassistant.homeAssistant.states[\"sensor.tesla_model_3_battery\"].state'));\n\nif (plugged && location === 'home') {\n    // Car is home and plugged in\n    msg.carReady = true;\n    msg.battery = battery;\n    \n    node.status({\n        fill: 'blue',\n        shape: 'dot',\n        text: `Car ready - Battery: ${battery}%`\n    });\n    \n    return msg;\n} else {\n    // Car not ready for charging\n    msg.carReady = false;\n    \n    node.status({\n        fill: 'grey',\n        shape: 'ring',\n        text: 'Car not ready'\n    });\n    \n    return null;\n}",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 420,
+    "y": 360,
+    "wires": [
+      [
+        "smart_car_charging_decision"
+      ]
+    ]
+  },
+  {
+    "id": "smart_car_charging_decision",
+    "type": "function",
+    "z": "load_balancer_flow",
+    "name": "Smart Car Charging Decision",
+    "func": "const battery = msg.battery;\nconst saunaActive = flow.get('sauna_active') || false;\nconst boilerOn = global.get('homeassistant.homeAssistant.states[\"switch.shellypro4pm_ec62609fd3dc_switch_2\"].state');\nconst priceRank = parseInt(global.get('homeassistant.homeAssistant.states[\"sensor.shf_rank_now\"].state'));\nconst totalPower = parseFloat(global.get('homeassistant.homeAssistant.states[\"sensor.sahko_kokonaiskulutus_teho\"].state'));\n\n// Don't charge if battery > 90%\nif (battery >= 90) {\n    msg.action = 'no_charge';\n    msg.reason = 'Battery full (>90%)';\n    return null;\n}\n\n// Check conflicts\nif (saunaActive) {\n    msg.action = 'wait';\n    msg.reason = 'Sauna active';\n    msg.notification = '🚗 Car charging delayed - Sauna in use';\n    return msg;\n}\n\nif (boilerOn === 'on') {\n    // Boiler is on (3kW), car can charge but at reduced rate\n    // Available: 17250 - 3000 = 14250W\n    // Max car: 11000W, but let's be safe at 8000W (12A)\n    msg.action = 'charge_reduced';\n    msg.amps = 12;\n    msg.reason = 'Boiler active - reduced charging';\n} else {\n    // No conflicts - check price and total load\n    const availablePower = 17250 - totalPower;\n    \n    if (priceRank <= 8) {\n        // Cheap hour - charge at full if possible\n        if (availablePower > 11000) {\n            msg.action = 'charge_full';\n            msg.amps = 16;\n            msg.reason = 'Cheap hour + capacity available';\n        } else {\n            msg.action = 'charge_reduced';\n            msg.amps = 12;\n            msg.reason = 'Cheap hour but limited capacity';\n        }\n    } else if (battery < 50) {\n        // Low battery - charge anyway but reduced\n        msg.action = 'charge_reduced';\n        msg.amps = 10;\n        msg.reason = 'Low battery (<50%) - slow charge';\n    } else {\n        // Not cheap hour and battery OK - wait\n        msg.action = 'wait';\n        msg.reason = 'Waiting for cheaper hours';\n        return null;\n    }\n}\n\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 700,
+    "y": 360,
+    "wires": [
+      [
+        "execute_car_charging"
+      ]
+    ]
+  },
+  {
+    "id": "execute_car_charging",
+    "type": "function",
+    "z": "load_balancer_flow",
+    "name": "Execute Car Charging",
+    "func": "const messages = [];\n\nif (msg.action === 'charge_full' || msg.action === 'charge_reduced') {\n    // Set amperage first\n    messages.push({\n        payload: {\n            domain: 'number',\n            service: 'set_value',\n            data: {\n                entity_id: 'number.tesla_model_3_charging_amps',\n                value: msg.amps\n            }\n        }\n    });\n    \n    // Then turn on charger\n    messages.push({\n        payload: {\n            domain: 'switch',\n            service: 'turn_on',\n            data: {\n                entity_id: 'switch.tesla_model_3_charger'\n            }\n        },\n        notification: `🚗 Car charging started at ${msg.amps}A - ${msg.reason}`\n    });\n} else if (msg.action === 'wait') {\n    // Turn off charger\n    messages.push({\n        payload: {\n            domain: 'switch',\n            service: 'turn_off',\n            data: {\n                entity_id: 'switch.tesla_model_3_charger'\n            }\n        },\n        notification: msg.notification || `🚗 Car charging paused - ${msg.reason}`\n    });\n}\n\nreturn [messages];",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 970,
+    "y": 360,
+    "wires": [
+      [
+        "execute_service",
+        "send_notification"
+      ]
+    ]
+  },
+  {
+    "id": "rebalance_loads",
+    "type": "function",
+    "z": "load_balancer_flow",
+    "name": "Rebalance All Loads",
+    "func": "// Called when sauna turns off or other major change\n// Re-evaluate all devices and optimize\n\nconst totalPower = parseFloat(global.get('homeassistant.homeAssistant.states[\"sensor.sahko_kokonaiskulutus_teho\"].state'));\nconst carPlugged = global.get('homeassistant.homeAssistant.states[\"binary_sensor.tesla_model_3_charger\"].state');\nconst carCharging = global.get('homeassistant.homeAssistant.states[\"switch.tesla_model_3_charger\"].state');\nconst boilerOn = global.get('homeassistant.homeAssistant.states[\"switch.shellypro4pm_ec62609fd3dc_switch_2\"].state');\nconst priceRank = parseInt(global.get('homeassistant.homeAssistant.states[\"sensor.shf_rank_now\"].state'));\n\nconst availablePower = 17250 - totalPower;\nconst messages = [];\n\n// Priority 1: If car is plugged and should be charging\nif (carPlugged === 'on' && carCharging !== 'on') {\n    // Check if we should start car\n    if (availablePower > 3000 && priceRank <= 12) {\n        // Enough power and decent price\n        messages.push({\n            trigger: 'car_charging',\n            reason: 'rebalance'\n        });\n    }\n}\n\n// Priority 2: Check if car can increase amperage\nif (carCharging === 'on' && boilerOn !== 'on') {\n    const currentAmps = parseFloat(global.get('homeassistant.homeAssistant.states[\"number.tesla_model_3_charging_amps\"].state'));\n    \n    if (currentAmps < 16 && availablePower > 3000) {\n        messages.push({\n            payload: {\n                domain: 'number',\n                service: 'set_value',\n                data: {\n                    entity_id: 'number.tesla_model_3_charging_amps',\n                    value: 16\n                }\n            },\n            notification: '🔄 Rebalanced - Car charging increased to 16A'\n        });\n    }\n}\n\nreturn [messages];",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 800,
+    "y": 100,
+    "wires": [
+      [
+        "execute_service",
+        "send_notification"
+      ]
+    ]
+  },
+  {
+    "id": "execute_service",
+    "type": "api-call-service",
+    "z": "load_balancer_flow",
+    "name": "Execute Service Call",
+    "server": "home_assistant",
+    "version": 5,
+    "debugenabled": false,
+    "domain": "",
+    "service": "",
+    "areaId": [],
+    "deviceId": [],
+    "entityId": [],
+    "data": "",
+    "dataType": "jsonata",
+    "mergeContext": "",
+    "mustacheAltTags": false,
+    "outputProperties": [],
+    "queue": "none",
+    "x": 1070,
+    "y": 200,
+    "wires": [
+      [
+        "debug_output"
+      ]
+    ]
+  },
+  {
+    "id": "send_notification",
+    "type": "function",
+    "z": "load_balancer_flow",
+    "name": "Prepare Notification",
+    "func": "if (msg.notification) {\n    msg.payload = {\n        data: {\n            message: msg.notification\n        }\n    };\n    return msg;\n}\nreturn null;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1080,
+    "y": 140,
+    "wires": [
+      [
+        "telegram_notify"
+      ]
+    ]
+  },
+  {
+    "id": "telegram_notify",
+    "type": "api-call-service",
+    "z": "load_balancer_flow",
+    "name": "Send to Telegram",
+    "server": "home_assistant",
+    "version": 5,
+    "debugenabled": false,
+    "domain": "notify",
+    "service": "telegram",
+    "areaId": [],
+    "deviceId": [],
+    "entityId": [],
+    "data": "{\"message\": payload.data.message}",
+    "dataType": "jsonata",
+    "mergeContext": "",
+    "mustacheAltTags": false,
+    "outputProperties": [],
+    "queue": "none",
+    "x": 1300,
+    "y": 140,
+    "wires": [[]]
+  },
+  {
+    "id": "debug_output",
+    "type": "debug",
+    "z": "load_balancer_flow",
+    "name": "Load Balancer Debug",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "true",
+    "targetType": "full",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 1310,
+    "y": 200,
+    "wires": []
+  },
+  {
+    "id": "home_assistant",
+    "type": "server",
+    "name": "Home Assistant",
+    "version": 5,
+    "addon": true,
+    "rejectUnauthorizedCerts": true,
+    "ha_boolean": "y|yes|true|on|home|open",
+    "connectionDelay": true,
+    "cacheJson": true,
+    "heartbeat": false,
+    "heartbeatInterval": 30,
+    "areaSelector": "friendlyName",
+    "deviceSelector": "friendlyName",
+    "entitySelector": "friendlyName",
+    "statusSeparator": "at: ",
+    "statusYear": "hidden",
+    "statusMonth": "short",
+    "statusDay": "numeric",
+    "statusHourCycle": "h23",
+    "statusTimeFormat": "h:m",
+    "enableGlobalContextStore": true
+  }
+]
