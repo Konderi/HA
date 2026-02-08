@@ -36,6 +36,13 @@
 
 **Status:** ✅ **Entity exists and is working!**
 
+**Important Note About Tesla Sleep:**
+- Tesla goes to sleep when not plugged in or actively charging
+- When asleep, some sensors may become `unavailable` temporarily
+- This is **normal behavior** to preserve Tesla battery
+- The flows handle this gracefully - they check entity state before using
+- When you plug in or wake the car, all entities become available again
+
 **Your Tesla Integration (All Working):**
 - ✅ `binary_sensor.tesla_model_3_charger` (cable plugged in status) - **FOUND!**
 - ✅ `binary_sensor.tesla_model_3_charging` (currently charging)
@@ -209,50 +216,102 @@ input_number:
 
 ## 📝 Quick Fix Configuration
 
-**Only needed for room temperature control flow (optional):**
+**✅ DONE! Missing entities added to your config files:**
 
-**Add to `configuration.yaml`:**
+The 5 missing input helpers have been added to:
+- `power-management/input_booleans.yaml` (2 new entities)
+- `power-management/input_numbers.yaml` (3 new entities)
+
+---
+
+### 🚀 Deploy to Home Assistant:
+
+**Step 1: Check Your Configuration Includes**
+
+Make sure your main `configuration.yaml` includes these files:
 
 ```yaml
-# Missing input helpers (only for temperature-radiator-control.json)
-input_boolean:
-  kids_home:
-    name: Kids at Home
-    icon: mdi:account-multiple
-  
-  mh1_manual_override:
-    name: MH1 Manual Override
-    icon: mdi:temperature-celsius
-
-input_number:
-  mh1_target_temp:
-    name: MH1 Target Temperature
-    min: 15
-    max: 25
-    step: 0.5
-    unit_of_measurement: "°C"
-  
-  kids_rooms_min_temp:
-    name: Kids Rooms Minimum Temperature
-    min: 15
-    max: 22
-    step: 0.5
-    unit_of_measurement: "°C"
-  
-  kids_rooms_target_temp:
-    name: Kids Rooms Target Temperature
-    min: 18
-    max: 25
-    step: 0.5
-    unit_of_measurement: "°C"
+# In your configuration.yaml, you should have:
+input_boolean: !include power-management/input_booleans.yaml
+input_number: !include power-management/input_numbers.yaml
 ```
 
-**Then:**
-1. Save configuration.yaml
-2. Check Configuration (Developer Tools → YAML → Check Configuration)
-3. Restart Home Assistant
+**Step 2: Copy Files to Home Assistant**
 
-**Or skip it:** Just don't use the `temperature-radiator-control.json` flow if you don't need room-specific control.
+```bash
+# Copy the updated files to your HA config directory
+scp power-management/input_booleans.yaml root@homeassistant:/config/power-management/
+scp power-management/input_numbers.yaml root@homeassistant:/config/power-management/
+```
+
+**Or use Samba/SMB:**
+- Copy files to `\\homeassistant.local\config\power-management\`
+
+**Step 3: Reload Input Helpers**
+
+In Home Assistant:
+1. Go to **Developer Tools** → **YAML**
+2. Click **"All YAML configuration"** or just **"Input helpers"**
+3. Or restart Home Assistant to load everything
+
+**Step 4: Verify**
+
+Check that these new entities appear:
+- `input_boolean.kids_home`
+- `input_boolean.mh1_manual_override`
+- `input_number.mh1_target_temp`
+- `input_number.kids_rooms_min_temp`
+- `input_number.kids_rooms_target_temp`
+
+Go to **Settings** → **Devices & Services** → **Helpers** and look for the new entities.
+
+---
+
+### 📋 What Was Added:
+
+**To `input_booleans.yaml`:**
+```yaml
+# Kids at home indicator
+kids_home:
+  name: "Kids at Home"
+  icon: mdi:account-multiple
+  initial: false
+
+# Manual override for MH1 room radiator
+mh1_manual_override:
+  name: "MH1 Manual Override"
+  icon: mdi:temperature-celsius
+  initial: false
+```
+
+**To `input_numbers.yaml`:**
+```yaml
+# MH1 Target Temperature
+mh1_target_temp:
+  name: "MH1 Target Temperature"
+  min: 15
+  max: 25
+  step: 0.5
+  initial: 20
+  unit_of_measurement: "°C"
+
+# Kids Rooms Temperature Controls
+kids_rooms_min_temp:
+  name: "Kids Rooms Minimum Temperature"
+  min: 15
+  max: 22
+  step: 0.5
+  initial: 18
+  unit_of_measurement: "°C"
+
+kids_rooms_target_temp:
+  name: "Kids Rooms Target Temperature"
+  min: 18
+  max: 25
+  step: 0.5
+  initial: 20
+  unit_of_measurement: "°C"
+```
 
 ---
 
