@@ -57,7 +57,7 @@ views:
                 }
             tap_action:
               action: navigate
-              navigation_path: /power-management-mobile/energy
+              navigation_path: /dashboard-powermanagement/energy
           
           - type: custom:mushroom-template-card
             primary: Current Price
@@ -80,7 +80,7 @@ views:
                 }
             tap_action:
               action: navigate
-              navigation_path: /power-management-mobile/prices
+              navigation_path: /dashboard-powermanagement/prices
           
           - type: custom:mushroom-template-card
             primary: Today
@@ -96,7 +96,7 @@ views:
                 }
             tap_action:
               action: navigate
-              navigation_path: /power-management-mobile/statistics
+              navigation_path: /dashboard-powermanagement/statistics
       
       # Navigation Menu
       - type: custom:mushroom-title-card
@@ -119,7 +119,7 @@ views:
                 }
             tap_action:
               action: navigate
-              navigation_path: /power-management-mobile/heating
+              navigation_path: /dashboard-powermanagement/heating
           
           - type: custom:mushroom-template-card
             primary: Energy
@@ -135,7 +135,7 @@ views:
                 }
             tap_action:
               action: navigate
-              navigation_path: /power-management-mobile/energy
+              navigation_path: /dashboard-powermanagement/energy
           
           - type: custom:mushroom-template-card
             primary: Prices
@@ -151,7 +151,7 @@ views:
                 }
             tap_action:
               action: navigate
-              navigation_path: /power-management-mobile/prices
+              navigation_path: /dashboard-powermanagement/prices
       
       - type: horizontal-stack
         cards:
@@ -169,7 +169,7 @@ views:
                 }
             tap_action:
               action: navigate
-              navigation_path: /power-management-mobile/devices
+              navigation_path: /dashboard-powermanagement/devices
           
           - type: custom:mushroom-template-card
             primary: Statistics
@@ -185,7 +185,7 @@ views:
                 }
             tap_action:
               action: navigate
-              navigation_path: /power-management-mobile/statistics
+              navigation_path: /dashboard-powermanagement/statistics
       
       # 7-Day Consumption vs Price Chart
       - type: custom:apexcharts-card
