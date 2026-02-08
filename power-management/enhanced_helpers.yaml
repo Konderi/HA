@@ -1,0 +1,290 @@
+# ============================================
+# ENHANCED CONTROL HELPERS
+# Add these to your configuration.yaml or helpers UI
+# ============================================
+
+input_number:
+  # ==========================================
+  # BOILER CONTROLS
+  # ==========================================
+  
+  # Maximum price rank for boiler (1-24)
+  boiler_max_rank:
+    name: "Boiler Max Price Rank"
+    min: 1
+    max: 24
+    step: 1
+    initial: 8
+    icon: mdi:numeric
+    mode: slider
+    unit_of_measurement: "rank"
+  
+  # Maximum daily runtime hours
+  boiler_max_hours_daily:
+    name: "Boiler Max Hours Per Day"
+    min: 1
+    max: 8
+    step: 0.5
+    initial: 3
+    icon: mdi:clock-outline
+    mode: slider
+    unit_of_measurement: "h"
+  
+  # ==========================================
+  # TESLA CONTROLS
+  # ==========================================
+  
+  # Tesla charging limit (already exists in your system)
+  # tesla_charge_limit:
+  #   name: "Tesla Charge Limit"
+  #   min: 50
+  #   max: 100
+  #   step: 5
+  #   initial: 80
+  #   icon: mdi:battery-charging-80
+  #   mode: slider
+  #   unit_of_measurement: "%"
+  
+  # ==========================================
+  # RADIATOR CONTROLS - MH1 (Master Bedroom)
+  # ==========================================
+  
+  mh1_outside_temp_threshold:
+    name: "MH1 Outside Temp Threshold"
+    min: -30
+    max: 20
+    step: 1
+    initial: 10
+    icon: mdi:thermometer-low
+    mode: slider
+    unit_of_measurement: "°C"
+  
+  mh1_min_room_temp:
+    name: "MH1 Min Room Temperature"
+    min: 15
+    max: 25
+    step: 0.5
+    initial: 19
+    icon: mdi:thermometer-chevron-down
+    mode: slider
+    unit_of_measurement: "°C"
+  
+  mh1_max_room_temp:
+    name: "MH1 Max Room Temperature"
+    min: 18
+    max: 28
+    step: 0.5
+    initial: 21
+    icon: mdi:thermometer-chevron-up
+    mode: slider
+    unit_of_measurement: "°C"
+  
+  # ==========================================
+  # RADIATOR CONTROLS - TUOMAS ROOM
+  # ==========================================
+  
+  tuomas_outside_temp_threshold:
+    name: "Tuomas Outside Temp Threshold"
+    min: -30
+    max: 20
+    step: 1
+    initial: 12
+    icon: mdi:thermometer-low
+    mode: slider
+    unit_of_measurement: "°C"
+  
+  tuomas_min_room_temp:
+    name: "Tuomas Min Room Temperature"
+    min: 15
+    max: 25
+    step: 0.5
+    initial: 20
+    icon: mdi:thermometer-chevron-down
+    mode: slider
+    unit_of_measurement: "°C"
+  
+  tuomas_max_room_temp:
+    name: "Tuomas Max Room Temperature"
+    min: 18
+    max: 28
+    step: 0.5
+    initial: 22
+    icon: mdi:thermometer-chevron-up
+    mode: slider
+    unit_of_measurement: "°C"
+  
+  # ==========================================
+  # RADIATOR CONTROLS - SARA ROOM
+  # ==========================================
+  
+  sara_outside_temp_threshold:
+    name: "Sara Outside Temp Threshold"
+    min: -30
+    max: 20
+    step: 1
+    initial: 12
+    icon: mdi:thermometer-low
+    mode: slider
+    unit_of_measurement: "°C"
+  
+  sara_min_room_temp:
+    name: "Sara Min Room Temperature"
+    min: 15
+    max: 25
+    step: 0.5
+    initial: 20
+    icon: mdi:thermometer-chevron-down
+    mode: slider
+    unit_of_measurement: "°C"
+  
+  sara_max_room_temp:
+    name: "Sara Max Room Temperature"
+    min: 18
+    max: 28
+    step: 0.5
+    initial: 22
+    icon: mdi:thermometer-chevron-up
+    mode: slider
+    unit_of_measurement: "°C"
+
+input_boolean:
+  # ==========================================
+  # OVERRIDE CONTROLS
+  # ==========================================
+  
+  # Tesla priority charging override
+  tesla_priority_charging:
+    name: "Tesla Priority Charging"
+    icon: mdi:car-electric-outline
+    initial: false
+  
+  # Boiler Luxus mode (2 hours override)
+  boiler_luxus_mode:
+    name: "Boiler Luxus Mode (2h)"
+    icon: mdi:water-boiler-alert
+    initial: false
+
+input_datetime:
+  # Track when Luxus mode was activated
+  boiler_luxus_activated:
+    name: "Boiler Luxus Activated Time"
+    has_date: true
+    has_time: true
+
+# ==========================================
+# SENSORS FOR TRACKING
+# ==========================================
+
+sensor:
+  - platform: template
+    sensors:
+      # Daily boiler runtime tracker
+      boiler_runtime_today:
+        friendly_name: "Boiler Runtime Today"
+        unit_of_measurement: "h"
+        value_template: >-
+          {% set today = now().date() %}
+          {% set history = states.switch.shellypro4pm_ec62609fd3dc_switch_2.last_changed %}
+          {% if history %}
+            {% set on_time = states.switch.shellypro4pm_ec62609fd3dc_switch_2 | history_stats('time', today, now()) %}
+            {{ (on_time | float) | round(1) }}
+          {% else %}
+            0
+          {% endif %}
+        icon_template: mdi:clock-check-outline
+      
+      # Boiler remaining hours today
+      boiler_remaining_hours:
+        friendly_name: "Boiler Remaining Hours Today"
+        unit_of_measurement: "h"
+        value_template: >-
+          {% set max_hours = states('input_number.boiler_max_hours_daily') | float(3) %}
+          {% set used_hours = states('sensor.boiler_runtime_today') | float(0) %}
+          {{ ([max_hours - used_hours, 0] | max) | round(1) }}
+        icon_template: mdi:timer-sand
+      
+      # Luxus mode time remaining
+      boiler_luxus_remaining:
+        friendly_name: "Luxus Mode Remaining"
+        unit_of_measurement: "min"
+        value_template: >-
+          {% if is_state('input_boolean.boiler_luxus_mode', 'on') %}
+            {% set activated = states('input_datetime.boiler_luxus_activated') %}
+            {% if activated %}
+              {% set start = as_timestamp(activated) %}
+              {% set now_ts = now().timestamp() %}
+              {% set elapsed = (now_ts - start) / 60 %}
+              {% set remaining = 120 - elapsed %}
+              {{ ([remaining, 0] | max) | round(0) }}
+            {% else %}
+              120
+            {% endif %}
+          {% else %}
+            0
+          {% endif %}
+        icon_template: mdi:timer
+
+# ==========================================
+# AUTOMATIONS FOR HELPER MANAGEMENT
+# ==========================================
+
+automation:
+  # Reset boiler runtime at midnight
+  - id: reset_boiler_runtime_midnight
+    alias: "Reset Boiler Runtime at Midnight"
+    trigger:
+      - platform: time
+        at: "00:00:00"
+    action:
+      - service: input_number.set_value
+        target:
+          entity_id: sensor.boiler_runtime_today
+        data:
+          value: 0
+  
+  # Auto-disable Luxus mode after 2 hours
+  - id: boiler_luxus_auto_disable
+    alias: "Boiler Luxus Mode Auto Disable"
+    trigger:
+      - platform: state
+        entity_id: input_boolean.boiler_luxus_mode
+        to: 'on'
+    action:
+      # Record activation time
+      - service: input_datetime.set_datetime
+        target:
+          entity_id: input_datetime.boiler_luxus_activated
+        data:
+          datetime: "{{ now().isoformat() }}"
+      # Wait 2 hours
+      - delay:
+          hours: 2
+      # Disable Luxus mode
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.boiler_luxus_mode
+      # Send notification
+      - service: notify.notify
+        data:
+          title: "💧 Boiler Luxus Mode Ended"
+          message: "Luxus mode automatically disabled after 2 hours"
+  
+  # Auto-disable Tesla priority charging when charged
+  - id: tesla_priority_auto_disable
+    alias: "Tesla Priority Charging Auto Disable"
+    trigger:
+      - platform: numeric_state
+        entity_id: sensor.tesla_model_3_battery
+        above: 80
+    condition:
+      - condition: state
+        entity_id: input_boolean.tesla_priority_charging
+        state: 'on'
+    action:
+      - service: input_boolean.turn_off
+        target:
+          entity_id: input_boolean.tesla_priority_charging
+      - service: notify.notify
+        data:
+          title: "🚗 Tesla Priority Charging Complete"
+          message: "Priority mode disabled - battery at {{ states('sensor.tesla_model_3_battery') }}%"
