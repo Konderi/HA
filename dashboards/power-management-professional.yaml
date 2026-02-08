@@ -133,7 +133,7 @@ views:
             group_by:
               func: last
               duration: 1hour
-          - entity: sensor.electricity_total_price_cents
+          - entity: sensor.current_electricity_cost_rate
             yaxis_id: price
             name: Price (c/kWh)
             type: line
@@ -231,7 +231,7 @@ views:
             labels:
               format: 'HH:mm'
         series:
-          - entity: sensor.electricity_total_price_cents
+          - entity: sensor.current_electricity_cost_rate
             name: Total Price
             type: column
             group_by:
