@@ -1,0 +1,88 @@
+# ============================================
+# PHASE 2 HELPER ENTITIES - ADD TO CONFIGURATION.YAML
+# ============================================
+# 
+# INSTRUCTIONS:
+# 1. Find the "input_datetime:" section in your configuration.yaml
+# 2. Add the entries below to your existing input_datetime section
+# 3. Add the new input_boolean and input_number sections
+# 4. Save and check configuration
+# 5. Restart Home Assistant
+# ============================================
+
+# ============================================
+# ADD TO EXISTING input_datetime: section
+# ============================================
+# You already have:
+#   device_start_time:
+#   device_end_time:
+#   electric_trigger_point:
+#
+# ADD THESE TWO NEW ENTRIES:
+
+  mh1_start_time:
+    name: "MH1 Heating Start Time"
+    has_date: false
+    has_time: true
+    initial: "22:00"
+
+  mh1_end_time:
+    name: "MH1 Heating End Time"
+    has_date: false
+    has_time: true
+    initial: "07:00"
+
+
+# ============================================
+# ADD NEW input_boolean: section (if you don't have one)
+# ============================================
+
+input_boolean:
+  # Kids at home toggle (every other week)
+  kids_home:
+    name: "Kids at Home"
+    icon: mdi:human-child
+
+  # MH1 Master Bedroom manual override
+  mh1_manual_override:
+    name: "MH1 Manual Heating Override"
+    icon: mdi:radiator
+
+
+# ============================================
+# ADD NEW input_number: section (if you don't have one)
+# ============================================
+
+input_number:
+  # MH1 Master Bedroom target temperature
+  mh1_target_temp:
+    name: "MH1 Target Temperature"
+    min: 18
+    max: 24
+    step: 0.5
+    unit_of_measurement: "°C"
+    icon: mdi:thermometer
+    mode: slider
+    initial: 20
+
+  # Kids rooms minimum temperature
+  kids_rooms_min_temp:
+    name: "Kids Rooms Minimum Temperature"
+    min: 16
+    max: 20
+    step: 0.5
+    unit_of_measurement: "°C"
+    icon: mdi:thermometer-low
+    mode: slider
+    initial: 18
+
+  # Kids rooms target temperature
+  kids_rooms_target_temp:
+    name: "Kids Rooms Target Temperature"
+    min: 18
+    max: 22
+    step: 0.5
+    unit_of_measurement: "°C"
+    icon: mdi:thermometer-high
+    mode: slider
+    initial: 19
