@@ -26,15 +26,10 @@ views:
             min: 0
             max: 17.25
             needle: true
-            segments:
-              - from: 0
-                color: '#4ECDC4'
-              - from: 8
-                color: '#FFE66D'
-              - from: 12
-                color: '#FF9A76'
-              - from: 15
-                color: '#FF6B6B'
+            severity:
+              green: 0
+              yellow: 10
+              red: 14
           
           - type: gauge
             entity: sensor.current_electricity_cost_rate
@@ -43,15 +38,10 @@ views:
             max: 50
             needle: true
             unit: c/kWh
-            segments:
-              - from: 0
-                color: '#4ECDC4'
-              - from: 15
-                color: '#FFE66D'
-              - from: 25
-                color: '#FF9A76'
-              - from: 35
-                color: '#FF6B6B'
+            severity:
+              green: 0
+              yellow: 18
+              red: 28
           
           - type: gauge
             entity: sensor.talon_kokonaiskulutus_paiva_kwh
@@ -60,17 +50,10 @@ views:
             max: 120
             needle: true
             unit: kWh
-            segments:
-              - from: 0
-                color: '#4ECDC4'
-              - from: 40
-                color: '#95E1D3'
-              - from: 60
-                color: '#FFE66D'
-              - from: 80
-                color: '#FF9A76'
-              - from: 100
-                color: '#FF6B6B'
+            severity:
+              green: 0
+              yellow: 70
+              red: 95
           
           - type: gauge
             entity: sensor.average_power_factor
@@ -78,13 +61,10 @@ views:
             min: 0
             max: 1
             needle: true
-            segments:
-              - from: 0
-                color: '#FF6B6B'
-              - from: 0.85
-                color: '#FFE66D'
-              - from: 0.95
-                color: '#4ECDC4'
+            severity:
+              red: 0
+              yellow: 0.80
+              green: 0.90
 
       # Row 2: 7-Day Consumption vs Price Chart
       - type: custom:apexcharts-card
@@ -716,17 +696,10 @@ views:
             max: 500
             needle: true
             unit: '€'
-            segments:
-              - from: 0
-                color: '#4ECDC4'
-              - from: 200
-                color: '#95E1D3'
-              - from: 300
-                color: '#FFE66D'
-              - from: 400
-                color: '#FF9A76'
-              - from: 450
-                color: '#FF6B6B'
+            severity:
+              green: 0
+              yellow: 300
+              red: 420
           
           - type: gauge
             entity: sensor.talon_kokonaiskulutus_kuukausi_kwh
@@ -735,17 +708,10 @@ views:
             max: 2000
             needle: true
             unit: kWh
-            segments:
-              - from: 0
-                color: '#4ECDC4'
-              - from: 800
-                color: '#95E1D3'
-              - from: 1200
-                color: '#FFE66D'
-              - from: 1600
-                color: '#FF9A76'
-              - from: 1800
-                color: '#FF6B6B'
+            severity:
+              green: 0
+              yellow: 1300
+              red: 1700
 
       # Consumption Breakdown
       - type: entities
