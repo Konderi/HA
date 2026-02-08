@@ -648,8 +648,8 @@ views:
                   background: rgba(var(--rgb-primary-text-color), 0.05);
                 }
           - type: entity
-            entity: sensor.sahko_kokonaishinta_c
-            name: Total
+            entity: sensor.electricity_total_price_cents
+            name: Total Price
             icon: mdi:currency-eur
             card_mod:
               style: |
