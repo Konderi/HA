@@ -1,0 +1,308 @@
+# ============================================
+# COMPLETE TEMPLATES.YAML - MERGED VERSION
+# Combines existing utility sensors with modern power management sensors
+# ============================================
+
+- sensor:
+    # ============================================
+    # EXISTING UTILITY SENSORS
+    # ============================================
+
+    #### Low Battery list ###########################
+    - name: "Low Battery Devices"
+      unique_id: 482eea09-6221-4ca4-bf34-1251aaf605d4
+      icon: >
+        mdi:battery-low
+      state: >
+        {% set threshold = states('input_number.battery_threshold') | int %}
+        {%- set ns = namespace(sensors=[]) -%}
+        {%- for state in states.sensor
+          |selectattr('attributes.device_class', 'defined')
+          |selectattr('attributes.state_class', 'defined')
+          |selectattr('attributes.device_class', '==', 'battery')
+          |selectattr('attributes.state_class', '==', 'measurement')
+          |selectattr('state', 'is_number') -%}
+          {%- if state.state | int <= threshold -%}
+            {% set ns.sensors = ns.sensors + [dict(name = state.name | replace('battery', '') | replace('Battery', ''), state = state.state | int)] %}
+          {%- endif -%}
+        {%- endfor -%}
+        {%- set batt = ns.sensors | sort(attribute='state') %}
+        {%- set ns = namespace(batt='') -%}
+        {%- for state in batt -%}
+            {% set ns.batt= ns.batt + (state.name ~ ' (' ~ state.state ~'%)' ~ "\n") %}
+        {%- endfor -%}
+
+        {% if ns.batt | count > 0 %}
+          {{ ns.batt | truncate(255, true, '...')}}
+        {% else %}
+          {{ 'unavailable'}}
+        {% endif %}
+
+    ### Sademittari laskuri #########
+
+    - name: Rainfall today
+      unit_of_measurement: mm
+      state_class: total_increasing
+      unique_id: rainfall_today
+      state: >-
+        {% set count = states('sensor.rainsensor_flips') | int(0) %}
+        {% set mm = count * 0.30303 %}
+        {% if count >= 0 %}
+          {{ mm|round(1, 'floor') }}
+        {% endif %}
+      availability: "{{ (states('sensor.rainsensor_flips') not in ('unknown', 'unavailable')) }}"
+
+    - name: "Rain intensity"
+      unit_of_measurement: "mm/h"
+      state_class: measurement
+      unique_id: rainfall_per_hour
+      state: >-
+        {% if state_attr('binary_sensor.rainfall_trend','gradient') != None and state_attr('binary_sensor.rainfall_trend','gradient') > 0 and state_attr('binary_sensor.rainfall_trend','gradient') < 0.0278 %}
+        {{ (state_attr('binary_sensor.rainfall_trend','gradient')*3600) | round(1) }}
+        {% else %}
+        0
+        {% endif %}
+
+    ### Accuweather sensors #########
+
+    - name: Outside_temperature
+      unit_of_measurement: "°C"
+      state_class: measurement
+      unique_id: outside_temperature
+      state: >-
+        {{ state_attr('sensor.weather_koti', 'temperature') | float ()}}
+
+    # ============================================
+    # POWER MANAGEMENT - MODERN SENSORS
+    # ============================================
+
+    # ELECTRICITY PRICING - DASHBOARD COMPATIBILITY
+
+    # For ApexCharts - Nordpool spot price in c/kWh
+    - name: "Sahkon myyntihinta c kWh"
+      unique_id: sahkon_myyntihinta_c_kwh
+      unit_of_measurement: "c/kWh"
+      device_class: monetary
+      state: >
+        {{ (states('sensor.nordpool_kwh_fi_eur_4_10_0') | float(0) * 100) | round(2) }}
+      icon: mdi:cash
+      attributes:
+        source: "Nordpool FI spot price"
+        calculation: "nordpool × 100"
+
+    # For ApexCharts - Transfer tariff in c/kWh (day/night)
+    - name: "Sahko siirtohinta"
+      unique_id: sahko_siirtohinta
+      unit_of_measurement: "c/kWh"
+      device_class: monetary
+      state_class: measurement
+      state: >
+        {% set hour = now().hour %}
+        {% if 7 <= hour < 22 %}
+          {{ 4.92 }}
+        {% else %}
+          {{ 3.01 }}
+        {% endif %}
+      icon: mdi:transmission-tower
+      attributes:
+        tariff_type: >
+          {% set hour = now().hour %}
+          {% if 7 <= hour < 22 %}day{% else %}night{% endif %}
+        day_tariff: "4.92"
+        night_tariff: "3.01"
+        schedule: "07:00-22:00 = day, 22:00-07:00 = night"
+
+    # For ApexCharts - Total electricity price in c/kWh
+    - name: "SHF Electricity Full Price Charts"
+      unique_id: shf_electricity_full_price_charts
+      unit_of_measurement: "c/kWh"
+      device_class: monetary
+      state: >
+        {{ states('sensor.electricity_total_price_cents') | float(0) }}
+      icon: mdi:chart-line
+      attributes:
+        source: "sensor.electricity_total_price_cents"
+        includes: "nordpool + energy + transfer + tax + margin, × VAT"
+        auto_tariff: "Automatic day/night detection"
+
+    # POWER MONITORING
+
+    # Total 3-phase power consumption
+    - name: "Total Power Consumption"
+      unique_id: total_power_consumption
+      unit_of_measurement: "W"
+      device_class: power
+      state_class: measurement
+      state: >
+        {% set a = states('sensor.shellyem3_channel_a_power') | float(0) %}
+        {% set b = states('sensor.shellyem3_channel_b_power') | float(0) %}
+        {% set c = states('sensor.shellyem3_channel_c_power') | float(0) %}
+        {{ (a + b + c) | round(0) }}
+      icon: mdi:lightning-bolt
+      attributes:
+        phase_a_watts: "{{ states('sensor.shellyem3_channel_a_power') | float(0) | round(0) }}"
+        phase_b_watts: "{{ states('sensor.shellyem3_channel_b_power') | float(0) | round(0) }}"
+        phase_c_watts: "{{ states('sensor.shellyem3_channel_c_power') | float(0) | round(0) }}"
+        phase_a_amps: "{{ (states('sensor.shellyem3_channel_a_power') | float(0) / 230) | round(1) }}"
+        phase_b_amps: "{{ (states('sensor.shellyem3_channel_b_power') | float(0) / 230) | round(1) }}"
+        phase_c_amps: "{{ (states('sensor.shellyem3_channel_c_power') | float(0) / 230) | round(1) }}"
+        total_amps: "{{ ((states('sensor.shellyem3_channel_a_power') | float(0) + states('sensor.shellyem3_channel_b_power') | float(0) + states('sensor.shellyem3_channel_c_power') | float(0)) / 230) | round(1) }}"
+
+    # Total 3-phase power in kW (for easier reading)
+    - name: "Total Power kW"
+      unique_id: total_power_kw
+      unit_of_measurement: "kW"
+      device_class: power
+      state_class: measurement
+      state: >
+        {{ (states('sensor.total_power_consumption') | float(0) / 1000) | round(2) }}
+      icon: mdi:flash
+
+    # Total 3-phase energy consumption
+    - name: "Total Energy Consumption"
+      unique_id: total_energy_consumption
+      unit_of_measurement: "kWh"
+      device_class: energy
+      state_class: total_increasing
+      state: >
+        {% set a = states('sensor.shellyem3_channel_a_energy') | float(0) %}
+        {% set b = states('sensor.shellyem3_channel_b_energy') | float(0) %}
+        {% set c = states('sensor.shellyem3_channel_c_energy') | float(0) %}
+        {{ (a + b + c) | round(2) }}
+      icon: mdi:counter
+      attributes:
+        phase_a_kwh: "{{ states('sensor.shellyem3_channel_a_energy') | float(0) | round(2) }}"
+        phase_b_kwh: "{{ states('sensor.shellyem3_channel_b_energy') | float(0) | round(2) }}"
+        phase_c_kwh: "{{ states('sensor.shellyem3_channel_c_energy') | float(0) | round(2) }}"
+
+    # POWER FACTOR MONITORING
+
+    # Average power factor across all phases
+    - name: "Average Power Factor"
+      unique_id: average_power_factor
+      unit_of_measurement: ""
+      state_class: measurement
+      state: >
+        {% set a = states('sensor.shellyem3_channel_a_power_factor') | float(0) %}
+        {% set b = states('sensor.shellyem3_channel_b_power_factor') | float(0) %}
+        {% set c = states('sensor.shellyem3_channel_c_power_factor') | float(0) %}
+        {% set count = [a, b, c] | reject('==', 0) | list | length %}
+        {% if count > 0 %}
+          {{ ((a + b + c) / count) | round(2) }}
+        {% else %}
+          {{ 0 }}
+        {% endif %}
+      icon: mdi:cosine-wave
+      attributes:
+        phase_a: "{{ states('sensor.shellyem3_channel_a_power_factor') | float(0) | round(2) }}"
+        phase_b: "{{ states('sensor.shellyem3_channel_b_power_factor') | float(0) | round(2) }}"
+        phase_c: "{{ states('sensor.shellyem3_channel_c_power_factor') | float(0) | round(2) }}"
+        quality: >
+          {% set pf = states('sensor.average_power_factor') | float(0) %}
+          {% if pf >= 0.95 %}Excellent
+          {% elif pf >= 0.90 %}Good
+          {% elif pf >= 0.80 %}Fair
+          {% else %}Poor{% endif %}
+
+    # Lowest power factor (identifies worst phase)
+    - name: "Lowest Power Factor"
+      unique_id: lowest_power_factor
+      unit_of_measurement: ""
+      state_class: measurement
+      state: >
+        {% set a = states('sensor.shellyem3_channel_a_power_factor') | float(1) %}
+        {% set b = states('sensor.shellyem3_channel_b_power_factor') | float(1) %}
+        {% set c = states('sensor.shellyem3_channel_c_power_factor') | float(1) %}
+        {{ [a, b, c] | min | round(2) }}
+      icon: mdi:alert-circle
+      attributes:
+        worst_phase: >
+          {% set a = states('sensor.shellyem3_channel_a_power_factor') | float(1) %}
+          {% set b = states('sensor.shellyem3_channel_b_power_factor') | float(1) %}
+          {% set c = states('sensor.shellyem3_channel_c_power_factor') | float(1) %}
+          {% set min_pf = [a, b, c] | min %}
+          {% if min_pf == a %}Phase A
+          {% elif min_pf == b %}Phase B
+          {% else %}Phase C{% endif %}
+
+    # COST TRACKING
+
+    # Current electricity cost rate (€/h at current power)
+    - name: "Current Electricity Cost Rate"
+      unique_id: current_electricity_cost_rate
+      unit_of_measurement: "€/h"
+      device_class: monetary
+      state_class: measurement
+      state: >
+        {% set power_kw = states('sensor.total_power_kw') | float(0) %}
+        {% set price_eur = states('sensor.electricity_total_price_now') | float(0) %}
+        {{ (power_kw * price_eur) | round(3) }}
+      icon: mdi:cash-clock
+      attributes:
+        power_kw: "{{ states('sensor.total_power_kw') | float(0) }}"
+        price_eur_kwh: "{{ states('sensor.electricity_total_price_now') | float(0) }}"
+        cost_per_day_if_constant: "{{ (states('sensor.current_electricity_cost_rate') | float(0) * 24) | round(2) }} €"
+
+    # UTILITIES
+
+    # Water meter consumption (based on manual readings)
+    - name: "Water Consumption"
+      unique_id: water_consumption
+      unit_of_measurement: "L"
+      device_class: volume
+      state_class: total_increasing
+      state: >
+        {{ states('input_number.water_meter_reading') | float(0) }}
+      icon: mdi:water-pump
+      attributes:
+        cubic_meters: "{{ (states('input_number.water_meter_reading') | float(0) / 1000) | round(3) }}"
+        last_manual_reading: "{{ states('input_number.water_meter_reading') }}"
+        helper_required: "input_number.water_meter_reading"
+
+    # Water consumption cost
+    - name: "Water Total Cost"
+      unique_id: water_total_cost
+      unit_of_measurement: "€"
+      device_class: monetary
+      state: >
+        {% set water_fee = 1.45 %}
+        {% set wastewater_fee = 2.32 %}
+        {% set vat = 1.24 %}
+        {% set consumption_m3 = states('sensor.water_consumption') | float(0) / 1000 %}
+        {{ (consumption_m3 * (water_fee + wastewater_fee) * vat) | round(2) }}
+      icon: mdi:water
+      attributes:
+        consumption_liters: "{{ states('sensor.water_consumption') | float(0) | round(0) }}"
+        consumption_m3: "{{ (states('sensor.water_consumption') | float(0) / 1000) | round(3) }}"
+        water_fee_eur_m3: "1.45"
+        wastewater_fee_eur_m3: "2.32"
+        vat_multiplier: "1.24"
+        total_cost_breakdown: "{{ (states('sensor.water_consumption') | float(0) / 1000) | round(3) }} m3 * (1.45 + 2.32) * 1.24 = {{ states('sensor.water_total_cost') }} EUR"
+
+    # Best 5-hour charging window for tomorrow
+    - name: "Best Charging Window Tomorrow"
+      unique_id: best_charging_window_tomorrow
+      device_class: timestamp
+      state: >
+        {% set hours = 5 %}
+        {% if state_attr('sensor.nordpool_kwh_fi_eur_4_10_0', 'tomorrow_valid') == true %}
+          {% set tomorrow = state_attr('sensor.nordpool_kwh_fi_eur_4_10_0', 'tomorrow') %}
+          {% set ns = namespace(best_start=0, best_cost=999) %}
+          {% for i in range(0, 24 - hours + 1) %}
+            {% set cost = tomorrow[i:i+hours] | sum %}
+            {% if cost < ns.best_cost %}
+              {% set ns.best_cost = cost %}
+              {% set ns.best_start = i %}
+            {% endif %}
+          {% endfor %}
+          {{ (today_at("00:00") + timedelta(days=1, hours=ns.best_start)) | as_timestamp | timestamp_local }}
+        {% else %}
+          {{ (today_at("00:00") + timedelta(days=1)) | as_timestamp | timestamp_local }}
+        {% endif %}
+      icon: mdi:clock-start
+      attributes:
+        window_hours: "5"
+        end_time: >
+          {% set start = states('sensor.best_charging_window_tomorrow') | as_timestamp %}
+          {{ (start + 5 * 3600) | timestamp_local }}
+        description: "Optimal 5-hour window for EV charging, heating, or high-power tasks"

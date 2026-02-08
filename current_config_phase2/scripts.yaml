@@ -1,0 +1,257 @@
+etuoven_avaus:
+  alias: Etuoven avaus - Home Assistant
+  sequence:
+  - service: lock.unlock
+    data:
+      code: '062021'
+    target:
+      entity_id: lock.etuovi
+  - wait_template: ''
+    continue_on_timeout: true
+    timeout: '15'
+  - service: lock.lock
+    data: {}
+    target:
+      entity_id: lock.etuovi
+  mode: restart
+  icon: phu:panel-frontdoor-open
+sammuta_oma_kone:
+  alias: Sammuta oma kone
+  sequence:
+  - service: hassio.addon_stdin
+    data:
+      addon: core_rpc_shutdown
+      input: Pelikone
+  mode: single
+  icon: mdi:desktop-classic
+sammuta_valot:
+  alias: Sammuta valot
+  sequence:
+  - service: light.turn_off
+    data: {}
+    target:
+      entity_id: light.koti
+  mode: single
+  icon: hue:bulb-classic-off
+vacuum_tyhjenna_sailio:
+  alias: 'Vacuum: Tyhjennä säiliö'
+  sequence:
+  - service: vacuum.send_command
+    data:
+      command: app_goto_target
+      params:
+      - 22124
+      - 26062
+    target:
+      entity_id: vacuum.roborock_s6_maxv
+  mode: single
+  icon: mdi:trash-can
+vacuum_keittio:
+  alias: 'Vacuum: Keittiö'
+  sequence:
+  - service: xiaomi_miio.vacuum_clean_zone
+    data:
+      repeats: 1
+      zone:
+      - - 19702
+        - 25743
+        - 22941
+        - 28944
+    target:
+      entity_id: vacuum.roborock_s6_maxv
+  mode: single
+  icon: mdi:fridge
+vacuum_makkari:
+  alias: 'Vacuum: Pojat'
+  sequence:
+  - service: xiaomi_miio.vacuum_clean_zone
+    data:
+      repeats: 1
+      zone:
+      - - 19703
+        - 28959
+        - 22901
+        - 32531
+    target:
+      entity_id: vacuum.roborock_s6_maxv
+  mode: single
+  icon: mdi:bed-double
+vacuum_poikien_huone:
+  alias: 'Vacuum: Sara'
+  sequence:
+  - service: xiaomi_miio.vacuum_clean_zone
+    data:
+      repeats: 1
+      zone:
+      - - 25020
+        - 29536
+        - 28012
+        - 32531
+    target:
+      entity_id: vacuum.roborock_s6_maxv
+  mode: single
+  icon: mdi:account-cowboy-hat
+vacuum_olohuone:
+  alias: 'Vacuum: Olohuone'
+  sequence:
+  - service: xiaomi_miio.vacuum_clean_zone
+    data:
+      repeats: 1
+      zone:
+      - - 24939
+        - 25165
+        - 28261
+        - 29439
+    target:
+      entity_id: vacuum.roborock_s6_maxv
+  mode: single
+  icon: mdi:sofa
+vacuum_aula:
+  alias: 'Vacuum: Aula'
+  sequence:
+  - service: xiaomi_miio.vacuum_clean_zone
+    data:
+      repeats: 1
+      zone:
+      - - 22959
+        - 26690
+        - 25003
+        - 30469
+    target:
+      entity_id: vacuum.roborock_s6_maxv
+  mode: single
+  icon: mdi:map-marker
+etuoven_avaus_toni:
+  alias: Etuoven avaus - Toni
+  sequence:
+  - service: lock.unlock
+    data: {}
+    target:
+      entity_id: lock.etuovi
+  - wait_template: ''
+    continue_on_timeout: true
+    timeout: '10'
+  - service: lock.lock
+    data: {}
+    target:
+      entity_id: lock.etuovi
+  mode: restart
+  icon: phu:panel-frontdoor-open
+etuoven_avaus_jenni:
+  alias: Etuoven avaus - Jenni
+  sequence:
+  - service: lock.unlock
+    data: {}
+    target:
+      entity_id: lock.etuovi
+  - wait_template: ''
+    continue_on_timeout: true
+    timeout: '10'
+  - service: lock.lock
+    data: {}
+    target:
+      entity_id: lock.etuovi
+  mode: restart
+  icon: phu:panel-frontdoor-open
+new_script:
+  alias: doorbell_01_snapshot
+  sequence:
+  - service: camera.snapshot
+    target:
+      entity_id: camera.ovikello_kamera
+    data:
+      filename: /config/www/cam_captures/doorbell_01_{{ now().strftime("%Y%m%d-%H%M")
+        }}.jpg
+  - service: camera.snapshot
+    target:
+      entity_id: camera.ovikello_kamera
+    data:
+      filename: /config/www/cam_captures/doorbell_01_last.jpg
+  mode: single
+  icon: mdi:camera
+sauna_rele:
+  alias: Sauna rele
+  sequence:
+  - service: switch.turn_on
+    data: {}
+    target:
+      entity_id: switch.sauna_switch_0
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 0
+      milliseconds: 450
+    enabled: false
+  - service: switch.turn_off
+    data: {}
+    target:
+      entity_id: switch.sauna_switch_0
+    enabled: false
+  mode: single
+  icon: mdi:hot-tub
+camera_driveway_1_snapshot_ai_notification:
+  alias: Camera - Driveway 1 - Snapshot, AI & Notification
+  sequence:
+  - metadata: {}
+    data:
+      filename: ./www/snapshots/driveway1_snapshot1.jpg
+    target:
+      entity_id: camera.etupiha
+    enabled: true
+    action: camera.snapshot
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 0
+      milliseconds: 500
+    enabled: true
+  - metadata: {}
+    data:
+      filename: ./www/snapshots/driveway1_snapshot2.jpg
+    target:
+      entity_id: camera.etupiha
+    enabled: true
+    action: camera.snapshot
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 0
+      milliseconds: 500
+    enabled: true
+  - metadata: {}
+    data:
+      filename: ./www/snapshots/driveway1_snapshot3.jpg
+    target:
+      entity_id: camera.etupiha
+    enabled: true
+    action: camera.snapshot
+  - metadata: {}
+    data:
+      prompt: Motion has been detected, compare and very briefly describe what you
+        see in the following sequence of images from my driveway camera number 1.
+        What do you think caused the motion alarm? If a person or car is present,
+        describe them in detail. Do not describe stationary objects or buildings.
+        If you see no obvious causes of motion, reply with "No Obvious Motion Detected."
+        Your message needs to be short enough to fit in a phone notification.
+      image_filename:
+      - ./www/snapshots/driveway1_snapshot1.jpg
+      - ./www/snapshots/driveway1_snapshot2.jpg
+      - ./www/snapshots/driveway1_snapshot3.jpg
+    response_variable: generated_content
+    action: google_generative_ai_conversation.generate_content
+  - if:
+    - condition: template
+      value_template: '{{ ''No Obvious Motion Detected.'' in generated_content.text
+        }}'
+    then:
+    - stop: ''
+    else:
+    - metadata: {}
+      data:
+        title: Driveway 1 Motion Detected
+        message: '{{generated_content[''text''] }}'
+        data:
+          image: /local/snapshots/driveway1_snapshot2.jpg
+      action: notify.mobile_app_iphone15_toni
+  mode: single
+  description: ''

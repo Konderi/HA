@@ -1,0 +1,144 @@
+# ============================================
+# SENSORS.YAML - PLATFORM SENSORS ONLY
+# Compatible with Home Assistant 2026.2.x+
+# ============================================
+#
+# This file is included via: sensor: !include sensors.yaml
+# Contains only platform-based sensors (REST, history_stats, etc.)
+#
+# ============================================
+
+# ============================================
+# FINGRID API REST SENSORS
+# Finnish power grid data
+# ============================================
+
+- platform: rest
+  resource: https://api.fingrid.fi/v1/variable/181/event/json
+  method: GET
+  name: "Wind Power Fingrid"
+  unique_id: wind_power_fingrid
+  value_template: "{{ value_json.value }}"
+  unit_of_measurement: "MW"
+  scan_interval: 3600
+  headers:
+    x-api-key: "cgeAMM85kLa6Sttee8kL37cH6qtaOk5g79JYZOam"
+    accept: application/json
+
+- platform: rest
+  resource: https://api.fingrid.fi/v1/variable/188/event/json
+  method: GET
+  name: "Nuclear Power Fingrid"
+  unique_id: nuclear_power_fingrid
+  value_template: "{{ value_json.value }}"
+  unit_of_measurement: "MW"
+  scan_interval: 3600
+  headers:
+    x-api-key: "AcgeAMM85kLa6Sttee8kL37cH6qtaOk5g79JYZOam"
+    accept: application/json
+
+- platform: rest
+  resource: https://api.fingrid.fi/v1/variable/191/event/json
+  method: GET
+  name: "Water Power Fingrid"
+  unique_id: water_power_fingrid
+  value_template: "{{ value_json.value }}"
+  unit_of_measurement: "MW"
+  scan_interval: 3600
+  headers:
+    x-api-key: "cgeAMM85kLa6Sttee8kL37cH6qtaOk5g79JYZOam"
+    accept: application/json
+
+- platform: rest
+  resource: https://api.fingrid.fi/v1/variable/245/event/json
+  method: GET
+  name: "Wind Power 36h Estimate Fingrid"
+  unique_id: wind_power_36h_estimate_fingrid
+  value_template: "{{ value_json.value }}"
+  unit_of_measurement: "MW"
+  scan_interval: 3600
+  headers:
+    x-api-key: "cgeAMM85kLa6Sttee8kL37cH6qtaOk5g79JYZOam"
+    accept: application/json
+
+- platform: rest
+  resource: https://api.fingrid.fi/v1/variable/193/event/json
+  method: GET
+  name: "Power consumption Fingrid"
+  unique_id: Power_consumption_Fingrid
+  value_template: "{{ value_json.value }}"
+  unit_of_measurement: "MW"
+  scan_interval: 3600
+  headers:
+    x-api-key: "cgeAMM85kLa6Sttee8kL37cH6qtaOk5g79JYZOam"
+    accept: application/json
+
+- platform: rest
+  resource: https://api.fingrid.fi/v1/variable/201/event/json
+  method: GET
+  name: "Heat co-generation Fingrid"
+  unique_id: heat_co-generation_fingrid
+  value_template: "{{ value_json.value }}"
+  unit_of_measurement: "MW"
+  scan_interval: 3600
+  headers:
+    x-api-key: "cgeAMM85kLa6Sttee8kL37cH6qtaOk5g79JYZOam"
+    accept: application/json
+
+- platform: rest
+  resource: https://api.fingrid.fi/v1/variable/202/event/json
+  method: GET
+  name: "industry_co-generation_fingrid"
+  unique_id: Industry co-generation Fingrid
+  value_template: "{{ value_json.value }}"
+  unit_of_measurement: "MW"
+  scan_interval: 3600
+  headers:
+    x-api-key: "cgeAMM85kLa6Sttee8kL37cH6qtaOk5g79JYZOam"
+    accept: application/json
+
+- platform: rest
+  resource: https://api.fingrid.fi/v1/variable/192/event/json
+  method: GET
+  name: "Fingrid, kokonaistuotanto"
+  unique_id: fingrid_kokonaistuotanto
+  value_template: "{{ value_json.value }}"
+  unit_of_measurement: "MW"
+  scan_interval: 3600
+  headers:
+    x-api-key: "cgeAMM85kLa6Sttee8kL37cH6qtaOk5g79JYZOam"
+    accept: application/json
+
+- platform: rest
+  resource: https://api.fingrid.fi/v1/variable/336/event/json
+  method: GET
+  name: "Fingrid, Sähköpulan tilannetieto"
+  unique_id: fingrid_sahkopulantilannetieto
+  value_template: "{{ value_json.value }}"
+  scan_interval: 3600
+  headers:
+    x-api-key: "cgeAMM85kLa6Sttee8kL37cH6qtaOk5g79JYZOam"
+    accept: application/json
+
+- platform: rest
+  resource: https://api.fingrid.fi/v1/variable/209/event/json
+  method: GET
+  name: "Fingrid, Sähköjärjestelmän käyttötilanne"
+  unique_id: fingrid_sahkojarjestelmankayttotilanne
+  value_template: "{{ value_json.value }}"
+  scan_interval: 3600
+  headers:
+    x-api-key: "cgeAMM85kLa6Sttee8kL37cH6qtaOk5g79JYZOam"
+    accept: application/json
+
+# ============================================
+# RAIN SENSOR - HISTORY STATS
+# ============================================
+
+- platform: history_stats
+  name: Rainsensor flips
+  entity_id: binary_sensor.rainsensor_contact
+  state: "off"
+  type: count
+  start: "{{ now().replace(hour=0, minute=0, second=0) }}"
+  end: "{{ now() }}"

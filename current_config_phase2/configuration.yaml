@@ -1,0 +1,128 @@
+# Loads default set of integrations. Do not remove.
+default_config:
+
+frontend:
+  themes: !include_dir_merge_named themes
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+sensor: !include sensors.yaml
+group: !include groups.yaml
+template: !include templates.yaml
+# multiscrape: !include multiscrape.yaml
+
+# Example configuration.yaml entry for the Telegram Bot
+telegram_bot:
+  allowed_chat_ids:
+    - 6566689927
+
+# Example configuration.yaml entry for the notifier
+notify:
+  - platform: telegram
+    name: NOTIFIER_NAME
+    chat_id: 6566689927
+
+# Helper to keep the start time
+input_datetime:
+  device_start_time:
+    name: Device Start Time
+    has_time: true
+    has_date: false
+  device_end_time:
+    name: Device End Time
+    has_time: true
+    has_date: false
+  electric_trigger_point:
+    name: Electric price trigger
+    has_time: true
+    has_date: false
+
+tts:
+  - platform: google_cloud
+    key_file: keyfile.json
+    language: fi-FI
+    gender: female
+    voice: fi-FI-Wavenet-A
+    text_type: ssml
+
+homeassistant: # Find this row and if it doesn't exists, you can copypaste this whole block to the file.
+  packages: # NEW AND IMPORTANT ROW, NOTE INDENTATION
+    pack_1: !include spot-price.yaml # NEW AND IMPORTANT ROW, NOTE INDENTATION
+    porssari_core: !include porssari_core.yaml
+    electricity_pricing_constants: !include electricity_pricing_constants.yaml
+    electricity_pricing: !include electricity_pricing.yaml
+  # There might be code here. Leave it as is.
+  allowlist_external_dirs:
+    - "/config/media/doorbell/"
+  media_dirs:
+    media: /config/media
+    local: /media
+    recording: /
+  auth_providers:
+    - type: homeassistant
+    - type: trusted_networks
+      trusted_networks:
+        - 192.168.50.0/24
+
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 172.30.33.0/24
+    - 192.168.50.0/24
+
+google_assistant:
+  project_id: utility-lock-369217
+  service_account: !include SERVICE_ACCOUNT.json
+  report_state: true
+
+switch:
+  - platform: rest
+    name: shelly_doorbell_chime_status
+    resource: http://192.168.50.218/settings/relay/0
+    body_on: "btn_type=toggle"
+    body_off: "btn_type=detached"
+    is_on_template: '{{ value_json.btn_type == "toggle" }}'
+
+##### Alarm Control Panel ##################################
+
+alarm_control_panel:
+  - platform: manual
+    name: Koti hälytin
+    code: 1234
+    code_arm_required: false
+    arming_time: 30 # The time of the 'arming' state before effecting a state change.
+    delay_time: 30 # The time of the 'pending' state before triggering the alarm.
+    trigger_time: 120 # The time of the 'triggered' state in which the alarm is firing.
+    disarm_after_trigger: false
+    disarmed:
+      trigger_time: 0
+    armed_home:
+      arming_time: 0
+      delay_time: 0
+
+##### Roborock S6 MaxV
+camera:
+  - platform: xiaomi_cloud_map_extractor
+    host: !secret xiaomi_vacuum_host
+    token: !secret xiaomi_vacuum_token
+    username: !secret xiaomi_cloud_username
+    password: !secret xiaomi_cloud_password
+    draw: ["all"]
+    attributes:
+      - calibration_points
+    auto_update: false
+
+qvr_pro:
+  host: 192.168.50.3
+  #  port: 8080
+  username: !secret qnap_username
+  password: !secret qnap_password
+
+binary_sensor:
+  - platform: trend
+    sensors:
+      rainfall_trend:
+        entity_id: sensor.rainfall_today
+        min_gradient: 0.000138889
+        max_samples: 2
