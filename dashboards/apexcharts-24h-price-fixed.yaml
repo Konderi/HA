@@ -1,0 +1,124 @@
+# ============================================
+# 24-Hour Electricity Price Chart (WORKING)
+# ============================================
+# Uses Nordpool sensor which has 24h+ forecast data
+# Applies your fixed costs (transfer + tax + margin + VAT)
+# ============================================
+
+type: custom:apexcharts-card
+header:
+  show: true
+  title: 💰 Electricity Total Price - 24 Hours
+  show_states: true
+  colorize_states: true
+
+graph_span: 30h
+span:
+  start: hour
+  offset: "-2h"
+
+now:
+  show: true
+  label: NOW
+
+yaxis:
+  - id: price
+    min: 0
+    max: ~50
+    decimals: 1
+    apex_config:
+      title:
+        text: "c/kWh"
+
+apex_config:
+  chart:
+    height: 300
+  dataLabels:
+    enabled: false
+  xaxis:
+    labels:
+      format: HH:mm
+      datetimeUTC: false
+  tooltip:
+    x:
+      format: 'ddd HH:mm'
+
+series:
+  # ============================================
+  # Option 1: Use Nordpool + Transform (RECOMMENDED)
+  # This shows spot price, then adds your fixed costs
+  # ============================================
+  - entity: sensor.nordpool_kwh_fi_eur_4_10_0
+    name: Total Price
+    type: column
+    extend_to: now
+    data_generator: |
+      return entity.attributes.raw_today.concat(entity.attributes.raw_tomorrow || []).map((entry, index) => {
+        // Get spot price in €/kWh
+        const spotPrice = entry.value;
+        
+        // Your fixed costs (in €/kWh)
+        const hour = new Date(entry.start).getHours();
+        const isDayTariff = hour >= 7 && hour < 22;
+        const transferFee = isDayTariff ? 0.0492 : 0.0301;  // Day: 4.92c, Night: 3.01c
+        const tax = 0.02793720;      // 2.79372 c/kWh
+        const margin = 0.0059;        // 0.59 c/kWh
+        const vat = 1.255;            // 25.5%
+        
+        // Calculate total price in cents
+        const totalEur = (spotPrice + transferFee + tax + margin) * vat;
+        const totalCents = totalEur * 100;
+        
+        return [new Date(entry.start).getTime(), totalCents];
+      });
+    show:
+      extremas: time
+    color_threshold:
+      - value: 0
+        color: "#4ECDC4"   # Cyan - Very cheap
+      - value: 12
+        color: "#95E1D3"   # Light green
+      - value: 16
+        color: "#FFE66D"   # Yellow
+      - value: 20
+        color: "#FF9A76"   # Orange
+      - value: 25
+        color: "#FF6B6B"   # Red
+      - value: 35
+        color: "#FF0000"   # Dark red - Very expensive
+
+  # ============================================
+  # Option 2: Add spot price line for reference (OPTIONAL)
+  # ============================================
+  - entity: sensor.nordpool_kwh_fi_eur_4_10_0
+    name: Spot Price Only
+    type: line
+    opacity: 0.5
+    stroke_width: 2
+    extend_to: now
+    data_generator: |
+      return entity.attributes.raw_today.concat(entity.attributes.raw_tomorrow || []).map((entry) => {
+        return [new Date(entry.start).getTime(), entry.value * 100];
+      });
+    color: gray
+    show:
+      legend_value: false
+      in_header: false
+
+# ============================================
+# DEBUGGING: If chart still shows "N/A"
+# ============================================
+# 1. Check Nordpool sensor exists:
+#    Developer Tools → States → sensor.nordpool_kwh_fi_eur_4_10_0
+# 
+# 2. Check it has attributes:
+#    - raw_today (array of 24 hours)
+#    - raw_tomorrow (array, available after ~14:00)
+#
+# 3. Check your constants match:
+#    - Transfer day: 4.92 c/kWh
+#    - Transfer night: 3.01 c/kWh  
+#    - Tax: 2.79372 c/kWh
+#    - Margin: 0.59 c/kWh
+#    - VAT: 25.5%
+# ============================================
