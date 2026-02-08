@@ -111,84 +111,7 @@ views:
       # ========================================================================
       - type: grid
         cards:
-          # Real-time Power Consumption with Phase Breakdown
-          - type: custom:apexcharts-card
-            header:
-              show: true
-              title: ⚡ Tehonkulutus Reaaliaikaisesti
-              show_states: true
-              colorize_states: true
-            graph_span: 30min
-            span:
-              start: minute
-              offset: -30min
-            now:
-              show: true
-              label: Nyt
-            yaxis:
-              - id: power
-                min: 0
-                max: 18
-                decimals: 1
-                apex_config:
-                  tickAmount: 6
-            apex_config:
-              chart:
-                height: 280
-              stroke:
-                width: 3
-              fill:
-                type: gradient
-                gradient:
-                  shadeIntensity: 0.4
-                  opacityFrom: 0.8
-                  opacityTo: 0.3
-              legend:
-                show: true
-                position: top
-              tooltip:
-                shared: true
-            series:
-              - entity: sensor.total_power_kw
-                name: Kokonaisteho
-                type: area
-                color: '#FF6B6B'
-                stroke_width: 3
-                show:
-                  in_header: true
-                  legend_value: true
-                color_threshold:
-                  - value: 0
-                    color: '#4ECDC4'
-                  - value: 8
-                    color: '#FFE66D'
-                  - value: 12
-                    color: '#FF6B6B'
-                  - value: 15
-                    color: '#FF0000'
-              - entity: sensor.shellyem3_channel_a_power
-                name: Vaihe A
-                type: line
-                stroke_width: 2
-                color: '#95E1D3'
-                opacity: 0.6
-                transform: 'return x / 1000;'
-              - entity: sensor.shellyem3_channel_b_power
-                name: Vaihe B
-                type: line
-                stroke_width: 2
-                color: '#F38181'
-                opacity: 0.6
-                transform: 'return x / 1000;'
-              - entity: sensor.shellyem3_channel_c_power
-                name: Vaihe C
-                type: line
-                stroke_width: 2
-                color: '#AA96DA'
-                opacity: 0.6
-                transform: 'return x / 1000;'
-
-          # Power Gauges - Current State
+          # Current Power & Status
           - type: horizontal-stack
             cards:
               - type: gauge
@@ -197,10 +120,6 @@ views:
                 min: 0
                 max: 17.25
                 needle: true
-                severity:
-                  green: 0
-                  yellow: 8
-                  red: 12
                 segments:
                   - from: 0
                     color: '#4ECDC4'
@@ -211,38 +130,113 @@ views:
                   - from: 15
                     color: '#FF0000'
               - type: gauge
-                entity: sensor.average_power_factor
-                name: Tehokerroin
-                min: 0
-                max: 1
-                needle: true
-                severity:
-                  red: 0
-                  yellow: 0.85
-                  green: 0.95
-              - type: gauge
                 entity: sensor.current_electricity_cost_rate
                 name: Hinta nyt
                 min: 0
                 max: 50
                 needle: true
                 unit: c/kWh
-                severity:
-                  green: 0
-                  yellow: 15
-                  red: 25
+                segments:
+                  - from: 0
+                    color: '#4ECDC4'
+                  - from: 15
+                    color: '#FFE66D'
+                  - from: 25
+                    color: '#FF9A76'
+                  - from: 35
+                    color: '#FF6B6B'
 
-          # Electricity Price Chart - 48h with Rank
+          # 7-Day Consumption vs Price - THE KEY CHART!
           - type: custom:apexcharts-card
             header:
               show: true
-              title: 💰 Sähkön hinta 48h
+              title: ⚡💰 Kulutus vs. Hinta 7 päivää
               show_states: true
               colorize_states: true
-            graph_span: 48h
+            experimental:
+              color_threshold: true
+            graph_span: 7d
+            span:
+              start: day
+              offset: '-7d'
+            now:
+              show: false
+            yaxis:
+              - id: consumption
+                min: 0
+                decimals: 1
+                opposite: false
+              - id: price
+                min: 0
+                max: 60
+                decimals: 0
+                opposite: true
+            apex_config:
+              chart:
+                height: 320
+              legend:
+                show: true
+                position: top
+              dataLabels:
+                enabled: false
+              stroke:
+                width: [1, 3]
+                curve: smooth
+              tooltip:
+                shared: true
+                x:
+                  format: 'dd.MM HH:mm'
+              xaxis:
+                labels:
+                  format: 'dd.M'
+            series:
+              - entity: sensor.talon_kokonaiskulutus_tunti_kwh
+                yaxis_id: consumption
+                name: Tuntikulutus kWh
+                type: area
+                stroke_width: 1
+                float_precision: 2
+                color: '#EA8043'
+                opacity: 0.7
+                group_by:
+                  func: last
+                  duration: 1hour
+                show:
+                  legend_value: false
+                  in_header: true
+              - entity: sensor.electricity_total_price_cents
+                yaxis_id: price
+                name: Kokonaishinta c/kWh
+                type: line
+                float_precision: 1
+                stroke_width: 3
+                group_by:
+                  func: last
+                  duration: 1hour
+                show:
+                  legend_value: false
+                  in_header: true
+                color_threshold:
+                  - value: 0
+                    color: '#4ECDC4'
+                  - value: 15
+                    color: '#FFE66D'
+                  - value: 25
+                    color: '#FF9A76'
+                  - value: 35
+                    color: '#FF0000'
+
+          # Today's Price Chart - 24h with extremas
+          - type: custom:apexcharts-card
+            header:
+              show: true
+              title: 💰 Sähkön hinta tänään
+              show_states: true
+              colorize_states: true
+            graph_span: 30h
             span:
               start: hour
-              offset: -2h
+              offset: '-2h'
             now:
               show: true
               label: Nyt
@@ -250,26 +244,21 @@ views:
               - id: price
                 min: 0
                 max: ~50
-                decimals: 1
-              - id: rank
-                opposite: true
-                min: 0
-                max: 24
                 decimals: 0
             apex_config:
               chart:
-                height: 260
+                height: 240
               legend:
-                show: true
-                position: top
+                show: false
               dataLabels:
                 enabled: false
-              stroke:
-                curve: smooth
               tooltip:
                 shared: true
                 x:
-                  format: 'dd.MM HH:mm'
+                  format: 'HH:mm'
+              xaxis:
+                labels:
+                  format: 'HH:mm'
             series:
               - entity: sensor.electricity_total_price_cents
                 name: Kokonaishinta
@@ -277,6 +266,9 @@ views:
                 group_by:
                   func: last
                   duration: 1h
+                show:
+                  in_header: true
+                  extremas: time
                 color_threshold:
                   - value: 0
                     color: '#4ECDC4'
@@ -290,46 +282,17 @@ views:
                     color: '#FF6B6B'
                   - value: 35
                     color: '#FF0000'
-                show:
-                  in_header: true
-                  extremas: time
-              - entity: sensor.sahkon_myyntihinta_c_kwh
-                name: Myynti
-                type: line
-                stroke_width: 2
-                color: '#0066CC'
-                show:
-                  in_header: true
-                  in_chart: false
-              - entity: sensor.sahko_siirtohinta
-                name: Siirto
-                type: line
-                stroke_width: 2
-                color: '#00CC66'
-                show:
-                  in_header: true
-                  in_chart: false
-              - entity: sensor.nordpool_kwh_fi_eur_4_10_0
-                name: Tuntiarvo
-                yaxis_id: rank
-                type: line
-                stroke_width: 2
-                color: '#AA96DA'
-                curve: stepline
-                attribute: rank
-                show:
-                  in_header: false
-                  legend_value: false
 
-          # Daily & Monthly Consumption
+          # Daily & Monthly Summary
           - type: horizontal-stack
             cards:
               - type: gauge
                 entity: sensor.talon_kokonaiskulutus_paiva_kwh
-                name: Päivä
+                name: Kulutus tänään
                 min: 0
                 max: 120
                 needle: true
+                unit: kWh
                 segments:
                   - from: 0
                     color: '#4ECDC4'
@@ -343,7 +306,7 @@ views:
                     color: '#FF6B6B'
               - type: gauge
                 entity: sensor.sahko_hinnan_korjaus_kuukausi
-                name: Kuukausi
+                name: Kuukausi yhteensä
                 min: 0
                 max: 500
                 needle: true
@@ -484,43 +447,6 @@ views:
               - entity: switch.shellypro4pm_ec62609fd3dc_switch_0
                 name: 🌡️ Sara patteri
                 icon: mdi:radiator
-
-          # Power Factor & Phase Health
-          - type: horizontal-stack
-            cards:
-              - type: gauge
-                entity: sensor.shellyem3_channel_a_voltage
-                name: Vaihe A
-                min: 200
-                max: 250
-                needle: true
-                severity:
-                  red: 200
-                  yellow: 220
-                  green: 225
-                unit: V
-              - type: gauge
-                entity: sensor.shellyem3_channel_b_voltage
-                name: Vaihe B
-                min: 200
-                max: 250
-                needle: true
-                severity:
-                  red: 200
-                  yellow: 220
-                  green: 225
-                unit: V
-              - type: gauge
-                entity: sensor.shellyem3_channel_c_voltage
-                name: Vaihe C
-                min: 200
-                max: 250
-                needle: true
-                severity:
-                  red: 200
-                  yellow: 220
-                  green: 225
-                unit: V
 
           # Best Charging Window
           - type: markdown
