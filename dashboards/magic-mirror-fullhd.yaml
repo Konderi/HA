@@ -120,15 +120,10 @@ views:
                 min: 0
                 max: 17.25
                 needle: true
-                segments:
-                  - from: 0
-                    color: '#4ECDC4'
-                  - from: 8
-                    color: '#FFE66D'
-                  - from: 12
-                    color: '#FF6B6B'
-                  - from: 15
-                    color: '#FF0000'
+                severity:
+                  green: 0
+                  yellow: 10
+                  red: 14
               - type: gauge
                 entity: sensor.current_electricity_cost_rate
                 name: Hinta nyt
@@ -136,15 +131,10 @@ views:
                 max: 50
                 needle: true
                 unit: c/kWh
-                segments:
-                  - from: 0
-                    color: '#4ECDC4'
-                  - from: 15
-                    color: '#FFE66D'
-                  - from: 25
-                    color: '#FF9A76'
-                  - from: 35
-                    color: '#FF6B6B'
+                severity:
+                  green: 0
+                  yellow: 18
+                  red: 28
 
           # 7-Day Consumption vs Price - THE KEY CHART!
           - type: custom:apexcharts-card
@@ -293,17 +283,10 @@ views:
                 max: 120
                 needle: true
                 unit: kWh
-                segments:
-                  - from: 0
-                    color: '#4ECDC4'
-                  - from: 40
-                    color: '#95E1D3'
-                  - from: 60
-                    color: '#FFE66D'
-                  - from: 80
-                    color: '#FF9A76'
-                  - from: 100
-                    color: '#FF6B6B'
+                severity:
+                  green: 0
+                  yellow: 70
+                  red: 95
               - type: gauge
                 entity: sensor.sahko_hinnan_korjaus_kuukausi
                 name: Kuukausi yhteensä
@@ -311,17 +294,10 @@ views:
                 max: 500
                 needle: true
                 unit: '€'
-                segments:
-                  - from: 0
-                    color: '#4ECDC4'
-                  - from: 200
-                    color: '#95E1D3'
-                  - from: 300
-                    color: '#FFE66D'
-                  - from: 400
-                    color: '#FF9A76'
-                  - from: 450
-                    color: '#FF6B6B'
+                severity:
+                  green: 0
+                  yellow: 300
+                  red: 420
         column_span: 1
 
       # ========================================================================
@@ -485,17 +461,10 @@ views:
                   min: 10
                   max: 100
                   needle: true
-                  segments:
-                    - from: 10
-                      color: '#0000FF'
-                    - from: 40
-                      color: '#00FFFF'
-                    - from: 60
-                      color: '#FFFF00'
-                    - from: 70
-                      color: '#FF8800'
-                    - from: 80
-                      color: '#FF0000'
+                  severity:
+                    green: 10
+                    yellow: 60
+                    red: 80
                 - type: entity
                   entity: binary_sensor.doorsensor_sauna_contact
                   name: Saunan ovi
