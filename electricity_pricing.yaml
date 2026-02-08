@@ -13,25 +13,25 @@ template:
         state: >
           {% set nordpool = states('sensor.nordpool_kwh_fi_eur_4_10_0') | float(0) %}
           {% set hour = now().hour %}
-          {% set is_day_tariff = hour >= 7 and hour < 22 %}
+          {% set is_night_tariff = hour >= 22 or hour < 7 %}
           
-          {# Base components from constants #}
-          {% set energy_price = 0.44 if is_day_tariff else 0.37 %}
-          {% set transfer_price = 4.92 if is_day_tariff else 3.01 %}
+          {# Nordpool price already includes energy cost - don't add extra! #}
+          {# Transfer price varies by time of day #}
+          {% set transfer_price = 3.01 if is_night_tariff else 4.92 %}
           {% set tax = 2.79372 %}
-          {% set margin = 0.25 %}
+          {% set margin = 0.59 %}
           
           {# Calculate total price in cents/kWh #}
-          {% set total_before_vat = (nordpool * 100) + energy_price + transfer_price + tax + margin %}
+          {# Formula: (Nordpool + Transfer + Tax + Margin) × VAT #}
+          {% set total_before_vat = (nordpool * 100) + transfer_price + tax + margin %}
           {% set total_with_vat = total_before_vat * 1.255 %}
           
           {{ total_with_vat | round(2) }}
         attributes:
           nordpool_price_cents: "{{ (states('sensor.nordpool_kwh_fi_eur_4_10_0') | float(0) * 100) | round(2) }}"
-          energy_price: "{{ 0.44 if now().hour >= 7 and now().hour < 22 else 0.37 }}"
-          transfer_price: "{{ 4.92 if now().hour >= 7 and now().hour < 22 else 3.01 }}"
+          transfer_price: "{{ 3.01 if (now().hour >= 22 or now().hour < 7) else 4.92 }}"
           tax: 2.79372
-          margin: 0.25
+          margin: 0.59
           vat_multiplier: 1.255
-          tariff_type: "{{ 'day' if now().hour >= 7 and now().hour < 22 else 'night' }}"
-          calculation: "nordpool + energy + transfer + tax + margin, then × VAT"
+          tariff_type: "{{ 'night (22-07)' if (now().hour >= 22 or now().hour < 7) else 'day (07-22)' }}"
+          calculation: "(Nordpool + Transfer + Tax + Margin) × VAT"

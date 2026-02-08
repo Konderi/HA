@@ -1,6 +1,6 @@
 # Centralized electricity pricing constants
 # Modern HA 2026.6+ compatible configuration
-# Created: 2026-02-08
+# Updated: 2026-02-08 - Fixed formula
 
 homeassistant:
   customize:
@@ -8,15 +8,17 @@ homeassistant:
       # Electricity pricing components (c/kWh)
       # Update these values according to your contract
       
-      electricity_energy_price: &electricity_energy_price
-        day: 0.44    # Day tariff (07:00-22:00) c/kWh
-        night: 0.37  # Night tariff (22:00-07:00) c/kWh
+      # NOTE: Energy price comes from Nordpool sensor (hourly spot price)
+      # These are the additional fees added on top of Nordpool price:
       
       electricity_transfer_price: &electricity_transfer_price
-        day: 4.92    # Day transfer tariff c/kWh
-        night: 3.01  # Night transfer tariff c/kWh
+        day: 4.92    # Day transfer tariff (07:00-22:00) c/kWh
+        night: 3.01  # Night transfer tariff (22:00-07:00) c/kWh
       
       # Fixed components
       electricity_tax: &electricity_tax 2.79372        # Electricity tax (c/kWh)
       electricity_vat: &electricity_vat 1.255          # VAT multiplier (25.5%)
-      electricity_margin: &electricity_margin 0.25     # Supplier margin (c/kWh)
+      electricity_margin: &electricity_margin 0.59     # Supplier margin (c/kWh)
+      
+      # FORMULA: (Nordpool + Transfer + Tax + Margin) × VAT (25.5%)
+      # Example: (3.21 + 4.92 + 2.79 + 0.59) × 1.255 = 14.44 c/kWh
