@@ -915,32 +915,50 @@ views:
       - type: grid
         title: 🌡️ Heating Control Configuration
         cards:
-          # ILP (Heat Pump) Settings
+          # ILP (Heat Pump) Settings - Price-Based Modes
           - type: entities
-            title: 🏠 ILP Heat Pump Settings
+            title: 🏠 ILP Heat Pump - Price-Based Temperature Control
             show_header_toggle: false
             entities:
-              - entity: input_number.normaalilampo_presence
-                name: Normal Temp (Presence)
-                icon: mdi:home-thermometer
-              - entity: input_number.lamponpudotus_presence
-                name: Reduced Temp (Away)
-                icon: mdi:thermometer-minus
+              - type: section
+                label: "🔥 Boost Mode (6 Cheapest Hours)"
               - entity: input_number.tehostuslampo
-                name: Boost Temperature
-                icon: mdi:thermometer-plus
+                name: Boost Temp (Rank 1-6)
+                icon: mdi:fire
+              - type: section
+                label: "🏠 Normal Mode (12 Mid-Price Hours)"
+              - entity: input_number.normaalilampo_presence
+                name: Normal Temp (Rank 7-18)
+                icon: mdi:home-thermometer-outline
+              - type: section
+                label: "🍃 Eco Mode (6 Most Expensive Hours)"
+              - entity: input_number.lamponpudotus_presence
+                name: Eco Temp (Rank 19-24)
+                icon: mdi:leaf
+              - type: divider
+              - type: section
+                label: "⚙️ Additional Settings"
               - entity: input_number.yllapitolampo
-                name: Maintenance Temp
-                icon: mdi:thermometer
+                name: Maintenance Temp (Holiday)
+                icon: mdi:thermometer-low
               - entity: input_number.ilp_pyynti
-                name: ILP Request Temp
+                name: ILP Request Temp (Auto)
                 icon: mdi:thermometer-lines
               - entity: input_number.ilp_max_rank_boost
-                name: ILP Max Rank Boost
+                name: Max Rank for Boost Mode
                 icon: mdi:chart-line
               - entity: input_number.ulkolampo_trigger
                 name: Outside Temp Trigger
                 icon: mdi:thermometer-alert
+              - type: divider
+              - type: section
+                label: "📊 Current Status"
+              - entity: sensor.shf_rank_now
+                name: Current Price Rank
+                icon: mdi:podium
+              - entity: climate.mitsu_ilp
+                name: ILP Climate Control
+                icon: mdi:heat-pump
             card_mod:
               style: |
                 ha-card {

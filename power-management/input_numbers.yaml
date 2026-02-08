@@ -175,3 +175,98 @@ kids_rooms_target_temp:
   icon: mdi:thermometer
   mode: slider
   unit_of_measurement: "°C"
+
+# ==========================================
+# MITSUBISHI ILP CLIMATE CONTROL - PRICE-BASED MODES
+# ==========================================
+# Automatic temperature adjustment based on electricity price ranking:
+#
+# 🔥 BOOST MODE (Rank 1-6): 6 cheapest hours of the day
+#    → Highest temperature, maximum comfort heating
+#
+# 🏠 NORMAL MODE (Rank 7-18): 12 mid-price hours
+#    → Standard comfortable temperature
+#
+# 🍃 ECO MODE (Rank 19-24): 6 most expensive hours
+#    → Reduced temperature, energy saving
+#
+# Automation automatically switches between modes based on 
+# current electricity price rank (sensor.nordpool or sensor.shf_rank_now)
+# ==========================================
+
+# BOOST MODE TEMPERATURE (6 Cheapest Hours - Rank 1-6)
+tehostuslampo:
+  name: "ILP Boost Temp (Rank 1-6 Cheapest)"
+  min: 20
+  max: 28
+  step: 0.5
+  initial: 24
+  icon: mdi:fire
+  mode: slider
+  unit_of_measurement: "°C"
+
+# NORMAL MODE TEMPERATURE (12 Mid-Price Hours - Rank 7-18)
+normaalilampo_presence:
+  name: "ILP Normal Temp (Rank 7-18 Mid)"
+  min: 18
+  max: 26
+  step: 0.5
+  initial: 21
+  icon: mdi:home-thermometer-outline
+  mode: slider
+  unit_of_measurement: "°C"
+
+# ECO MODE TEMPERATURE (6 Most Expensive Hours - Rank 19-24)
+lamponpudotus_presence:
+  name: "ILP Eco Temp (Rank 19-24 Expensive)"
+  min: 16
+  max: 22
+  step: 0.5
+  initial: 19
+  icon: mdi:leaf
+  mode: slider
+  unit_of_measurement: "°C"
+
+# MAINTENANCE TEMPERATURE (Long-term away/Holiday mode)
+yllapitolampo:
+  name: "ILP Maintenance Temperature (Holiday)"
+  min: 14
+  max: 20
+  step: 0.5
+  initial: 17
+  icon: mdi:thermometer-low
+  mode: slider
+  unit_of_measurement: "°C"
+
+# ILP REQUEST TEMPERATURE (Target for automations)
+ilp_pyynti:
+  name: "ILP Request Temperature (Auto Target)"
+  min: 18
+  max: 26
+  step: 0.5
+  initial: 21
+  icon: mdi:thermometer-lines
+  mode: slider
+  unit_of_measurement: "°C"
+
+# ILP MAX RANK FOR BOOST MODE
+ilp_max_rank_boost:
+  name: "ILP Max Price Rank for Boost"
+  min: 1
+  max: 24
+  step: 1
+  initial: 12
+  icon: mdi:chart-line
+  mode: slider
+  unit_of_measurement: "rank"
+
+# OUTSIDE TEMPERATURE TRIGGER (When to activate heating)
+ulkolampo_trigger:
+  name: "Outside Temperature Trigger"
+  min: -30
+  max: 20
+  step: 0.5
+  initial: 15
+  icon: mdi:thermometer-alert
+  mode: slider
+  unit_of_measurement: "°C"

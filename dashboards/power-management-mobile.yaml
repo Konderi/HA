@@ -869,3 +869,152 @@ views:
               background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
               color: white;
             }
+
+  # ==========================================================================
+  # VIEW 7: SETTINGS
+  # ==========================================================================
+  - title: Settings
+    path: settings
+    icon: mdi:cog
+    type: custom:vertical-layout
+    badges: []
+    cards:
+      # Navigation Chips
+      - type: custom:mushroom-chips-card
+        chips:
+          - type: back
+          - type: menu
+        alignment: center
+
+      # Page Title
+      - type: custom:mushroom-title-card
+        title: ⚙️ Settings
+        subtitle: Power & Heating Configuration
+        alignment: center
+
+      # ILP Climate Control - 3 Price-Based Modes
+      - type: custom:mushroom-title-card
+        title: 🌡️ ILP Climate Control
+        subtitle: Price-Based Temperature Modes
+        alignment: left
+
+      - type: entities
+        title: 🔥 Boost Mode (6 Cheapest Hours)
+        show_header_toggle: false
+        entities:
+          - entity: input_number.tehostuslampo
+            name: Boost Temperature
+            icon: mdi:fire
+
+      - type: entities
+        title: 🏠 Normal Mode (12 Mid-Price Hours)
+        show_header_toggle: false
+        entities:
+          - entity: input_number.normaalilampo_presence
+            name: Normal Temperature
+            icon: mdi:home-thermometer-outline
+
+      - type: entities
+        title: 🍃 Eco Mode (6 Most Expensive Hours)
+        show_header_toggle: false
+        entities:
+          - entity: input_number.lamponpudotus_presence
+            name: Eco Temperature
+            icon: mdi:leaf
+
+      # Power Management Settings
+      - type: custom:mushroom-title-card
+        title: ⚡ Power Management
+        subtitle: Boiler & Tesla Controls
+        alignment: left
+
+      - type: entities
+        show_header_toggle: false
+        entities:
+          - entity: input_boolean.tesla_priority_charging
+            name: Tesla Priority Charging
+            icon: mdi:car-electric
+          - entity: input_boolean.boiler_luxus_mode
+            name: Boiler Luxus Mode
+            icon: mdi:water-boiler-alert
+          - type: divider
+          - entity: input_number.boiler_max_rank
+            name: Boiler Max Price Rank
+            icon: mdi:numeric
+          - entity: input_number.boiler_max_hours_daily
+            name: Boiler Max Hours/Day
+            icon: mdi:clock-outline
+
+      # Room Temperature Settings
+      - type: custom:mushroom-title-card
+        title: 🏠 Room Temperatures
+        subtitle: Kids & Master Bedroom
+        alignment: left
+
+      - type: entities
+        title: Kids Rooms
+        show_header_toggle: false
+        entities:
+          - entity: input_boolean.kids_home
+            name: Kids at Home
+            icon: mdi:account-multiple
+          - entity: input_number.kids_rooms_target_temp
+            name: Target Temperature
+            icon: mdi:thermometer
+          - entity: input_number.kids_rooms_min_temp
+            name: Minimum Temperature
+            icon: mdi:thermometer-low
+
+      - type: entities
+        title: Master Bedroom (MH1)
+        show_header_toggle: false
+        entities:
+          - entity: input_boolean.mh1_manual_override
+            name: Manual Override
+            icon: mdi:hand-back-right
+          - entity: input_number.mh1_target_temp
+            name: Target Temperature
+            icon: mdi:thermometer
+
+      # Automation Overrides
+      - type: custom:mushroom-title-card
+        title: 🔧 Automation Controls
+        subtitle: Enable/Disable Automations
+        alignment: left
+
+      - type: entities
+        show_header_toggle: false
+        entities:
+          - entity: input_boolean.lammitysautomaatiot
+            name: Bypass Heating Automations
+            icon: mdi:radiator-disabled
+          - entity: input_boolean.hinta_automaation_ohitus
+            name: Bypass Price Automation
+            icon: mdi:currency-eur-off
+          - entity: input_boolean.lomatila
+            name: Holiday Mode
+            icon: mdi:palm-tree
+
+      # Current Status
+      - type: custom:mushroom-title-card
+        title: 📊 Current Status
+        subtitle: Live System Information
+        alignment: left
+
+      - type: entities
+        show_header_toggle: false
+        state_color: true
+        entities:
+          - entity: sensor.shf_rank_now
+            name: Current Price Rank
+            icon: mdi:podium
+          - entity: climate.mitsu_ilp
+            name: ILP Heat Pump
+            icon: mdi:heat-pump
+          - entity: sensor.total_power_kw
+            name: Total Power
+            icon: mdi:lightning-bolt
+          - entity: sensor.electricity_total_price_cents
+            name: Current Electricity Price
+            icon: mdi:currency-eur
+
