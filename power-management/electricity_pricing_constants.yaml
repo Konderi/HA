@@ -148,13 +148,15 @@ input_number:
 # PRICING CONSTANTS (Read-only info)
 # ====================
 
-sensor:
-  - platform: template
-    sensors:
-      electricity_pricing_info:
-        friendly_name: "Electricity Pricing Info"
-        value_template: "Configured"
-        attribute_templates:
+# ====================
+# MODERN TEMPLATE SENSOR
+# ====================
+template:
+  - sensor:
+      - name: "Electricity Pricing Info"
+        unique_id: electricity_pricing_info
+        state: "Configured"
+        attributes:
           # Quick reference (in cents)
           electric_tax_cents: >
             {{ (states('input_number.electricity_tax_eur') | float * 100) | round(2) }}
