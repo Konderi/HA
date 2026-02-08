@@ -1,0 +1,234 @@
+# ============================================
+# ELECTRICITY PRICING - COMPLETE SYSTEM
+# Based on Spot-Hinta.fi API + Your Contract
+# ============================================
+# 
+# Your Pricing (All include ALV 25.5%):
+# - Electric Tax: 2.827515 c/kWh
+# - Margin: 0.59 c/kWh
+# - Transfer Day (07-22): 5.11 c/kWh
+# - Transfer Night (22-07): 3.12 c/kWh
+# - Base Fee: 5.99 €/month
+#
+# Requires: sensor.shf_electricity_price_now (Spot-Hinta.fi)
+# ============================================
+
+template:
+  - sensor:
+      # ====================
+      # TRANSFER TARIFF (DAY/NIGHT)
+      # ====================
+      - name: "Transfer Tariff Now"
+        unique_id: transfer_tariff_now
+        unit_of_measurement: "€/kWh"
+        device_class: monetary
+        state: >
+          {% set hour = now().hour %}
+          {{ 0.0511 if 7 <= hour < 22 else 0.0312 }}
+        icon: >
+          {% set hour = now().hour %}
+          {{ 'mdi:weather-sunny' if 7 <= hour < 22 else 'mdi:weather-night' }}
+        attributes:
+          tariff_type: >
+            {% set hour = now().hour %}
+            {{ 'Day' if 7 <= hour < 22 else 'Night' }}
+          tariff_cents: >
+            {% set hour = now().hour %}
+            {{ 5.11 if 7 <= hour < 22 else 3.12 }}
+          start_time: >
+            {% set hour = now().hour %}
+            {{ '07:00' if 7 <= hour < 22 else '22:00' }}
+          end_time: >
+            {% set hour = now().hour %}
+            {{ '22:00' if 7 <= hour < 22 else '07:00' }}
+
+      # ====================
+      # TOTAL ELECTRICITY PRICE (ALL COMPONENTS)
+      # ====================
+      - name: "Electricity Total Price Now"
+        unique_id: electricity_total_price_now
+        unit_of_measurement: "€/kWh"
+        device_class: monetary
+        state_class: measurement
+        state: >
+          {% set spot = states('sensor.shf_electricity_price_now') | float(0) %}
+          {% set tax = 0.02827515 %}
+          {% set margin = 0.0059 %}
+          {% set transfer = states('sensor.transfer_tariff_now') | float(0.0511) %}
+          {{ (spot + tax + margin + transfer) | round(5) }}
+        icon: mdi:currency-eur
+        attributes:
+          spot_price: '{{ states("sensor.shf_electricity_price_now") | float(0) | round(5) }}'
+          electric_tax: 0.02827515
+          margin: 0.0059
+          transfer_fee: '{{ states("sensor.transfer_tariff_now") | float(0) | round(5) }}'
+          spot_price_cents: '{{ (states("sensor.shf_electricity_price_now") | float(0) * 100) | round(2) }}'
+          electric_tax_cents: 2.83
+          margin_cents: 0.59
+          transfer_fee_cents: '{{ (states("sensor.transfer_tariff_now") | float(0) * 100) | round(2) }}'
+          total_cents: '{{ (this.state | float(0) * 100) | round(2) }}'
+          rank: '{{ states("sensor.shf_rank_now") }}'
+          tariff_type: '{{ state_attr("sensor.transfer_tariff_now", "tariff_type") }}'
+
+      # ====================
+      # PRICE IN CENTS (FOR CHARTS)
+      # ====================
+      - name: "Electricity Total Price Cents"
+        unique_id: electricity_total_price_cents
+        unit_of_measurement: "c/kWh"
+        device_class: monetary
+        state_class: measurement
+        state: >
+          {{ (states('sensor.electricity_total_price_now') | float(0) * 100) | round(2) }}
+        icon: mdi:cash-100
+
+      # ====================
+      # HOURLY COST (CURRENT CONSUMPTION)
+      # ====================
+      - name: "Electricity Cost Now"
+        unique_id: electricity_cost_now
+        unit_of_measurement: "€/h"
+        device_class: monetary
+        state: >
+          {% set power_kw = states('sensor.total_power_consumption') | float(0) %}
+          {% set price = states('sensor.electricity_total_price_now') | float(0) %}
+          {{ (power_kw * price) | round(3) }}
+        icon: mdi:currency-eur-off
+        attributes:
+          power_kw: '{{ states("sensor.total_power_consumption") | float(0) | round(2) }}'
+          price_per_kwh: '{{ states("sensor.electricity_total_price_now") | float(0) | round(5) }}'
+          cost_per_minute: '{{ (this.state | float(0) / 60) | round(4) }}'
+
+      # ====================
+      # DAILY STATISTICS
+      # ====================
+      - name: "Electricity Average Price Today"
+        unique_id: electricity_average_price_today
+        unit_of_measurement: "€/kWh"
+        device_class: monetary
+        state: >
+          {% set spot_avg = state_attr('sensor.shf_electricity_price_now', 'today_avg') | float(0) %}
+          {% set tax = 0.02827515 %}
+          {% set margin = 0.0059 %}
+          {% set transfer_day = 0.0511 %}
+          {% set transfer_night = 0.0312 %}
+          {% set avg_transfer = (transfer_day * 15 + transfer_night * 9) / 24 %}
+          {{ (spot_avg + tax + margin + avg_transfer) | round(5) }}
+        icon: mdi:chart-line
+        attributes:
+          spot_average: '{{ state_attr("sensor.shf_electricity_price_now", "today_avg") | float(0) | round(5) }}'
+          day_hours: 15
+          night_hours: 9
+          weighted_transfer: '{{ ((0.0511 * 15 + 0.0312 * 9) / 24) | round(5) }}'
+
+      - name: "Electricity Min Price Today"
+        unique_id: electricity_min_price_today
+        unit_of_measurement: "€/kWh"
+        device_class: monetary
+        state: >
+          {% set spot_min = state_attr('sensor.shf_electricity_price_now', 'today_min') | float(0) %}
+          {% set tax = 0.02827515 %}
+          {% set margin = 0.0059 %}
+          {% set transfer_night = 0.0312 %}
+          {{ (spot_min + tax + margin + transfer_night) | round(5) }}
+        icon: mdi:arrow-down-bold
+
+      - name: "Electricity Max Price Today"
+        unique_id: electricity_max_price_today
+        unit_of_measurement: "€/kWh"
+        device_class: monetary
+        state: >
+          {% set spot_max = state_attr('sensor.shf_electricity_price_now', 'today_max') | float(0) %}
+          {% set tax = 0.02827515 %}
+          {% set margin = 0.0059 %}
+          {% set transfer_day = 0.0511 %}
+          {{ (spot_max + tax + margin + transfer_day) | round(5) }}
+        icon: mdi:arrow-up-bold
+
+      # ====================
+      # MONTHLY ESTIMATES
+      # ====================
+      - name: "Electricity Monthly Base Fee"
+        unique_id: electricity_monthly_base_fee
+        unit_of_measurement: "€"
+        device_class: monetary
+        state: "5.99"
+        icon: mdi:calendar-month
+        attributes:
+          description: "Fixed monthly base fee (incl. ALV 25.5%)"
+          yearly_total: "71.88"
+
+      - name: "Electricity Estimated Monthly Cost"
+        unique_id: electricity_estimated_monthly_cost
+        unit_of_measurement: "€"
+        device_class: monetary
+        state: >
+          {% set daily_kwh = states('sensor.energy_daily') | float(0) %}
+          {% set avg_price = states('sensor.electricity_average_price_today') | float(0) %}
+          {% set base_fee = 5.99 %}
+          {% set monthly_energy_cost = daily_kwh * avg_price * 30 %}
+          {{ (monthly_energy_cost + base_fee) | round(2) }}
+        icon: mdi:calculator
+        attributes:
+          daily_consumption_kwh: '{{ states("sensor.energy_daily") | float(0) | round(1) }}'
+          monthly_consumption_kwh: '{{ (states("sensor.energy_daily") | float(0) * 30) | round(0) }}'
+          energy_cost: '{{ (states("sensor.energy_daily") | float(0) * states("sensor.electricity_average_price_today") | float(0) * 30) | round(2) }}'
+          base_fee: "5.99"
+
+      # ====================
+      # SAVINGS TRACKING
+      # ====================
+      - name: "Electricity Savings This Month"
+        unique_id: electricity_savings_this_month
+        unit_of_measurement: "€"
+        device_class: monetary
+        state: >
+          {% set saved_from_peak = states('sensor.nodered_saved_euros') | float(0) %}
+          {% set saved_from_optimization = states('sensor.price_optimization_savings') | float(0) %}
+          {{ (saved_from_peak + saved_from_optimization) | round(2) }}
+        icon: mdi:piggy-bank
+        attributes:
+          peak_limiter_savings: '{{ states("sensor.nodered_saved_euros") | float(0) | round(2) }}'
+          price_optimization_savings: '{{ states("sensor.price_optimization_savings") | float(0) | round(2) }}'
+          interventions_count: '{{ states("sensor.nodered_interventions_count") | float(0) | int }}'
+
+  - binary_sensor:
+      # ====================
+      # PRICING STATUS
+      # ====================
+      - name: "Electricity Price Cheap Now"
+        unique_id: electricity_price_cheap_now
+        device_class: power
+        state: >
+          {% set rank = states('sensor.shf_rank_now') | int(24) %}
+          {{ rank <= 8 }}
+        icon: >
+          {% set rank = states('sensor.shf_rank_now') | int(24) %}
+          {{ 'mdi:currency-eur-off' if rank <= 8 else 'mdi:currency-eur' }}
+        attributes:
+          current_rank: '{{ states("sensor.shf_rank_now") }}'
+          threshold_rank: 8
+          description: "Price is in cheapest 1/3 of day"
+
+      - name: "Electricity Price Expensive Now"
+        unique_id: electricity_price_expensive_now
+        device_class: problem
+        state: >
+          {% set rank = states('sensor.shf_rank_now') | int(0) %}
+          {{ rank >= 18 }}
+        icon: >
+          {% set rank = states('sensor.shf_rank_now') | int(0) %}
+          {{ 'mdi:alert' if rank >= 18 else 'mdi:check-circle' }}
+        attributes:
+          current_rank: '{{ states("sensor.shf_rank_now") }}'
+          threshold_rank: 18
+          description: "Price is in most expensive 1/4 of day"
+
+      - name: "Night Tariff Active"
+        unique_id: night_tariff_active
+        state: >
+          {% set hour = now().hour %}
+          {{ hour < 7 or hour >= 22 }}
+        icon: >
+          {% set hour = now().hour %}
+          {{ 'mdi:weather-night' if (hour < 7 or hour >= 22) else 'mdi:weather-sunny' }}

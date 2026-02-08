@@ -1,0 +1,441 @@
+- platform: template
+  sensors:
+    sahkon_hinta_energydashboard:
+      friendly_name: Sähkön hinta EnergyDashBoard
+      unit_of_measurement: EUR/kWh
+      value_template: >-
+        {{ (0.0045 + 0.02794 + (states('sensor.shf_electricity_price_now','current_price')| float )) }}
+
+    sahkon_myyntihinta_c_kwh:
+      friendly_name: Sähkön myyntihinta c/kWh
+      unit_of_measurement: c/kWh
+      value_template: >-
+        {{ (states('sensor.nordpool_kwh_fi_eur_4_10_0')|float * 100) | round(2) }}
+
+    sahko_siirtohinta:
+      friendly_name: Sähkön siirtohinta
+      unit_of_measurement: c/kWh
+      value_template: >-
+        {{ (0.0492 if 6 < now().hour < 22 else 0.0301)*100 }}
+
+    sahko_kokonaishinta2:
+      friendly_name: Sähkön kokonaishinta
+      unit_of_measurement: EUR/kWh
+      value_template: >-
+        {{ (0.0045 + 0.02794 + (state_attr('sensor.nordpool_kwh_fi_eur_4_10_0','current_price') |float + states('sensor.sahko_siirtohinta') |float)) | round(3) }}
+
+    sahko_kokonaishinta:
+      friendly_name: Sähkön kokonaishinta
+      unit_of_measurement: €/kWh
+      value_template: >-
+        {{ (0.45 + 2.794 + (states('sensor.shf_electricity_price_now','current_price') |float * 100)) }}
+
+    sahko_kokonaishinta_c:
+      friendly_name: Sähkön kokonaishinta c/kWh
+      unit_of_measurement: c/kWh
+      value_template: >-
+        {{ (states('sensor.sahko_kokonaishinta')|float ) | round(2) }}
+
+    shf_electricity_full_price_charts:
+      friendly_name: Sähkön kokonaishinta SHF/Charts
+      unit_of_measurement: "c/kWh"
+      value_template: >
+        {{ (states('sensor.shf_electricity_price_now')|float * 100) | round(2) }}
+
+    shf_electricity_full_price_now:
+      friendly_name: Sähkön kokonaishinta SHF/Cent
+      unit_of_measurement: c/kWh
+      value_template: >
+        {{ (states('sensor.shf_electricity_price_now')|float * 100) | round(2) }}
+
+    vedenkulutuksen_hinta:
+      friendly_name: Veden kokonaishinta
+      unit_of_measurement: €
+      value_template: >-
+        {%- set vesimaksu = 1.45 -%}
+        {%- set jatevesimaksu = 2.32 -%}
+        {%- set alv = 1.24 -%}
+        {{ ((states('sensor.veden_kulutus_litroina')|float /1000) * (((vesimaksu + jatevesimaksu)*alv)|float|round(2))) }}
+
+    cheapest_hours_energy_tomorrow:
+      device_class: timestamp
+      friendly_name: Cheapest sequential electricity hours
+      value_template: >
+        {%- set numberOfSequentialHours = 5 -%}
+        {%- set lastHour = 23 -%}
+        {%- set firstHour = 0 -%}
+        {%- if state_attr('sensor.nordpool_kwh_fi_eur_4_10_0', 'tomorrow_valid') == true -%}
+          {%- set ns = namespace(counter=0, list=[], cheapestHour=today_at("00:00") + timedelta( hours = (24)), cheapestPrice=999.00) -%}
+          {%- for i in range(firstHour + numberOfSequentialHours, lastHour+1) -%}
+            {%- set ns.counter = 0.0 -%}
+            {%- for j in range(i-numberOfSequentialHours, i) -%}
+              {%- set ns.counter = ns.counter + state_attr('sensor.nordpool_kwh_fi_eur_4_10_0', 'tomorrow')[j] -%}
+            {%- endfor -%}
+            {%- set ns.list = ns.list + [ns.counter] -%}
+            {%- if ns.counter < ns.cheapestPrice -%}
+              {%- set ns.cheapestPrice = ns.counter -%}
+              {%- set ns.cheapestHour = today_at("00:00") + timedelta( hours = (24 + i - numberOfSequentialHours)) -%}
+            {%- endif -%}
+          {%- endfor -%}
+          {{ ns.cheapestHour }}
+          {%- set ns.cheapestPrice = ns.cheapestPrice / numberOfSequentialHours -%}
+        {%- endif -%}
+
+    sahko_kokonaiskulutus_energia:
+      friendly_name: Sähkön kokonaisenergia kWh
+      unit_of_measurement: kWh
+      value_template: >-
+        {{ states('sensor.shellyem3_channel_a_energy') |float + states('sensor.shellyem3_channel_b_energy') |float + states('sensor.shellyem3_channel_c_energy') |float }}
+
+    sahko_kokonaiskulutus_teho:
+      friendly_name: Sähkön kokonaisteho W
+      unit_of_measurement: W
+      value_template: >-
+        {{ (states('sensor.shellyem3_channel_a_power') |float + states('sensor.shellyem3_channel_b_power') |float + states('sensor.shellyem3_channel_c_power') |float )|round(2) }}
+
+    sahkon_kokonaiskulutus_kwh:
+      friendly_name: Sähkön kokonaiskulutus kWh
+      unit_of_measurement: kWh
+      value_template: >-
+        {{ (states('sensor.sahko_kokonaiskulutus_teho')|float / 1000) | round(2) }}
+
+    talo_tuntikulutus:
+      friendly_name: Talo, Tuntikustannus
+      unit_of_measurement: €
+      value_template: >-
+        {{ states('sensor.sahko_kokonaishinta') |float * states('sensor.talon_kokonaiskulutus_tunti_kwh')|float }}
+
+    kokonaiskulutus_hinta_nyt:
+      friendly_name: Talon kokonaiskulutuksen kustannus nyt
+      unit_of_measurement: €
+      value_template: >-
+        {{ ((states('sensor.sahko_kokonaiskulutus')|float * (states('sensor.sahkon_kokonaishinta')|float)) | round(2))/1000 }}
+
+    sahko_kokonaisvirta:
+      friendly_name: Sähkön kokonaisvirta
+      unit_of_measurement: A
+      value_template: >-
+        {{ states('sensor.shellyem3_channel_a_current') |float + states('sensor.shellyem3_channel_b_current') |float + states('sensor.shellyem3_channel_b_current') |float }}
+
+    vuorokauden_keskihinta:
+      friendly_name: Sähkön keskihinta/vrk
+      unit_of_measurement: €
+      value_template: >-
+        {{ states('sensor.talon_kokonaiskustannus_paiva_eur')|float / 24  }}
+
+    vuorokauden_keskihinta2:
+      friendly_name: Toteutunut keskihinta
+      unit_of_measurement: €
+      value_template: >-
+        {{ (states('sensor.talon_kokonaiskustannus_paiva_eur')|float / states('sensor.talon_kokonaiskulutus_paiva_kwh')|float)  }}
+
+    viikon_keskihinta:
+      friendly_name: Toteutunut viikkokeskihinta
+      unit_of_measurement: c/kWh
+      value_template: >-
+        {{ (states('sensor.talon_kokonaiskustannus_viikko_eur')|float / states('sensor.talon_kokonaiskulutus_viikko_kwh')|float)  }}
+
+    kuukauden_keskihinta:
+      friendly_name: Toteutunut kuukausikeskihinta
+      unit_of_measurement: c/kWh
+      value_template: >-
+        {{ (states('sensor.talon_kokonaiskustannus_kuukausi_eur')|float / states('sensor.talon_kokonaiskulutus_kuukausi_kwh')|float)  }}
+
+    sahko_hinnan_korjaus_paiva:
+      friendly_name: Sähkön hinnan korjaus, päivä
+      unit_of_measurement: €
+      value_template: >-
+        {{ (states('sensor.talon_kokonaiskustannus_paiva_eur')|float /100)| round(2) }}
+
+    sahko_hinnan_korjaus_viikko:
+      friendly_name: Sähkön hinnan korjaus, viikko
+      unit_of_measurement: €
+      value_template: >-
+        {{ (states('sensor.talon_kokonaiskustannus_viikko_eur')|float /100)| round(2) }}
+
+    sahko_hinnan_korjaus_kuukausi:
+      friendly_name: Sähkön hinnan korjaus, kuukausi
+      unit_of_measurement: €
+      value_template: >-
+        {{ (states('sensor.talon_kokonaiskustannus_kuukausi_eur')|float /100)| round(2) }}
+
+    sahko_hinnan_korjaus_vuosi:
+      friendly_name: Sähkön hinnan korjaus, vuosi
+      unit_of_measurement: €
+      value_template: >-
+        {{ (states('sensor.talon_kokonaiskustannus_vuosi_eur')|float /100)| round(2) }}
+
+    device_end_time_custom:
+      friendly_name: Lämmityksen pysäytys, säädettävä
+      value_template: >-
+        {{ ((as_timestamp(states('sensor.cheapest_hours_energy_tomorrow')) + ((states('input_number.lammitystunnit') |int)*3600))  | timestamp_custom('%H:%M')) }}
+
+    veden_kulutus_litroina:
+      friendly_name: "Veden kulutus litroina /h"
+      unit_of_measurement: "L"
+      value_template: "{{ (states('sensor.veden_kokonaiskulutus_tunti_m3') | float *1000 ) | round(2) }}"
+
+    vesimittari_lukema:
+      friendly_name: "Vesimittarilukema"
+      unit_of_measurement: "m³"
+      value_template: "{{ (states('sensor.vesimittari_raw') | float ) | round(1) }}"
+
+    veden_hinnan_korjaus_paiva:
+      friendly_name: Veden hinnan korjaus, päivä
+      unit_of_measurement: €
+      value_template: >-
+        {{ states('sensor.veden_kokonaiskulutus_paiva_eur')|float | round(1) }}
+
+    veden_hinnan_korjaus_viikko:
+      friendly_name: Veden hinnan korjaus, viikko
+      unit_of_measurement: €
+      value_template: >-
+        {{ states('sensor.veden_kokonaiskulutus_viikko_eur')|float | round(1) }}
+
+    veden_hinnan_korjaus_kuukausi:
+      friendly_name: Veden hinnan korjaus, kuukausi
+      unit_of_measurement: €
+      value_template: >-
+        {{ states('sensor.veden_kokonaiskustannus_kuukausi_eur')|float | round(1) }}
+
+    veden_hinnan_korjaus_vuosi:
+      friendly_name: Veden hinnan korjaus, vuosi
+      unit_of_measurement: €
+      value_template: >-
+        {{ states('sensor.veden_kokonaiskustannus_vuosi_eur')|float | round(1) }}
+
+    ### Tesla auton lataushinta ##########
+
+    tesla_latauksen_kokonaishinta:
+      friendly_name: Tesla lataushinta nyt
+      unit_of_measurement: €
+      value_template: >-
+        {{ ((states('sensor.sahko_kokonaishinta')|float * (states('sensor.tesla_lataus_tuntikulutus_eur')|float)) | round(2)) }}
+
+    tesla_hinnan_korjaus_paiva:
+      friendly_name: Tesla hinnan korjaus, päivä
+      unit_of_measurement: €
+      value_template: >-
+        {{ states('sensor.tesla_paivakustannus_eur')|float | round(1) /10}}
+
+    teslan_hinnan_korjaus_kuukausi:
+      friendly_name: Tesla hinnan korjaus, kuukausi
+      unit_of_measurement: €
+      value_template: >-
+        {{ states('sensor.tesla_kuukausikustannus_eur')|float | round(1) /10}}
+
+    teslan_hinnan_korjaus_vuosi:
+      friendly_name: Tesla hinnan korjaus, vuosi
+      unit_of_measurement: €
+      value_template: >-
+        {{ states('sensor.tesla_vuosikustannus_eur')|float | round(1) /10}}
+
+    #################################################
+
+    ulkopistorasia_tuntihinta:
+      friendly_name: Ulkopistorasian tuntihinta
+      unit_of_measurement: €
+      value_template: >-
+        {{ ((states('sensor.sahko_kokonaishinta_c')|float * (states('sensor.ulkopistorasia_tuntikulutus_kwh')|float)) | round (2))}}
+
+    ### Apex triggeritiedot väreillä ##########
+
+    heating_triggered:
+      unit_of_measurement: unit
+      friendly_name: Heating trigger
+      value_template: >-
+        {% if states('sensor.sahkon_myyntihinta_c_kwh') < ('input_number.sahkon_hinta_trigger') %}
+        1 
+        {% else %} 
+        0 
+        {% endif %}
+
+    ###############################
+
+    plate_recognizer:
+      friendly_name: "jmo553"
+      value_template: >-
+        {{ state_attr("image_processing.platerecognizer_etupiha", "watched_plates")["jmo553"] }}
+
+    lights_on_count:
+      friendly_name: "Lights on count"
+      value_template: >-
+        {{ expand('light.koti') 
+        | selectattr('state','eq','on') 
+        | list | count }}
+
+    sahkojarjestelman_tilanne:
+      value_template: >-
+        {% if states('sensor.fingrid_sahkojarjestelman_kayttotilanne') == "1" %}
+          Normaali
+        {% elif states('sensor.fingrid_sahkojarjestelman_kayttotilanne') == "2" %}
+          Heikentynyt
+        {% elif states('sensor.fingrid_sahkojarjestelman_kayttotilanne') == "3" %}
+          Vaarassa
+        {% elif states('sensor.fingrid_sahkojarjestelman_kayttotilanne') == "4" %}
+          Vakava häiriö
+        {% elif states('sensor.fingrid_sahkojarjestelman_kayttotilanne') == "5" %}
+          Vakava häiriö (palautuminen)
+        {% else %}
+          Tuntematon
+        {% endif %}
+
+    sahkopula_tilanne:
+      value_template: >-
+        {% if states('sensor.fingrid_sahkopulan_tilannetieto') == "0" %}
+          Normaali käyttötilanne
+        {% elif states('sensor.fingrid_sahkopulan_tilannetieto') == "1" %}
+          Sähköpula mahdollinen
+        {% elif states('sensor.fingrid_sahkopulan_tilannetieto') == "2" %}
+          Sähköpulan riski suuri
+        {% elif states('sensor.fingrid_sahkopulan_tilannetieto') == "3" %}
+          Sähköpula
+        {% else %}
+          Tuntematon
+        {% endif %}
+
+    ### LVV kulutus #######
+
+    lamminvesivaraaja_kulutus:
+      friendly_name: Lämminvesivaraajan kulutus
+      unit_of_measurement: kWh
+      value_template: >-
+        {{ states('sensor.shellyem_34945473cbdf_channel_1_energy') |float + states('sensor.shellyem_34945473cbdf_channel_2_energy') |float }}
+
+    ### Saunan tilatieto ########
+
+    saunan_tilatieto:
+      value_template: >-
+        {% set sauna_teho_w = states('sensor.sahko_kokonaiskulutus_teho') | float %}
+        {% if 6500 < sauna_teho_w < 11000 %}
+          Päällä
+        {% else %}
+          Sammutettu
+        {% endif %}
+
+    ### Ulkopistorasian kulutus ########
+    ulkopistorasian_urakkahinta:
+      friendly_name: Ulkopistorasian urakkahinta
+      unit_of_measurement: €
+      value_template: >-
+        {{ states('sensor.ulkopistorasia_kattoremonttihinta_eur') | round (1) /100 }}
+
+# Fingrid API
+- platform: rest
+  resource: https://api.fingrid.fi/v1/variable/181/event/json
+  method: GET
+  name: "Wind Power Fingrid"
+  unique_id: wind_power_fingrid
+  value_template: "{{ value_json.value }}"
+  unit_of_measurement: "MW"
+  scan_interval: 3600 #
+  headers:
+    x-api-key: "cgeAMM85kLa6Sttee8kL37cH6qtaOk5g79JYZOam"
+    accept: application/json
+- platform: rest
+  resource: https://api.fingrid.fi/v1/variable/188/event/json
+  method: GET
+  name: "Nuclear Power Fingrid"
+  unique_id: nuclear_power_fingrid
+  value_template: "{{ value_json.value }}"
+  unit_of_measurement: "MW"
+  scan_interval: 3600
+  headers:
+    x-api-key: "AcgeAMM85kLa6Sttee8kL37cH6qtaOk5g79JYZOam"
+    accept: application/json
+- platform: rest
+  resource: https://api.fingrid.fi/v1/variable/191/event/json
+  method: GET
+  name: "Water Power Fingrid"
+  unique_id: water_power_fingrid
+  value_template: "{{ value_json.value }}"
+  unit_of_measurement: "MW"
+  scan_interval: 3600
+  headers:
+    x-api-key: "cgeAMM85kLa6Sttee8kL37cH6qtaOk5g79JYZOam"
+    accept: application/json
+- platform: rest
+  resource: https://api.fingrid.fi/v1/variable/245/event/json
+  method: GET
+  name: "Wind Power 36h Estimate Fingrid"
+  unique_id: wind_power_36h_estimate_fingrid
+  value_template: "{{ value_json.value }}"
+  unit_of_measurement: "MW"
+  scan_interval: 3600
+  headers:
+    x-api-key: "cgeAMM85kLa6Sttee8kL37cH6qtaOk5g79JYZOam"
+    accept: application/json
+- platform: rest
+  resource: https://api.fingrid.fi/v1/variable/193/event/json
+  method: GET
+  name: "Power consumption Fingrid"
+  unique_id: Power_consumption_Fingrid
+  value_template: "{{ value_json.value }}"
+  unit_of_measurement: "MW"
+  scan_interval: 3600
+  headers:
+    x-api-key: "cgeAMM85kLa6Sttee8kL37cH6qtaOk5g79JYZOam"
+    accept: application/json
+- platform: rest
+  resource: https://api.fingrid.fi/v1/variable/201/event/json
+  method: GET
+  name: "Heat co-generation Fingrid"
+  unique_id: heat_co-generation_fingrid
+  value_template: "{{ value_json.value }}"
+  unit_of_measurement: "MW"
+  scan_interval: 3600
+  headers:
+    x-api-key: "cgeAMM85kLa6Sttee8kL37cH6qtaOk5g79JYZOam"
+    accept: application/json
+- platform: rest
+  resource: https://api.fingrid.fi/v1/variable/202/event/json
+  method: GET
+  name: "industry_co-generation_fingrid"
+  unique_id: Industry co-generation Fingrid
+  value_template: "{{ value_json.value }}"
+  unit_of_measurement: "MW"
+  scan_interval: 3600
+  headers:
+    x-api-key: "cgeAMM85kLa6Sttee8kL37cH6qtaOk5g79JYZOam"
+    accept: application/json
+- platform: rest
+  resource: https://api.fingrid.fi/v1/variable/192/event/json
+  method: GET
+  name: "Fingrid, kokonaistuotanto"
+  unique_id: fingrid_kokonaistuotanto
+  value_template: "{{ value_json.value }}"
+  unit_of_measurement: "MW"
+  scan_interval: 3600
+  headers:
+    x-api-key: "cgeAMM85kLa6Sttee8kL37cH6qtaOk5g79JYZOam"
+    accept: application/json
+- platform: rest
+  resource: https://api.fingrid.fi/v1/variable/336/event/json
+  method: GET
+  name: "Fingrid, Sähköpulan tilannetieto"
+  unique_id: fingrid_sahkopulantilannetieto
+  value_template: "{{ value_json.value }}"
+  scan_interval: 3600
+  headers:
+    x-api-key: "cgeAMM85kLa6Sttee8kL37cH6qtaOk5g79JYZOam"
+    accept: application/json
+- platform: rest
+  resource: https://api.fingrid.fi/v1/variable/209/event/json
+  method: GET
+  name: "Fingrid, Sähköjärjestelmän käyttötilanne"
+  unique_id: fingrid_sahkojarjestelmankayttotilanne
+  value_template: "{{ value_json.value }}"
+  scan_interval: 3600
+  headers:
+    x-api-key: "cgeAMM85kLa6Sttee8kL37cH6qtaOk5g79JYZOam"
+    accept: application/json
+
+    ### Sademittari #######################
+
+- platform: history_stats
+  name: Rainsensor flips
+  entity_id: binary_sensor.rainsensor_contact #The aqara sensor
+  state: "off"
+  type: count
+  start: "{{ now().replace(hour=0, minute=0, second=0) }}"
+  end: "{{ now() }}"

@@ -1,0 +1,1793 @@
+- id: 3b383a06f71143e883221608f2ff9d86
+  alias: Set device start time
+  description: ''
+  trigger:
+  - platform: time
+    at: '23:10:00'
+  condition:
+  - condition: not
+    conditions:
+    - condition: state
+      entity_id: sensor.cheapest_hours_energy_tomorrow
+      state: unknown
+  action:
+  - service: input_datetime.set_datetime
+    data:
+      time: '{{ as_timestamp(states(''sensor.cheapest_hours_energy_tomorrow'')) |
+        timestamp_custom(''%H:%M'') }}'
+    target:
+      entity_id: input_datetime.device_start_time
+  mode: single
+- id: a0f877d06c1d47c89a0e1bf2d7ab9505
+  alias: Set device end  time
+  description: ''
+  trigger:
+  - platform: time
+    at: '23:15:00'
+  condition:
+  - condition: not
+    conditions:
+    - condition: state
+      entity_id: sensor.cheapest_hours_energy_tomorrow
+      state: unknown
+  action:
+  - service: input_datetime.set_datetime
+    data:
+      time: '{{ ((as_timestamp(states(''sensor.cheapest_hours_energy_tomorrow''))
+        + ((states(''input_number.lammitystunnit'') |int)*3600))  | timestamp_custom(''%H:%M''))
+        }}'
+    target:
+      entity_id: input_datetime.device_end_time
+  mode: single
+- id: '1666961541365'
+  alias: Lämmityksen automaatio - Pois
+  description: ''
+  trigger:
+  - platform: time
+    at: input_datetime.device_end_time
+    enabled: false
+  - platform: state
+    entity_id:
+    - binary_sensor.shf_rank_acceptable
+    to: 'off'
+    from: 'on'
+  condition: []
+  action:
+  - service: homeassistant.turn_off
+    data: {}
+    target:
+      entity_id: switch.patterit
+  - if:
+    - condition: state
+      entity_id: group.somebody_home
+      state: not_home
+    then:
+    - service: climate.set_temperature
+      data:
+        temperature: '{{ states(''input_number.lammonpudotus_presence'') }}'
+      target:
+        entity_id: climate.mitsu_ilp
+    - service: climate.set_fan_mode
+      data:
+        fan_mode: '2'
+      target:
+        entity_id:
+        - climate.mitsu_ilp
+      enabled: false
+    else:
+    - service: climate.set_temperature
+      data:
+        temperature: '{{ states(''input_number.normaalilampo_presence'') }}'
+      target:
+        entity_id: climate.mitsu_ilp
+    - service: climate.set_fan_mode
+      data:
+        fan_mode: '2'
+      target:
+        entity_id:
+        - climate.mitsu_ilp
+      enabled: false
+    enabled: true
+  - service: switch.turn_off
+    target:
+      entity_id: switch.shellypro4pm_ec62609fd3dc_switch_2
+    data: {}
+  mode: single
+- id: '1666961714981'
+  alias: Lämmityksen automaation - Päälle
+  description: ''
+  trigger:
+  - platform: time
+    at: input_datetime.device_start_time
+    enabled: false
+  - platform: state
+    entity_id:
+    - binary_sensor.shf_price_or_rank_acceptable
+    from: 'off'
+    to: 'on'
+  condition: []
+  action:
+  - service: climate.set_temperature
+    data:
+      temperature: '{{ states(''input_number.tehostuslampo'') }}'
+    target:
+      entity_id: climate.mitsu_ilp
+    enabled: true
+  - service: climate.set_fan_mode
+    data:
+      fan_mode: '3'
+    target:
+      entity_id:
+      - climate.mitsu_ilp
+    enabled: false
+  - if:
+    - condition: template
+      value_template: '{{ state_attr(''weather.forecast_koti'', ''temperature'')|float
+        < states(''input_number.ulkolampo_trigger'')|float }}'
+    then:
+    - service: homeassistant.turn_on
+      data: {}
+      target:
+        entity_id: switch.patterit
+    alias: Patterit päälle jos trigger täyttyy
+  - alias: Lämminvesivaraaja päälle
+    if: []
+    then:
+    - service: switch.turn_on
+      target:
+        entity_id: switch.shellypro4pm_ec62609fd3dc_switch_2
+      data: {}
+    enabled: true
+  mode: single
+- id: '1667140527172'
+  alias: Hinta info - on
+  description: ''
+  trigger:
+  - platform: time
+    at: 07:30:00
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: numeric_state
+        entity_id: sensor.sahko_kokonaishinta_c
+        below: 0.1
+      sequence:
+      - service: light.turn_on
+        data:
+          transition: 20
+          rgb_color:
+          - 0
+          - 255
+          - 0
+        target:
+          entity_id: light.hue_color_lamp_1
+    - conditions:
+      - condition: numeric_state
+        entity_id: sensor.sahko_kokonaishinta_c
+        above: 0.1
+        below: 0.2
+      sequence:
+      - service: light.turn_on
+        data:
+          transition: 21
+          rgb_color:
+          - 255
+          - 255
+          - 0
+        target:
+          entity_id: light.hue_color_lamp_1
+    - conditions:
+      - condition: numeric_state
+        entity_id: sensor.sahko_kokonaishinta_c
+        above: 0.2
+      sequence:
+      - service: light.turn_on
+        data:
+          rgb_color:
+          - 255
+          - 0
+          - 0
+          transition: 20
+        target:
+          entity_id: light.hue_color_lamp_1
+  mode: single
+- id: '1667142394613'
+  alias: Hinta info - off
+  description: ''
+  trigger:
+  - platform: time
+    at: 09:00:00
+  condition: []
+  action:
+  - service: light.turn_on
+    data:
+      rgb_color:
+      - 252
+      - 255
+      - 252
+      transition: 11
+      brightness: 151
+    target:
+      entity_id: light.hue_color_lamp_1
+  mode: single
+- id: '1668538256427'
+  alias: Peilin sähköt päälle - aamu
+  description: Käynnistetään peilin sähköt aamulla 5:30
+  trigger:
+  - platform: time
+    at: 07:00:00
+  condition: []
+  action:
+  - type: turn_on
+    device_id: e4b76a39130a36514ceac97c2e47b75e
+    entity_id: switch.sonoff_10006f0317_2
+    domain: switch
+  mode: single
+- id: '1668538332212'
+  alias: Peilin sähköt pois - ilta
+  description: Sammuta peili 21:00
+  trigger:
+  - platform: time
+    at: '21:00:00'
+  condition: []
+  action:
+  - type: turn_off
+    device_id: e4b76a39130a36514ceac97c2e47b75e
+    entity_id: switch.sonoff_10006f0317_2
+    domain: switch
+  mode: single
+- id: '1668964679026'
+  alias: Nordpool config daily reload
+  description: Ladataan nordpoolin konfiguraatio päivittäin ongelmien ehkäisemiseksi
+  trigger:
+  - platform: time
+    at: '13:55:00'
+  condition: []
+  action:
+  - service: homeassistant.reload_config_entry
+    data: {}
+    target:
+      entity_id: sensor.nordpool_kwh_fi_eur_4_10_0
+  mode: single
+- id: '1668969873693'
+  alias: 'Alarm: APK vuotoilmaisin'
+  description: ''
+  triggers:
+  - type: moist
+    device_id: 3ba2dd0483a62409974f911c4756bc40
+    entity_id: binary_sensor.aqara_keittioapk_water_leak
+    domain: binary_sensor
+    trigger: device
+  conditions: []
+  actions:
+  - data:
+      entity_id: media_player.soundbar
+      message: Vettä havaittu astianpesukoneen alla
+    action: tts.google_cloud_say
+  - action: notify.send_message
+    metadata: {}
+    data:
+      message: APK alla havaittu vesivuoto!
+      title: Vesivuoto!
+    target:
+      device_id: b4f55dbf5baf2a63b8eda5840ca8c471
+  - action: telegram_bot.answer_callback_query
+    metadata: {}
+    data:
+      show_alert: false
+      config_entry_id: 01KGKZJKGHEZ4QMP048V15R9ZC
+      message: APK alla havaittu vesivuoto!
+  mode: single
+- id: '1671439266705'
+  alias: Tesla latausautomaatio - hinta trigger
+  description: ''
+  triggers:
+  - minutes: /5
+    trigger: time_pattern
+  - entity_id:
+    - binary_sensor.shadow_charging
+    enabled: true
+    trigger: state
+  conditions:
+  - condition: device
+    device_id: 70374649bedf9c582e2dab8783a7650b
+    domain: device_tracker
+    entity_id: 4cfb3e285a4458122ce88bf40a56e9fe
+    type: is_home
+  actions:
+  - if:
+    - condition: template
+      value_template: '{{ (states(''sensor.shf_electricity_price_now'')|float) *100
+        < states(''input_number.auton_lataus'')|float}}'
+    - condition: state
+      entity_id: switch.shellypro4pm_ec62609fd3dc_switch_2
+      state: 'off'
+    - condition: state
+      entity_id: sensor.saunan_tilatieto
+      state: Sammutettu
+    then:
+    - action: switch.turn_on
+      metadata: {}
+      data: {}
+      target:
+        entity_id:
+        - switch.tesla_model_3_charger
+    else:
+    - action: switch.turn_off
+      metadata: {}
+      data: {}
+      target:
+        entity_id:
+        - switch.tesla_model_3_charger
+  mode: single
+- id: '1672842981754'
+  alias: 'Presence: Somebody arrives home'
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - group.somebody_home
+    from: not_home
+    to: home
+  condition: []
+  action:
+  - service: climate.set_temperature
+    data:
+      temperature: '{{ states(''input_number.normaalilampo_presence'') }}'
+    target:
+      entity_id: climate.mitsubishi_rw25
+    enabled: true
+  - service: climate.set_fan_mode
+    data:
+      fan_mode: '4'
+    target:
+      entity_id: climate.mitsubishi_rw25
+    enabled: true
+  - delay:
+      hours: 0
+      minutes: 45
+      seconds: 0
+      milliseconds: 0
+    enabled: true
+  - service: climate.set_fan_mode
+    data:
+      fan_mode: '3'
+    target:
+      entity_id: climate.mitsubishi_rw25
+    enabled: true
+  - if:
+    - condition: sun
+      after: sunset
+      before: sunrise
+    then:
+    - service: light.turn_on
+      data: {}
+      target:
+        entity_id: light.peilin_led
+    enabled: true
+  mode: single
+- id: '1672843062348'
+  alias: 'Presence: Everybody leaves home'
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - group.somebody_home
+    from: home
+    to:
+    - not_home
+    - Jäähallilla
+    - Puolimatkan koulu
+    - Metsäkaltevan koulu
+    - Tomilla
+    - Pirjolla
+    - Lealla
+    - Tapis
+    - Kankurissa
+  condition: []
+  action:
+  - service: light.turn_off
+    data: {}
+    target:
+      entity_id: light.koti
+  - service: climate.set_temperature
+    data:
+      temperature: '{{ states(''input_number.lammonpudotus_presence'') }}'
+    target:
+      entity_id: climate.mitsubishi_rw25
+    enabled: true
+  - service: climate.set_fan_mode
+    data:
+      fan_mode: '2'
+    target:
+      entity_id: climate.mitsubishi_rw25
+    enabled: true
+  mode: single
+- id: '1673025557841'
+  alias: Liiketunnistin - portaikko
+  description: LED valaistuis päälle liikkeestä
+  trigger:
+  - type: motion
+    platform: device
+    device_id: 02bca7a75618ffe99f57263ec7662943
+    entity_id: fbc54ea072507b924890bb6a06c24bad
+    domain: binary_sensor
+    id: liiketunnistin_shelly_portaikko
+  - type: no_motion
+    platform: device
+    device_id: 02bca7a75618ffe99f57263ec7662943
+    entity_id: fbc54ea072507b924890bb6a06c24bad
+    domain: binary_sensor
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: time
+        after: '21:00:00'
+        before: 07:30:00
+      sequence:
+      - if:
+        - condition: trigger
+          id:
+          - liiketunnistin_portaikko
+          - liiketunnistin_shelly_portaikko
+        then:
+        - data:
+            brightness_pct: 10
+          target:
+            entity_id: light.portaikko
+          action: light.turn_on
+        else:
+        - data: {}
+          target:
+            entity_id: light.portaikko
+          action: light.turn_off
+    - conditions:
+      - condition: time
+        after: 07:30:00
+        before: '10:00:00'
+      sequence:
+      - if:
+        - condition: trigger
+          id:
+          - liiketunnistin_portaikko
+          - liiketunnistin_shelly_portaikko
+        then:
+        - data:
+            brightness_pct: 35
+          target:
+            entity_id: light.portaikko
+          action: light.turn_on
+        else:
+        - data: {}
+          target:
+            entity_id: light.portaikko
+          action: light.turn_off
+    - conditions:
+      - condition: time
+        after: '10:00:00'
+        before: '21:00:00'
+      sequence:
+      - if:
+        - condition: trigger
+          id:
+          - liiketunnistin_portaikko
+          - liiketunnistin_shelly_portaikko
+        then:
+        - data:
+            brightness_pct: 75
+          target:
+            entity_id: light.portaikko
+          action: light.turn_on
+        else:
+        - data: {}
+          target:
+            entity_id: light.portaikko
+          action: light.turn_off
+  mode: restart
+- id: '1674489090659'
+  alias: 'Alarm: Sound Siren when the Alarm is Triggered'
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - alarm_control_panel.koti_halytin
+    to: triggered
+    id: alarm-is-triggered
+  - platform: state
+    entity_id:
+    - alarm_control_panel.koti_halytin
+    to: disarmed
+    from: triggered
+    id: alarm-is-disarmed
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: alarm-is-triggered
+      sequence:
+      - repeat:
+          until:
+          - condition: state
+            entity_id: alarm_control_panel.koti_halytin
+            state: disarmed
+          sequence:
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: 30
+              milliseconds: 0
+          - service: switch.toggle
+            data: {}
+            target:
+              entity_id:
+              - switch.firealarm_heat_upstairs_alarm
+              - switch.firealarm_smoke_hallway_alarm
+    - conditions:
+      - condition: trigger
+        id: alarm-is-disarmed
+      sequence:
+      - service: switch.toggle
+        data: {}
+        target:
+          entity_id:
+          - switch.firealarm_heat_upstairs_alarm
+          - switch.firealarm_smoke_hallway_alarm
+    default: []
+  mode: restart
+- id: '1674489236750'
+  alias: 'Alarm: Trigger Alarm when Armed Away'
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.alarm_motion_sensors
+    to: 'on'
+  condition:
+  - condition: state
+    entity_id: alarm_control_panel.koti_halytin
+    state: armed_away
+  action:
+  - service: alarm_control_panel.alarm_trigger
+    data: {}
+    target:
+      entity_id: alarm_control_panel.koti_halytin
+  mode: single
+- id: '1674495788698'
+  alias: 'Alarm: Notification to mobile devices when alarm triggered'
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - alarm_control_panel.koti_halytin
+    to: triggered
+    id: alarm-is-triggered
+  - platform: state
+    entity_id:
+    - alarm_control_panel.koti_halytin
+    from: triggered
+    to: disarmed
+    id: alarm-is-disarmed
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: alarm-is-triggered
+      sequence:
+      - service: notify.mobile_app_iphone15_toni
+        data:
+          message: Kotihälytys laukesi!
+      - service: notify.mobile_app_iphone_jenni
+        data: {}
+    - conditions:
+      - condition: trigger
+        id: alarm-is-disarmed
+      sequence:
+      - service: notify.mobile_app_iphone15_toni
+        data:
+          message: Kotihälytys kytketty pois
+      - service: notify.mobile_app_iphone_jenni
+        data:
+          message: Kotihälytys kytketty pois
+    default: []
+  mode: restart
+- id: '1674742355861'
+  alias: 'Presence: Tuulikaapin ovi unohtui auki'
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - group.somebody_home
+    from: home
+    to:
+    - not_home
+    - Jäähallilla
+    - Puolimatkan koulu
+    - Metsäkaltevan koulu
+    - Tomilla
+    - Pirjolla
+    - Lealla
+    - Tapis
+    - Kankurissa
+  condition:
+  - condition: state
+    entity_id: binary_sensor.doorsensor_tuulikaappi_contact
+    state: 'on'
+  action:
+  - service: notify.mobile_app_iphone_toni
+    data:
+      message: Tuulikaapin ovi unohtui auki!
+  mode: single
+- id: '1674808394209'
+  alias: 'Vacuum: Aktivoi huonesiivous'
+  description: ''
+  trigger: []
+  condition: []
+  action:
+  - service: vacuum.stop
+    target:
+      entity_id: vacuum.roborock_s6_maxv
+    data: {}
+  - delay:
+      hours: 0
+      minutes: 0
+      seconds: 3
+      milliseconds: 0
+  - service: script.turn_on
+    data_template:
+      entity_id: '{% if states.input_select.huone_siivous.state == "Aula" %} script.vacuum_aula  {%
+        elif states.input_select.huone_siivous.state == "Keittiö" %} script.vacuum_keittio  {%
+        elif states.input_select.huone_siivous.state == "Sara" %} script.vacuum_makkari
+        {% elif states.input_select.huone_siivous.state == "Imurin huolto" %} script.vacuum_tyhjenna_sailio
+        {% elif states.input_select.huone_siivous.state == "Poikien huone" %} script.vacuum_poikien_huone
+        {% elif states.input_select.huone_siivous.state == "Olohuone" %} script.vacuum_olohuone   {%
+        endif %}
+
+        '
+  mode: single
+- id: '1674820480331'
+  alias: 'Vacuum: cleaning completed'
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - vacuum.roborock_s6_maxv
+    to: returning
+  condition: []
+  action:
+  - service: notify.mobile_app_iphone15_toni
+    data: {}
+  mode: single
+- id: '1675159532867'
+  alias: 'Tag: Arm and Disarm alarm'
+  description: ''
+  trigger:
+  - platform: tag
+    tag_id: 33-CA-A8-98
+    id: tag-detected
+  - platform: tag
+    tag_id: 13-C7-23-1C
+    id: tag-detected
+  - platform: tag
+    tag_id: 04-55-73-B2-4B-75-81
+    id: tag-detected
+  condition: []
+  action:
+  - if:
+    - condition: state
+      entity_id: alarm_control_panel.koti_halytin
+      state: disarmed
+    then:
+    - service: alarm_control_panel.alarm_arm_away
+      data: {}
+      target:
+        entity_id: alarm_control_panel.koti_halytin
+    else:
+    - service: alarm_control_panel.alarm_disarm
+      data:
+        code: '6905'
+      target:
+        entity_id: alarm_control_panel.koti_halytin
+  mode: restart
+- id: '1675166187586'
+  alias: 'Frontdoor: Toni NFC-open'
+  description: ''
+  trigger:
+  - platform: tag
+    tag_id: 13-C7-23-1C
+    id: TAG-Toni
+  condition:
+  - condition: state
+    entity_id: lock.etuovi
+    state: locked
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: TAG-Toni
+      sequence:
+      - service: script.etuoven_avaus_toni
+        data: {}
+  mode: single
+- id: '1675992439770'
+  alias: Saunan etähallinta
+  description: 'Saunan etähallinta.
+
+    Ehtojen mukaisesti tehdään pyydetyt asiat.'
+  trigger:
+  - platform: state
+    entity_id:
+    - input_button.saunan_ohjaus
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: state
+        entity_id: sensor.saunan_tilatieto
+        state: Sammutettu
+      sequence:
+      - if:
+        - condition: state
+          entity_id: binary_sensor.doorsensor_sauna_contact
+          state: 'off'
+        - condition: state
+          entity_id: binary_sensor.shadow_charging
+          state: 'off'
+        then:
+        - service: script.sauna_rele
+          data: {}
+        - service: notify.mobile_app_iphone_toni
+          data:
+            message: Sauna kytketty päälle.
+        - service: notify.mobile_app_le2123
+          data:
+            message: Sauna kytketty päälle.
+        else:
+        - delay:
+            hours: 0
+            minutes: 0
+            seconds: 2
+            milliseconds: 0
+        - service: notify.mobile_app_iphone_toni
+          data:
+            message: Saunaa ei voida kytkeä päälle, ovi on auki tai auto latauksessa!
+        - service: notify.mobile_app_le2123
+          data:
+            message: Saunaa ei voida kytkeä päälle, ovi on auki tai auto latauksessa!
+    - conditions:
+      - condition: state
+        entity_id: sensor.saunan_tilatieto
+        state: Päällä
+      sequence:
+      - service: script.sauna_rele
+        data: {}
+      - service: notify.mobile_app_iphone_toni
+        data:
+          message: Sauna sammutettu.
+      - service: notify.mobile_app_le2123
+        data:
+          message: Sauna sammutettu.
+  mode: queued
+  max: 10
+- id: '1676887174588'
+  alias: Ovikello - kamerakuva
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - switch.ovikello
+  - platform: state
+    entity_id:
+    - sensor.testinappi_action
+  condition: []
+  action:
+  - service: browser_mod.popup
+    data:
+      dismissable: true
+      autoclose: false
+      title: Ovikello soi!
+      size: fullscreen
+      timeout: 45000
+      deviceID:
+      - Taikapeili
+      content:
+        camera_view: live
+        type: picture-glance
+        entities: []
+        camera_image: camera.qvr_etupiha
+  - service: camera.snapshot
+    data:
+      filename: /config/media/doorbell/snap.jpg
+    target:
+      entity_id: camera.qvr_etupiha
+    enabled: false
+  - service: notify.mobile_app_iphone_toni
+    data:
+      message: Joku on ovella.
+      title: Ovikello soi!
+      image: /config/media/doorbell/snap.jpg
+    enabled: false
+  - service: notify.mobile_app_le2123
+    data:
+      message: Joku on ovella.
+      title: Ovikello soi!
+      data: /config/media/doorbell/snap.jpg
+    enabled: false
+  mode: queued
+  max: 10
+- id: '1676892164612'
+  alias: Ovikello - puhelin nofitikaatio Toni
+  description: ''
+  use_blueprint:
+    path: vorion/send-camera-snapshot-notification-on-motion.yaml
+    input:
+      motion_sensor: switch.ovikello
+      camera: camera.etupiha
+      notify_device: 14363be9e620fa8d751d73aeac81889e
+      delay: 2
+      notification_title: Ovikello soi, joku on ovella!
+      is_ios: true
+      switch: switch.ovikello
+- id: '1679127595836'
+  alias: 'Alarm: Phase down'
+  description: ''
+  trigger:
+  - platform: numeric_state
+    entity_id:
+    - sensor.shellyem3_channel_a_voltage
+    for:
+      hours: 0
+      minutes: 15
+      seconds: 0
+    below: 200
+    id: Phase1
+  - platform: numeric_state
+    entity_id:
+    - sensor.shellyem3_channel_b_voltage
+    for:
+      hours: 0
+      minutes: 15
+      seconds: 0
+    below: 200
+    id: Phase2
+  - platform: numeric_state
+    entity_id:
+    - sensor.shellyem3_channel_c_voltage
+    for:
+      hours: 0
+      minutes: 15
+      seconds: 0
+    below: 200
+    id: Phase3
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: Phase1
+      sequence:
+      - service: notify.mobile_app_iphone15_toni
+        data:
+          message: Vaihe1 on ollut pimeänä 30 minuuttia!
+      - service: notify.mobile_app_iphone_jenni
+        data:
+          message: Vaihe1 on ollut pimeänä 30 minuuttia!
+    - conditions:
+      - condition: trigger
+        id: Phase2
+      sequence:
+      - service: notify.mobile_app_iphone15_toni
+        data:
+          message: Vaihe2 on ollut pimeänä 30 minuuttia!
+      - service: notify.mobile_app_iphone_jenni
+        data:
+          message: Vaihe2 on ollut pimeänä 30 minuuttia!
+    - conditions:
+      - condition: trigger
+        id: Phase3
+      sequence:
+      - service: notify.mobile_app_iphone15_toni
+        data:
+          message: Vaihe3 on ollut pimeänä 30 minuuttia!
+      - service: notify.mobile_app_iphone_jenni
+        data:
+          message: Vaihe3 on ollut pimeänä 30 minuuttia!
+  mode: single
+- id: '1688046839739'
+  alias: Ovikello - ääniohjaus
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - input_boolean.ovikellon_ohjaus
+    id: chime_toggle
+  condition: []
+  action:
+  - if:
+    - condition: trigger
+      id: chime_toggle
+    then:
+    - wait_template: "\n  - platform: rest\n    name: shelly_doorbell_chime_status\n
+        \   resource: http://192.168.50.218/relay/0\n    body_on: 'btn_type=toggle'\n
+        \   body_off: 'btn_type=detached'\n    is_on_template: '{{ value_json.btn_type
+        == \"toggle\" }}'"
+      continue_on_timeout: false
+  mode: single
+- id: '1688121662579'
+  alias: 'Alarm: Saunan lämpöhälyytys'
+  description: ''
+  trigger:
+  - platform: numeric_state
+    entity_id: sensor.sauna_temperature
+    for:
+      hours: 1
+      minutes: 0
+      seconds: 0
+    above: 60
+  condition: []
+  action:
+  - service: notify.mobile_app_iphone15_toni
+    data:
+      message: Saunan lämpötila ollut 60 astetta yli tunnin, tarkista sauna.
+  mode: single
+- id: '1692968713066'
+  alias: 'Presense: Työhuone valaistus'
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.presense_sensor_tyohuone_presence
+    to: 'on'
+    id: huoneessa
+  - platform: state
+    entity_id:
+    - binary_sensor.presense_sensor_tyohuone_presence
+    to: 'off'
+    id: poissa
+    for:
+      hours: 0
+      minutes: 2
+      seconds: 0
+  condition: []
+  action:
+  - if:
+    - condition: trigger
+      id:
+      - huoneessa
+    then:
+    - service: light.turn_on
+      data: {}
+      target:
+        entity_id:
+        - light.tyopiste
+  - if:
+    - condition: trigger
+      id:
+      - poissa
+    then:
+    - service: light.turn_off
+      data: {}
+      target:
+        entity_id:
+        - light.tyopiste
+  mode: single
+- id: '1693767733108'
+  alias: Lämmitys automaatiot - päälle/pois
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - input_boolean.lvv_heating
+    to: 'on'
+    id: Heating_on
+  - platform: state
+    entity_id:
+    - input_boolean.lvv_heating
+    to: 'off'
+    id: Heating_off
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id:
+        - Heating_on
+      sequence:
+      - service: automation.turn_on
+        data: {}
+        target:
+          entity_id:
+          - automation.increase_heating_2
+          - automation.decrease_heating
+    - conditions:
+      - condition: trigger
+        id:
+        - Heating_off
+      sequence:
+      - service: automation.turn_off
+        data:
+          stop_actions: true
+        target:
+          entity_id:
+          - automation.increase_heating_2
+          - automation.decrease_heating
+  mode: single
+- id: '1696877211990'
+  alias: 'Pörssäri: MH1 ohjaus'
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - sensor.porssari_channel_1_state
+    from: '0'
+    to: '1'
+    id: Channel 1 On
+  - platform: state
+    entity_id:
+    - sensor.porssari_channel_1_state
+    from: '1'
+    to: '0'
+    id: Channel 1 Off
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id:
+        - Channel 1 On
+      sequence:
+      - service: switch.turn_on
+        data: {}
+        target:
+          entity_id: switch.mh1
+    - conditions:
+      - condition: trigger
+        id:
+        - Channel 1 Off
+      sequence:
+      - service: switch.turn_off
+        data: {}
+        target:
+          entity_id: switch.mh1
+  mode: single
+- id: '1697004671580'
+  alias: Lomatila aktivoinnit
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - input_boolean.lomatila
+    from: 'off'
+    to: 'on'
+    id: Lomatila päälle
+  - platform: state
+    entity_id:
+    - input_boolean.lomatila
+    from: 'on'
+    to: 'off'
+    id: Lomatila pois päältä
+  condition: []
+  action:
+  - if:
+    - condition: trigger
+      id:
+      - Lomatila päälle
+    then:
+    - data:
+        stop_actions: true
+      target:
+        entity_id:
+        - automation.decrease_heating
+        - automation.increase_heating_2
+      action: automation.turn_off
+    - data:
+        temperature: '{{ states(''input_number.lammonpudotus_presence'') }}'
+      target:
+        entity_id: climate.mitsu_ilp
+      enabled: true
+      action: climate.set_temperature
+    - data:
+        stop_actions: true
+      target:
+        entity_id: automation.porssari_mh1_ohjaus
+      action: automation.turn_off
+    - action: notify.mobile_app_iphone15_toni
+      data:
+        message: Lomatila aktivoitu
+    - data:
+        fan_mode: '2'
+      target:
+        entity_id:
+        - climate.mitsu_ilp
+      action: climate.set_fan_mode
+  - if:
+    - condition: trigger
+      id:
+      - Lomatila pois päältä
+    then:
+    - data:
+        stop_actions: true
+      target:
+        entity_id:
+        - automation.decrease_heating
+        - automation.increase_heating_2
+      action: automation.turn_on
+    - data:
+        temperature: '{{ states(''input_number.normaalilampo_presence'') }}'
+      target:
+        entity_id: climate.mitsu_ilp
+      enabled: true
+      action: climate.set_temperature
+    - data:
+        stop_actions: true
+      target:
+        entity_id: automation.porssari_mh1_ohjaus
+      action: automation.turn_on
+    - action: notify.mobile_app_iphone15_toni
+      data:
+        message: Lomatila poistettu päältä.
+    - data:
+        fan_mode: '3'
+      target:
+        entity_id:
+        - climate.mitsu_ilp
+      action: climate.set_fan_mode
+  mode: single
+- id: '1701451274628'
+  alias: 'Alarm: Flash Lights when the Alarm is triggered'
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - alarm_control_panel.koti_halytin
+    to: triggered
+    id: alarm-is-triggered
+  - platform: state
+    entity_id:
+    - alarm_control_panel.koti_halytin
+    to: disarmed
+    id: alarm-is-disarmed
+    from: triggered
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id: alarm-is-triggered
+      sequence:
+      - repeat:
+          until:
+          - condition: state
+            entity_id: alarm_control_panel.koti_halytin
+            state: disarmed
+          sequence:
+          - service: switch.turn_on
+            data: {}
+            target:
+              entity_id:
+              - switch.keittiokatto_kaytava_switch_0
+              - switch.keittiokatto_kaytava_switch_1
+          - service: scene.turn_on
+            target:
+              entity_id: scene.alarm_red
+            data:
+              transition: 1
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: 1
+              milliseconds: 0
+          - service: light.turn_off
+            data: {}
+            target:
+              entity_id:
+              - light.alarm_light_group
+          - delay:
+              hours: 0
+              minutes: 0
+              seconds: 1
+              milliseconds: 0
+    - conditions:
+      - condition: trigger
+        id: alarm-is-disarmed
+      sequence:
+      - service: scene.turn_on
+        target:
+          entity_id: scene.alarm_white
+        data:
+          transition: 1
+      - delay:
+          hours: 0
+          minutes: 0
+          seconds: 1
+          milliseconds: 0
+      - service: light.turn_off
+        data: {}
+        target:
+          entity_id: light.alarm_light_group
+    default: []
+  mode: restart
+- id: '1701456318034'
+  alias: 'Tag: Disarm alarm if state "Armed away"'
+  description: ''
+  trigger:
+  - platform: tag
+    tag_id: 13-C7-23-1C
+    id: tag-detected
+  - platform: tag
+    tag_id: 04-55-73-B2-4B-75-81
+    id: tag-detected
+  condition: []
+  action:
+  - if:
+    - condition: or
+      conditions:
+      - condition: state
+        entity_id: alarm_control_panel.koti_halytin
+        state: armed_away
+      - condition: state
+        entity_id: alarm_control_panel.koti_halytin
+        state: arming
+      - condition: state
+        entity_id: alarm_control_panel.koti_halytin
+        state: triggered
+    then:
+    - service: alarm_control_panel.alarm_disarm
+      data:
+        code: '1234'
+      target:
+        entity_id: alarm_control_panel.koti_halytin
+    else: []
+  mode: restart
+- id: '1702204389101'
+  alias: 'Alert: Vesimittari ongelma tilassa'
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - binary_sensor.vesimittari_problem
+    from: 'off'
+    to: 'on'
+    for:
+      hours: 12
+      minutes: 0
+      seconds: 0
+  condition: []
+  action:
+  - service: notify.mobile_app_iphone15_toni
+    data:
+      message: Vesimittarissa ongelma
+  mode: single
+- id: '1702631363234'
+  alias: 'Switch: Shelly_i4_spotit_kirkkaus'
+  description: ''
+  trigger:
+  - platform: device
+    device_id: 9bf92081e926ed1f9aa4a42dc30f8161
+    domain: shelly
+    type: long_push
+    subtype: button1
+    id: shelly-keittiokatkaisija-1-long-push
+  condition: []
+  action:
+  - repeat:
+      sequence:
+      - service: light.turn_on
+        target:
+          entity_id: light.spotit
+        data:
+          brightness_step_pct: 2
+      while:
+      - condition: trigger
+        id:
+        - shelly-keittiokatkaisija-1-long-push
+  mode: restart
+- id: '1702716069849'
+  alias: "Ovikello\U0001F514-  Joku ovella notifikaatio"
+  description: ''
+  triggers:
+  - entity_id:
+    - switch.ovikello
+    trigger: state
+  conditions: []
+  actions:
+  - data:
+      filename: /config/www/etuovi.jpg
+    target:
+      entity_id:
+      - camera.etupiha
+    action: camera.snapshot
+  - data:
+      message: Joku on ovella
+      title: "Ovikello soi \U0001F514"
+      data:
+        persistent: true
+        importance: high
+        tag: doorbell
+        image: /local/etuovi.jpg
+        actions:
+        - action: script.etuoven_avaus_toni
+          title: "Avaa ovi \U0001F513"
+        - action: URI
+          title: Avaa kamera
+          uri: /lovelace-puhelin/kamerat
+        - action: intercom_ignore
+          title: Hylkää ✖
+    action: notify.mobile_app_iphone15_toni
+  mode: single
+- id: '1702750416815'
+  alias: "Ovikello\U0001F514 - ignore notification Dismiss"
+  description: ''
+  triggers:
+  - event_data:
+      action: intercom_ignore
+    event_type: mobile_app_notification_action
+    trigger: event
+  conditions: []
+  actions:
+  - data:
+      message: clear_notification
+      data:
+        tag: intercom
+    action: notify.mobile_app_iphone15_toni
+  mode: single
+- id: '1703665116976'
+  alias: Update Map Extractor camera
+  description: ''
+  use_blueprint:
+    path: PiotrMachowski/update_map_extractor.yaml
+    input:
+      vacuum: vacuum.roborock_s6_maxv
+      camera: camera.xiaomi_cloud_map_extractor
+      mode_to_handle: two_intervals
+      browser_mod_path: /lovelace-puhelin/imuri
+- id: '1704042341199'
+  alias: 'Lämmitys: ylläpidon aktivointi kalliina aikana'
+  description: ''
+  triggers:
+  - minutes: '1'
+    trigger: time_pattern
+  conditions:
+  - condition: state
+    entity_id: binary_sensor.shf_rank_acceptable
+    state: 'off'
+  actions:
+  - if:
+    - condition: template
+      value_template: '{{ (states(''sensor.shf_electricity_price_now'')|float) *100
+        < states(''input_number.kalliin_hinnan_raja'')|float}}'
+    then:
+    - data:
+        temperature: '{{ states(''input_number.normaalilampo_presence'') }}'
+      target:
+        entity_id: climate.mitsubishi_rw25
+      enabled: true
+      action: climate.set_temperature
+    - data:
+        fan_mode: High
+      target:
+        entity_id: climate.mitsubishi_rw25
+      action: climate.set_fan_mode
+    else:
+    - data:
+        temperature: '{{ states(''input_number.yllapitolampo'') }}'
+      target:
+        entity_id: climate.mitsubishi_rw25
+      enabled: true
+      action: climate.set_temperature
+    - data:
+        fan_mode: Medium
+      target:
+        entity_id: climate.mitsubishi_rw25
+      action: climate.set_fan_mode
+  mode: single
+- id: '1704201162967'
+  alias: 'Lämmitys: ILP ylläpito kalleimmat tunnit'
+  description: ''
+  triggers:
+  - entity_id:
+    - sensor.porssari_channel_2_state
+    from: '1'
+    to: '0'
+    id: Ylläpito päälle
+    trigger: state
+  - entity_id:
+    - sensor.porssari_channel_2_state
+    from: '0'
+    to: '1'
+    id: Normaali lämmitys
+    trigger: state
+  conditions: []
+  actions:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id:
+        - Ylläpito päälle
+      sequence:
+      - data:
+          temperature: '{{ states(''input_number.yllapitolampo'') }}'
+        target:
+          entity_id: climate.mitsu_ilp
+        enabled: true
+        action: climate.set_temperature
+      - data:
+          fan_mode: Low
+        target:
+          entity_id:
+          - climate.mitsu_ilp
+        action: climate.set_fan_mode
+    - conditions:
+      - condition: trigger
+        id:
+        - Normaali lämmitys
+      sequence:
+      - data:
+          temperature: '{{ states(''input_number.normaalilampo_presence'') }}'
+        target:
+          entity_id: climate.mitsu_ilp
+        enabled: true
+        action: climate.set_temperature
+      - data:
+          fan_mode: Medium
+        target:
+          entity_id:
+          - climate.mitsu_ilp
+        action: climate.set_fan_mode
+  mode: single
+- id: '1704213500043'
+  alias: 'Lämmitys: MH1 automaatiot pois/päälle'
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - input_boolean.mh1_lammitysautomaatio
+    to: 'on'
+    id: Heating_on
+  - platform: state
+    entity_id:
+    - input_boolean.mh1_lammitysautomaatio
+    to: 'off'
+    id: Heating_off
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id:
+        - Heating_on
+      sequence:
+      - service: automation.turn_on
+        data: {}
+        target:
+          entity_id:
+          - automation.porssari_mh1_ohjaus
+    - conditions:
+      - condition: trigger
+        id:
+        - Heating_off
+      sequence:
+      - service: automation.turn_off
+        data:
+          stop_actions: true
+        target:
+          entity_id: automation.porssari_mh1_ohjaus
+  mode: single
+- id: '1704442250750'
+  alias: 'Lämmitys: ILP ylläpitoautomaatio pois/päälle'
+  description: ''
+  trigger:
+  - platform: state
+    entity_id:
+    - input_boolean.ilp_yllapitoautomaatio
+    to: 'on'
+    id: ILP_automation_on
+  - platform: state
+    entity_id:
+    - input_boolean.ilp_yllapitoautomaatio
+    to: 'off'
+    id: ILP_Automation_off
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: trigger
+        id:
+        - ILP_automation_on
+      sequence:
+      - service: automation.turn_on
+        data: {}
+        target:
+          entity_id: automation.lammitys_ilp_yllapito_kalleimmat_tunnit
+    - conditions:
+      - condition: trigger
+        id:
+        - ILP_Automation_off
+      sequence:
+      - service: automation.turn_off
+        data:
+          stop_actions: true
+        target:
+          entity_id: automation.lammitys_ilp_yllapito_kalleimmat_tunnit
+  mode: single
+- id: '1717057881710'
+  alias: OpenAI - Weather forecast
+  description: ''
+  trigger: []
+  condition: []
+  action:
+  - service: conversation.process
+    data:
+      agent_id: conversation.openai_conversation_2
+      text: 'You are weather forecast for teenagers. you love the weather. you are
+        also a sentient being inside a smart home. 3 teenagers are your audiance.
+        be creative and fun. instead of emojis use words as your responses is being
+        read out loud. please respond as your self.You are talking finnish.
+
+
+        \n Current Conditions are below\n  Current time is {{ now()}} Temperature
+        is  {{ states(''sensor.ulkolampotila'') }}  Humidity is {{ states(''sensor.ulkokosteus'')
+        }} UV Index is {{states(''sensor.koti_uv_indeksi'') }} Current Rain Intensity
+        {{ states(''sensor.koti_sademaara'') }} Forecasted Conditions for Today {{daily_forecast_koti_tilanne_paiva_1}}  Forecasted
+        Max Temperature for today {{daily_forecast_realfeel_lampotila_max_tanaan}}  Forecasted
+        Min Temperature for today {{daily_forecast_realfeel_lampotila_min_tanaan}}
+        Forecasted Precipitation Probability {{daily_forecast_tilanne_tanaan}}'
+    response_variable: agent
+  - service: weather.get_forecasts
+    data:
+      type: daily
+    response_variable: daily_forecast
+    target:
+      entity_id: weather.koti
+  - service: tts.cloud_say
+    data:
+      cache: false
+      language: en-GB
+      entity_id: media_player.nest_mini
+      message: '{{agent.response.speech.plain.speech}}'
+    enabled: false
+  - service: tts.google_cloud_say
+    data:
+      cache: false
+      language: en-GB
+      entity_id: media_player.nest_mini
+      message: '{{agent.response.speech.plain.speech}}'
+    enabled: true
+  mode: single
+- id: '1717064961994'
+  alias: OpenAI - Energy stats notification
+  description: ''
+  trigger:
+  - platform: time
+    at: 08:00:00
+  condition: []
+  action:
+  - service: weather.get_forecasts
+    metadata: {}
+    data:
+      type: daily
+    target:
+      entity_id: weather.koti
+    response_variable: daily_forecast
+  - service: conversation.process
+    data:
+      agent_id: conversation.openai_conversation_4
+      text: Use maximum 178 characters. {{states('sensor.talon_kokonaiskulutus_viikko_kwh')}}
+        kWh of energy usage last week, use for analysis and comparison only. {{states('input_number.sahkon_kulutus_edellinen_paiva')}}
+        kWh of energy usage yesterday. {{states('sensor.veden_kokonaiskulutus_viikko_l')}}
+        liters of water used last week, use for analysis and comparison only. {{states('input_number.veden_kulutus_edellinen_paiva')}}
+        liters of water used yesterday. Weather outlook for today is {{states('sensor.koti_tilanne_tanaan')}}
+        with a high of {{states('sensor.koti_realfeel_lampotila_max_tanaan')}}
+    response_variable: agent
+  - service: notify.notify
+    data:
+      title: Daily Home Update
+      message: '{{agent.response.speech.plain.speech}}'
+  mode: single
+- id: '1717073101189'
+  alias: OpenAI - Electric report
+  description: ''
+  trigger: []
+  condition: []
+  action:
+  - service: weather.get_forecasts
+    metadata: {}
+    data:
+      type: daily
+    target:
+      entity_id: weather.koti
+    response_variable: daily_forecast
+  - service: conversation.process
+    data:
+      agent_id: conversation.openai_conversation_4
+      text: Your mission is to calculate when the car should be charged and water
+        boiler heated. Your reply will be out loud from speakers so use clear text.
+        Water boiler heating takes about 3 hours. Car is priority one, because it
+        consumes more electricity. When temperature is below 0 degrees, car charging
+        takes more time than normally(this information should only be used in analysis).  Car
+        battery capacity is 78 Kilowats, this should only be used for calculations.   Car
+        charging speed is 11 kilowats per hour, this should only be used in analysis.  Time
+        estimates should be with 30 minutes accuracy.  You speak finnish.  {{states('sensor.shadow_battery_level')}}
+        Car current battery level.  {{states('sensor.shadow_energy_added')}} Car charged
+        last time. {{states('sensor.shf_electricity_full_price_now')}} Electricity
+        price per hour as cents.   Weather outlook for today is {{states('sensor.koti_tilanne_tanaan')}}
+        with a min of {{states('sensor.koti_realfeel_lampotila_min_tanaan')}}
+    response_variable: agent
+  - service: tts.google_cloud_say
+    data:
+      cache: false
+      entity_id: media_player.nest_mini
+      language: en-GB
+      message: '{{agent.response.speech.plain.speech}}'
+    enabled: true
+  - service: tts.cloud_say
+    data:
+      cache: false
+      entity_id: media_player.nest_mini
+      language: en-GB
+      message: '{{agent.response.speech.plain.speech}}'
+    enabled: false
+  mode: single
+- id: '1717134285844'
+  alias: Statistics - Update previous day values
+  description: ''
+  trigger:
+  - platform: time
+    at: '23:58:00'
+  condition: []
+  action:
+  - service: input_number.set_value
+    target:
+      entity_id: input_number.veden_kulutus_edellinen_paiva
+    data:
+      value: '{{ states(''sensor.veden_kokonaiskulutus_paiva_l'') }}'
+  - service: input_number.set_value
+    target:
+      entity_id: input_number.sahkon_kulutus_edellinen_paiva
+    data:
+      value: '{{ states(''sensor.talon_kokonaiskulutus_paiva_kwh'') }}'
+  mode: single
+- id: '1723389351507'
+  alias: 'Notification: Sauna valmis'
+  description: ''
+  triggers:
+  - entity_id:
+    - sensor.sauna_temperature
+    above: 56
+    trigger: numeric_state
+  conditions: []
+  actions:
+  - action: notify.mobile_app_iphone15_toni
+    metadata: {}
+    data:
+      message: Sauna valmis!
+  mode: single
+- id: '1726245068822'
+  alias: 'Alarm: Etuovi jäänyt auki'
+  description: ''
+  triggers:
+  - entity_id:
+    - lock.etuovi
+    to: unlocked
+    for:
+      hours: 0
+      minutes: 30
+      seconds: 0
+    trigger: state
+  conditions: []
+  actions:
+  - action: telegram_bot.send_message
+    metadata: {}
+    data:
+      title: Etuovi jäänyt auki!
+      message: Etuovi on ollut auki yli 30 minuuttia!
+  mode: single
+- id: '1726897588508'
+  alias: Pörssisähkövalo
+  description: ''
+  trigger:
+  - platform: time_pattern
+    minutes: '1'
+  condition:
+  - condition: time
+    after: 08:00:00
+    before: '21:30:00'
+  action:
+  - if:
+    - condition: numeric_state
+      entity_id: sensor.shf_electricity_price_now
+      below: 0.15
+    then:
+    - action: light.turn_on
+      metadata: {}
+      data:
+        rgb_color:
+        - 100
+        - 196
+        - 102
+        brightness_pct: 20
+      target:
+        entity_id: light.porssisahkovalo
+    else:
+    - action: light.turn_on
+      metadata: {}
+      data:
+        rgb_color:
+        - 235
+        - 77
+        - 61
+        brightness_pct: 20
+      target:
+        entity_id: light.porssisahkovalo
+  mode: single
+- id: '1727026302569'
+  alias: Pörssisähkövalo sammutus
+  description: ''
+  trigger:
+  - platform: time
+    at: '21:02:00'
+  condition: []
+  action:
+  - action: light.turn_off
+    metadata: {}
+    data:
+      transition: 5
+    target:
+      entity_id: light.porssisahkovalo
+  mode: single
+- id: '1728198518552'
+  alias: 'Alarm: Revontuli hälytys'
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.aurora_60_24
+    from: 'off'
+    to: 'on'
+  conditions: []
+  actions:
+  - action: telegram_bot.send_message
+    metadata: {}
+    data:
+      message: Revontulia näkyvillä!
+  mode: single
+- id: '1729319627397'
+  alias: 'Alert: tuulikaapin ovi jäänyt auki'
+  description: ''
+  triggers:
+  - trigger: state
+    entity_id:
+    - binary_sensor.doorsensor_tuulikaappi_contact
+    from: 'off'
+    to: 'on'
+    for:
+      hours: 0
+      minutes: 10
+      seconds: 0
+  conditions: []
+  actions:
+  - action: tts.google_cloud_say
+    metadata: {}
+    data:
+      cache: false
+      entity_id: media_player.nest_mini
+      message: Jäikö häntä oven väliin? Tuulikaapin ovi on auki
+  mode: single
+- id: '1735493712084'
+  alias: Camera 1 - Snapshot on motion
+  description: ''
+  triggers:
+  - type: motion
+    device_id: 4501ea7131e4bc0b688f43d7b5b4b452
+    entity_id: camera.etupiha
+    domain: binary_sensor
+    trigger: device
+  conditions: []
+  actions:
+  - action: script.camera_driveway_1_snapshot_ai_notification
+    metadata: {}
+    data: {}
+  mode: single

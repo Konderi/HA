@@ -1,0 +1,66 @@
+- sensor:
+    #### Low Battery list ###########################
+    - name: "Low Battery Devices"
+      unique_id: 482eea09-6221-4ca4-bf34-1251aaf605d4
+      icon: >
+        mdi:battery-low
+      state: >
+        {% set threshold = states('input_number.battery_threshold') | int %}
+        {%- set ns = namespace(sensors=[]) -%}
+        {%- for state in states.sensor
+          |selectattr('attributes.device_class', 'defined')
+          |selectattr('attributes.state_class', 'defined')
+          |selectattr('attributes.device_class', '==', 'battery')
+          |selectattr('attributes.state_class', '==', 'measurement')
+          |selectattr('state', 'is_number') -%}
+          {%- if state.state | int <= threshold -%}
+            {% set ns.sensors = ns.sensors + [dict(name = state.name | replace('battery', '') | replace('Battery', ''), state = state.state | int)] %}
+          {%- endif -%}
+        {%- endfor -%}
+        {%- set batt = ns.sensors | sort(attribute='state') %}
+        {%- set ns = namespace(batt='') -%}
+        {%- for state in batt -%}
+            {% set ns.batt= ns.batt + (state.name ~ ' (' ~ state.state ~'%)' ~ "\n") %}
+        {%- endfor -%}
+
+        {% if ns.batt | count > 0 %}
+          {{ ns.batt | truncate(255, true, '...')}}
+        {% else %}
+          {{ 'unavailable'}}
+        {% endif %}
+
+    ### Sademittari laskuri #########
+
+    - name: Rainfall today
+      unit_of_measurement: mm
+      state_class: total_increasing
+      unique_id: rainfall_today
+      state: >-
+        {% set count = states('sensor.rainsensor_flips') | int(0) %}
+        {% set mm = count * 0.30303 %}
+        {% if count >= 0 %}
+          {{ mm|round(1, 'floor') }}
+        {% endif %}
+      # If you have issues with the history sensor doubling after restarting HA, add the line below (@BigG)
+      availability: "{{ (states('sensor.rainsensor_flips') not in ('unknown', 'unavailable')) }}"
+
+    - name: "Rain intensity"
+      unit_of_measurement: "mm/h"
+      state_class: measurement
+      unique_id: rainfall_per_hour
+      state: >-
+        {% if state_attr('binary_sensor.rainfall_trend','gradient') != None and state_attr('binary_sensor.rainfall_trend','gradient') > 0 and state_attr('binary_sensor.rainfall_trend','gradient') < 0.0278 %}
+        {{ (state_attr('binary_sensor.rainfall_trend','gradient')*3600) | round(1) }}
+        {% else %}
+        0
+        {% endif %}
+
+    ### Accuweather sensors #########
+
+    - name: Outside_temperature
+      unit_of_measurement: "°C"
+      state_class: measurement
+      unique_id: outside_temperature
+      state: >-
+        {{ state_attr('sensor.weather_koti', 'temperature') | float ()}}
+
