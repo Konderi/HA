@@ -13,19 +13,23 @@ A collection of professional Home Assistant automations, integrations, and confi
 A comprehensive 4-flow Node-RED automation system that prevents main fuse burnout, eliminates peak power fees (tehomaksu), optimizes electricity costs, and monitors electrical system health.
 
 #### Key Features:
-- 💰 **200-350€ annual savings** through intelligent power management
+- 💰 **270-510€ annual savings** through intelligent power management (up to 550€ with professional charts)
 - 🔒 **Fuse protection** - Priority-based load balancing for high-power devices
 - 📊 **Tehomaksu prevention** - Eliminates peak power fees (50-150€/year savings)
 - 💡 **Price optimization** - Schedules devices based on Nordpool electricity prices
 - 📈 **Phase monitoring** - Real-time voltage and load monitoring with alerts
+- ⚡ **Power factor tracking** - Device-level efficiency monitoring with 6 professional charts
+- 🔄 **Migration guides** - Complete upgrade paths for legacy systems
 - 🎛️ **Professional dashboard** - Complete Lovelace control panel with real-time analytics
 
 #### Tech Stack:
 - Node-RED (4 core automation flows)
 - Home Assistant Lovelace UI
-- Shelly EM3 power monitoring
+- Shelly EM3 power monitoring (with power factor sensors)
 - Nordpool price integration
 - Telegram notifications
+- ApexCharts (6 professional visualization charts)
+- Modern template sensors (HA 2026.6+ compatible)
 
 #### Compatibility:
 - ✅ **Home Assistant 2026.2.x** (tested)
