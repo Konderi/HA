@@ -1,0 +1,54 @@
+# Total Energy Sensor - Fix for Utility Meters
+# This file fixes sensor.sahkon_kokonaisenergia which is needed by utility_meters
+# Deploy this file to Home Assistant to fix talon_kokonaiskulutus sensors
+
+template:
+  - sensor:
+      # =================================================================
+      # TOTAL ENERGY SENSOR (Sum of all 3 phases from ShellyEM3)
+      # =================================================================
+      # This sensor is the SOURCE for all utility_meter sensors:
+      # - sensor.talon_kokonaiskulutus_tunti_kwh (hourly)
+      # - sensor.talon_kokonaiskulutus_paiva_kwh (daily)
+      # - sensor.talon_kokonaiskulutus_viikko_kwh (weekly)
+      # - sensor.talon_kokonaiskulutus_kuukausi_kwh (monthly)
+      # - sensor.talon_kokonaiskulutus_vuosi_kwh (yearly)
+      # =================================================================
+      
+      - name: "Sähkön kokonaisenergia"
+        unique_id: sahkon_kokonaisenergia
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: total_increasing
+        state: >
+          {% set a = states('sensor.shellyem3_channel_a_energy') | float(0) %}
+          {% set b = states('sensor.shellyem3_channel_b_energy') | float(0) %}
+          {% set c = states('sensor.shellyem3_channel_c_energy') | float(0) %}
+          {{ (a + b + c) | round(2) }}
+        icon: mdi:lightning-bolt
+        
+        # Availability check - only available when all 3 channels are available
+        availability: >
+          {{ states('sensor.shellyem3_channel_a_energy') not in ['unavailable', 'unknown', 'none'] and
+             states('sensor.shellyem3_channel_b_energy') not in ['unavailable', 'unknown', 'none'] and
+             states('sensor.shellyem3_channel_c_energy') not in ['unavailable', 'unknown', 'none'] }}
+        
+        attributes:
+          # Individual phase values
+          phase_a_kwh: "{{ states('sensor.shellyem3_channel_a_energy') }}"
+          phase_b_kwh: "{{ states('sensor.shellyem3_channel_b_energy') }}"
+          phase_c_kwh: "{{ states('sensor.shellyem3_channel_c_energy') }}"
+          
+          # Friendly names
+          phase_a_name: "ShellyEM3 Channel A"
+          phase_b_name: "ShellyEM3 Channel B"
+          phase_c_name: "ShellyEM3 Channel C"
+          
+          # Source entities (for reference)
+          source_entities: "sensor.shellyem3_channel_a_energy, sensor.shellyem3_channel_b_energy, sensor.shellyem3_channel_c_energy"
+          
+          # Last update info
+          last_updated: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+          
+          # Note
+          note: "This sensor is required for utility_meter sensors to work properly"
