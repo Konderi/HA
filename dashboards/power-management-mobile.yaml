@@ -186,6 +186,22 @@ views:
             tap_action:
               action: navigate
               navigation_path: /dashboard-powermanagement/statistics
+          
+          - type: custom:mushroom-template-card
+            primary: Settings
+            secondary: Configure
+            icon: mdi:cog
+            icon_color: grey
+            layout: vertical
+            fill_container: true
+            card_mod:
+              style: |
+                ha-card {
+                  background: linear-gradient(135deg, rgba(158, 158, 158, 0.1) 0%, rgba(117, 117, 117, 0.2) 100%);
+                }
+            tap_action:
+              action: navigate
+              navigation_path: /dashboard-powermanagement/settings
       
       # 7-Day Consumption vs Price Chart
       - type: custom:apexcharts-card
