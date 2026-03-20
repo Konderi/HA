@@ -1,0 +1,88 @@
+# Total Power Sensor (Alternative Approach - Using Power Instead of Energy)
+# This creates a total power sensor and integrates it to energy using Riemann Sum
+# NOTE: Using direct energy sensors is MORE accurate than integrating power!
+
+template:
+  - sensor:
+      # =================================================================
+      # TOTAL POWER SENSOR (Sum of all 3 phases from ShellyEM3)
+      # =================================================================
+      # This is instantaneous power consumption (W)
+      # Will be integrated to energy (kWh) using Riemann Sum
+      # =================================================================
+      
+      - name: "Sähkön kokonaisteho"
+        unique_id: sahkon_kokonaisteho
+        unit_of_measurement: "W"
+        device_class: power
+        state_class: measurement
+        state: >
+          {% set a = states('sensor.shellyem3_channel_a_power') | float(0) %}
+          {% set b = states('sensor.shellyem3_channel_b_power') | float(0) %}
+          {% set c = states('sensor.shellyem3_channel_c_power') | float(0) %}
+          {{ (a + b + c) | round(0) }}
+        icon: mdi:lightning-bolt
+        
+        # Availability check
+        availability: >
+          {{ states('sensor.shellyem3_channel_a_power') not in ['unavailable', 'unknown', 'none'] and
+             states('sensor.shellyem3_channel_b_power') not in ['unavailable', 'unknown', 'none'] and
+             states('sensor.shellyem3_channel_c_power') not in ['unavailable', 'unknown', 'none'] }}
+        
+        attributes:
+          phase_a_watts: "{{ states('sensor.shellyem3_channel_a_power') | float(0) | round(0) }}"
+          phase_b_watts: "{{ states('sensor.shellyem3_channel_b_power') | float(0) | round(0) }}"
+          phase_c_watts: "{{ states('sensor.shellyem3_channel_c_power') | float(0) | round(0) }}"
+          phase_a_kw: "{{ (states('sensor.shellyem3_channel_a_power') | float(0) / 1000) | round(2) }}"
+          phase_b_kw: "{{ (states('sensor.shellyem3_channel_b_power') | float(0) / 1000) | round(2) }}"
+          phase_c_kw: "{{ (states('sensor.shellyem3_channel_c_power') | float(0) / 1000) | round(2) }}"
+
+# =================================================================
+# RIEMANN SUM INTEGRATION
+# =================================================================
+# Convert instantaneous power (W) to energy (kWh)
+# This integrates power readings over time
+# WARNING: Less accurate than using direct energy sensors!
+# =================================================================
+
+sensor:
+  - platform: integration
+    source: sensor.sahkon_kokonaisteho
+    name: "Sähkön kokonaisenergia (integroitu)"
+    unique_id: sahkon_kokonaisenergia_integroitu
+    unit_prefix: k  # Convert Wh to kWh
+    round: 2
+    method: trapezoidal
+
+# =================================================================
+# UTILITY METERS (using integrated energy)
+# =================================================================
+# These would replace your existing utility meters
+# Use sensor.sahkon_kokonaisenergia_integroitu as source
+# =================================================================
+
+utility_meter:
+  talon_kokonaiskulutus_integroitu:
+    source: sensor.sahkon_kokonaisenergia_integroitu
+    cycle: hourly
+    name: "Talon kokonaiskulutus (tunti, integroitu)"
+    
+  talon_kokonaiskulutus_paiva_integroitu:
+    source: sensor.sahkon_kokonaisenergia_integroitu
+    cycle: daily
+    name: "Talon kokonaiskulutus (päivä, integroitu)"
+    
+  talon_kokonaiskulutus_viikko_integroitu:
+    source: sensor.sahkon_kokonaisenergia_integroitu
+    cycle: weekly
+    name: "Talon kokonaiskulutus (viikko, integroitu)"
+    
+  talon_kokonaiskulutus_kuukausi_integroitu:
+    source: sensor.sahkon_kokonaisenergia_integroitu
+    cycle: monthly
+    name: "Talon kokonaiskulutus (kuukausi, integroitu)"
+    
+  talon_kokonaiskulutus_vuosi_integroitu:
+    source: sensor.sahkon_kokonaisenergia_integroitu
+    cycle: yearly
+    name: "Talon kokonaiskulutus (vuosi, integroitu)"

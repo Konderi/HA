@@ -346,10 +346,6 @@ views:
               show_states: true
               colorize_states: true
             graph_span: 24h
-            span:
-              start: hour
-            now:
-              show: true
             yaxis:
               - id: temp
                 min: 15

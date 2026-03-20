@@ -1,0 +1,133 @@
+# Tesla Charging Session Tracking Automations
+# Automatically tracks charging sessions and calculates costs
+# Add to configuration.yaml: automation: !include_dir_merge_list automations/
+
+- id: tesla_charging_session_start
+  alias: "Tesla: Charging Session Started"
+  description: "Record session start when Tesla starts charging"
+  mode: single
+  trigger:
+    - platform: state
+      entity_id: switch.tesla_model_3_charger
+      from: "off"
+      to: "on"
+  condition:
+    # Only if actually plugged in at home
+    - condition: state
+      entity_id: binary_sensor.tesla_model_3_charger
+      state: "on"
+  action:
+    # Record start time
+    - service: input_text.set_value
+      target:
+        entity_id: input_text.tesla_session_start_time
+      data:
+        value: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+    
+    # Record starting energy value
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.tesla_session_start_energy
+      data:
+        value: "{{ states('sensor.tesla_charging_energy') | float(0) }}"
+    
+    # Reset cost accumulator
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.tesla_session_cost_accumulator
+      data:
+        value: 0
+        
+    # Optional: Send notification
+    - service: notify.mobile_app_iphone17
+      data:
+        title: "🔌 Tesla Charging Started"
+        message: >
+          Started at {{ now().strftime('%H:%M') }}
+          Current price: {{ (states('sensor.electricity_total_price_cents') | float / 100) | round(2) }} €/kWh
+
+- id: tesla_charging_session_end
+  alias: "Tesla: Charging Session Ended"
+  description: "Calculate and save session cost when charging stops"
+  mode: single
+  trigger:
+    - platform: state
+      entity_id: switch.tesla_model_3_charger
+      from: "on"
+      to: "off"
+      for:
+        seconds: 30  # Wait 30 seconds to make sure it's really stopped
+  condition:
+    # Make sure we have a valid start energy
+    - condition: template
+      value_template: "{{ states('input_number.tesla_session_start_energy') | float(0) > 0 }}"
+  action:
+    # Calculate session energy
+    - variables:
+        start_energy: "{{ states('input_number.tesla_session_start_energy') | float(0) }}"
+        end_energy: "{{ states('sensor.tesla_charging_energy') | float(0) }}"
+        session_energy: "{{ (end_energy - start_energy) | round(2) }}"
+        avg_price_cents: "{{ states('sensor.electricity_total_price_cents') | float(0) }}"
+        avg_price_eur: "{{ (avg_price_cents / 100) | round(3) }}"
+        session_cost: "{{ (session_energy * avg_price_eur) | round(2) }}"
+        start_time: "{{ states('input_text.tesla_session_start_time') }}"
+        end_time: "{{ now().strftime('%Y-%m-%d %H:%M:%S') }}"
+        duration_minutes: >
+          {% set start = strptime(states('input_text.tesla_session_start_time'), '%Y-%m-%d %H:%M:%S') %}
+          {% set end = now() %}
+          {{ ((end - start).total_seconds() / 60) | round(0) }}
+    
+    # Save last charge energy
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.tesla_last_charge_energy
+      data:
+        value: "{{ session_energy }}"
+    
+    # Save last charge cost
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.tesla_last_charge_cost
+      data:
+        value: "{{ session_cost }}"
+    
+    # Save last charge duration
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.tesla_last_charge_duration
+      data:
+        value: "{{ duration_minutes }}"
+    
+    # Save start time
+    - service: input_text.set_value
+      target:
+        entity_id: input_text.tesla_last_charge_start
+      data:
+        value: "{{ start_time }}"
+    
+    # Save end time
+    - service: input_text.set_value
+      target:
+        entity_id: input_text.tesla_last_charge_end
+      data:
+        value: "{{ end_time }}"
+    
+    # Reset session start energy
+    - service: input_number.set_value
+      target:
+        entity_id: input_number.tesla_session_start_energy
+      data:
+        value: 0
+        
+    # Optional: Send notification with session summary
+    - service: notify.mobile_app_iphone17
+      data:
+        title: "✅ Tesla Charging Complete"
+        message: >
+          Charged: {{ session_energy }} kWh
+          Cost: {{ session_cost }} €
+          Duration: {{ (duration_minutes / 60) | round(1) }}h
+          Avg price: {{ avg_price_eur }} €/kWh
+          
+          Started: {{ start_time.split(' ')[1][:5] }}
+          Ended: {{ end_time.split(' ')[1][:5] }}

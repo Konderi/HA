@@ -1,0 +1,62 @@
+# Tesla Charging Session Tracking - Input Helpers
+# These store data about charging sessions
+# Add to configuration.yaml: input_number: !include input_helpers/tesla_charging_helpers.yaml
+
+# Last completed charging session
+input_number:
+  tesla_last_charge_energy:
+    name: "Tesla Last Charge Energy"
+    min: 0
+    max: 100
+    step: 0.01
+    unit_of_measurement: "kWh"
+    icon: mdi:battery-charging
+    
+  tesla_last_charge_cost:
+    name: "Tesla Last Charge Cost"
+    min: 0
+    max: 50
+    step: 0.01
+    unit_of_measurement: "€"
+    icon: mdi:currency-eur
+    
+  tesla_last_charge_duration:
+    name: "Tesla Last Charge Duration"
+    min: 0
+    max: 1440
+    step: 1
+    unit_of_measurement: "min"
+    icon: mdi:timer
+    
+  # Current charging session tracking
+  tesla_session_start_energy:
+    name: "Tesla Session Start Energy"
+    min: 0
+    max: 100000
+    step: 0.01
+    unit_of_measurement: "kWh"
+    icon: mdi:battery-charging-outline
+    
+  tesla_session_cost_accumulator:
+    name: "Tesla Session Cost Accumulator"
+    min: 0
+    max: 50
+    step: 0.01
+    unit_of_measurement: "€"
+    icon: mdi:currency-eur
+
+input_text:
+  tesla_last_charge_start:
+    name: "Tesla Last Charge Start Time"
+    max: 25
+    icon: mdi:clock-start
+    
+  tesla_last_charge_end:
+    name: "Tesla Last Charge End Time"
+    max: 25
+    icon: mdi:clock-end
+    
+  tesla_session_start_time:
+    name: "Tesla Current Session Start"
+    max: 25
+    icon: mdi:clock-start

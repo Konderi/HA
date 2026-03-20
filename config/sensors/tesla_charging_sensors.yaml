@@ -1,0 +1,173 @@
+# Tesla Charging Cost Tracking Sensors
+# Modern HA 2026.6+ compatible (template: format)
+# Tracks Tesla charging energy and costs when home and charging
+
+template:
+  - sensor:
+      # =================================================================
+      # TESLA CHARGING POWER (kW)
+      # =================================================================
+      # Calculates current charging power based on amps
+      # Finnish 3-phase: 400V × Amps × √3 / 1000
+      # Finnish single-phase: 230V × Amps / 1000
+      
+      - name: "Tesla Charging Power"
+        unique_id: tesla_charging_power
+        unit_of_measurement: "kW"
+        device_class: power
+        state_class: measurement
+        state: >
+          {% if is_state('switch.tesla_model_3_charger', 'on') %}
+            {% set amps = states('number.tesla_model_3_charging_amps') | float(0) %}
+            {# Finnish 3-phase charging: 400V × Amps × √3 / 1000 #}
+            {{ ((400 * amps * 1.732) / 1000) | round(2) }}
+          {% else %}
+            0
+          {% endif %}
+        icon: mdi:ev-station
+        availability: >
+          {{ states('switch.tesla_model_3_charger') not in ['unavailable', 'unknown', 'none'] and
+             states('number.tesla_model_3_charging_amps') not in ['unavailable', 'unknown', 'none'] }}
+        attributes:
+          charging_amps: "{{ states('number.tesla_model_3_charging_amps') }}"
+          charging_active: "{{ is_state('switch.tesla_model_3_charger', 'on') }}"
+          charger_plugged: "{{ states('binary_sensor.tesla_model_3_charger') }}"
+          
+      # =================================================================
+      # TESLA HOURLY CHARGING COST (€)
+      # =================================================================
+      # Calculates how much the current hour of charging costs
+      
+      - name: "Tesla Hourly Charging Cost"
+        unique_id: tesla_hourly_charging_cost
+        unit_of_measurement: "€"
+        device_class: monetary
+        state: >
+          {% set price = states('sensor.electricity_total_price_cents') | float(0) / 100 %}
+          {% set consumption = states('sensor.tesla_latausenergia_tunti_kwh') | float(0) %}
+          {{ (price * consumption) | round(2) }}
+        icon: mdi:currency-eur
+        availability: >
+          {{ states('sensor.electricity_total_price_cents') not in ['unavailable', 'unknown', 'none'] and
+             states('sensor.tesla_latausenergia_tunti_kwh') not in ['unavailable', 'unknown', 'none'] }}
+             
+      # =================================================================
+      # TESLA MONTHLY CHARGING COST (€)
+      # =================================================================
+      
+      - name: "Tesla Monthly Charging Cost"
+        unique_id: tesla_monthly_charging_cost
+        unit_of_measurement: "€"
+        device_class: monetary
+        state: >
+          {% set avg_price = states('sensor.electricity_total_price_cents') | float(0) / 100 %}
+          {% set consumption = states('sensor.tesla_latausenergia_kuukausi_kwh') | float(0) %}
+          {{ (avg_price * consumption) | round(2) }}
+        icon: mdi:currency-eur
+        attributes:
+          consumption_kwh: "{{ states('sensor.tesla_latausenergia_kuukausi_kwh') }}"
+          avg_price_per_kwh: "{{ (states('sensor.electricity_total_price_cents') | float(0) / 100) | round(3) }}"
+          
+      # =================================================================
+      # TESLA YEARLY CHARGING COST (€)
+      # =================================================================
+      
+      - name: "Tesla Yearly Charging Cost"
+        unique_id: tesla_yearly_charging_cost
+        unit_of_measurement: "€"
+        device_class: monetary
+        state: >
+          {% set avg_price = states('sensor.electricity_total_price_cents') | float(0) / 100 %}
+          {% set consumption = states('sensor.tesla_latausenergia_vuosi_kwh') | float(0) %}
+          {{ (avg_price * consumption) | round(2) }}
+        icon: mdi:currency-eur
+        attributes:
+          consumption_kwh: "{{ states('sensor.tesla_latausenergia_vuosi_kwh') }}"
+          avg_price_per_kwh: "{{ (states('sensor.electricity_total_price_cents') | float(0) / 100) | round(3) }}"
+          
+      # =================================================================
+      # TESLA LAST CHARGE SESSION (€)
+      # =================================================================
+      # Shows the cost of the last completed charging session
+      # Values are updated by automation when charging stops
+      
+      - name: "Tesla Last Charge Cost"
+        unique_id: tesla_last_charge_cost
+        unit_of_measurement: "€"
+        device_class: monetary
+        state: >
+          {{ states('input_number.tesla_last_charge_cost') | float(0) | round(2) }}
+        icon: mdi:ev-plug-tesla
+        attributes:
+          energy_kwh: "{{ states('input_number.tesla_last_charge_energy') | float(0) | round(2) }}"
+          avg_price_per_kwh: >
+            {% set energy = states('input_number.tesla_last_charge_energy') | float(0) %}
+            {% set cost = states('input_number.tesla_last_charge_cost') | float(0) %}
+            {% if energy > 0 %}
+              {{ (cost / energy) | round(3) }}
+            {% else %}
+              0
+            {% endif %}
+          duration_minutes: "{{ states('input_number.tesla_last_charge_duration') | float(0) | round(0) }}"
+          start_time: "{{ states('input_text.tesla_last_charge_start') }}"
+          end_time: "{{ states('input_text.tesla_last_charge_end') }}"
+          
+      # =================================================================
+      # TESLA CURRENT CHARGING SESSION COST (€)
+      # =================================================================
+      # Real-time cost of the ongoing charging session
+      
+      - name: "Tesla Current Session Cost"
+        unique_id: tesla_current_session_cost
+        unit_of_measurement: "€"
+        device_class: monetary
+        state: >
+          {% if is_state('switch.tesla_model_3_charger', 'on') %}
+            {% set start_energy = states('input_number.tesla_session_start_energy') | float(0) %}
+            {% set current_energy = states('sensor.tesla_charging_energy') | float(0) %}
+            {% set session_energy = current_energy - start_energy %}
+            {% set avg_price = states('sensor.electricity_total_price_cents') | float(0) / 100 %}
+            {{ (session_energy * avg_price) | round(2) }}
+          {% else %}
+            0
+          {% endif %}
+        icon: mdi:currency-eur-off
+        availability: >
+          {{ is_state('switch.tesla_model_3_charger', 'on') }}
+        attributes:
+          session_energy_kwh: >
+            {% if is_state('switch.tesla_model_3_charger', 'on') %}
+              {% set start_energy = states('input_number.tesla_session_start_energy') | float(0) %}
+              {% set current_energy = states('sensor.tesla_charging_energy') | float(0) %}
+              {{ (current_energy - start_energy) | round(2) }}
+            {% else %}
+              0
+            {% endif %}
+          current_price_per_kwh: "{{ (states('sensor.electricity_total_price_cents') | float(0) / 100) | round(3) }}"
+          session_start: "{{ states('input_text.tesla_session_start_time') }}"
+
+  - binary_sensor:
+      # =================================================================
+      # TESLA CHARGING STATUS (Home & Charging)
+      # =================================================================
+      # True when Tesla is home AND actively charging
+      
+      - name: "Tesla Charging at Home"
+        unique_id: tesla_charging_at_home
+        device_class: battery_charging
+        state: >
+          {{ is_state('binary_sensor.tesla_model_3_charger', 'on') and
+             is_state('switch.tesla_model_3_charger', 'on') }}
+        icon: >
+          {% if is_state('binary_sensor.tesla_model_3_charger', 'on') and is_state('switch.tesla_model_3_charger', 'on') %}
+            mdi:battery-charging
+          {% elif is_state('binary_sensor.tesla_model_3_charger', 'on') %}
+            mdi:battery-plus
+          {% else %}
+            mdi:battery-off
+          {% endif %}
+        attributes:
+          plugged_in: "{{ is_state('binary_sensor.tesla_model_3_charger', 'on') }}"
+          charging: "{{ is_state('switch.tesla_model_3_charger', 'on') }}"
+          charging_power_kw: "{{ states('sensor.tesla_charging_power') }}"
+          charging_amps: "{{ states('number.tesla_model_3_charging_amps') }}"

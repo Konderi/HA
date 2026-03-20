@@ -1,0 +1,67 @@
+# Utility Meters - Consumption Tracking
+# This configures utility meters to track hourly/daily/weekly/monthly/yearly consumption
+# Source: sensor.sahkon_kokonaisenergia_2 (or sensor.sahkon_kokonaisenergia if unique_id fixed)
+
+utility_meter:
+  # ==========================================
+  # HOURLY CONSUMPTION
+  # ==========================================
+  # Used in: ApexCharts 7-day consumption graphs
+  # Expected values: 2-6 kWh per hour
+  # NOTE: Using _2 suffix because duplicate unique_id created this variant
+  talon_kokonaiskulutus_tunti:
+    source: sensor.sahkon_kokonaisenergia_2
+    cycle: hourly
+    name: "Talon kokonaiskulutus tunti"
+    unique_id: talon_kokonaiskulutus_tunti
+    
+  # ==========================================
+  # DAILY CONSUMPTION  
+  # ==========================================
+  # Used in: Daily consumption gauges, mobile dashboard
+  # Expected values: 40-100 kWh per day
+  talon_kokonaiskulutus_paiva:
+    source: sensor.sahkon_kokonaisenergia_2
+    cycle: daily
+    name: "Talon kokonaiskulutus päivä"
+    unique_id: talon_kokonaiskulutus_paiva
+    
+  # ==========================================
+  # WEEKLY CONSUMPTION
+  # ==========================================
+  # Expected values: 300-700 kWh per week
+  talon_kokonaiskulutus_viikko:
+    source: sensor.sahkon_kokonaisenergia_2
+    cycle: weekly
+    name: "Talon kokonaiskulutus viikko"
+    unique_id: talon_kokonaiskulutus_viikko
+    
+  # ==========================================
+  # MONTHLY CONSUMPTION
+  # ==========================================
+  # Expected values: 1,200-3,000 kWh per month
+  talon_kokonaiskulutus_kuukausi:
+    source: sensor.sahkon_kokonaisenergia_2
+    cycle: monthly
+    name: "Talon kokonaiskulutus kuukausi"
+    unique_id: talon_kokonaiskulutus_kuukausi
+    
+  # ==========================================
+  # YEARLY CONSUMPTION
+  # ==========================================
+  # Expected values: 15,000-35,000 kWh per year
+  talon_kokonaiskulutus_vuosi:
+    source: sensor.sahkon_kokonaisenergia_2
+    cycle: yearly
+    name: "Talon kokonaiskulutus vuosi"
+    unique_id: talon_kokonaiskulutus_vuosi
+
+# ==========================================
+# NOTES
+# ==========================================
+# - These utility meters calculate consumption by tracking the DIFFERENCE
+#   between readings from the source sensor
+# - sensor.sahkon_kokonaisenergia_2 shows cumulative total (e.g., 64.6 kWh)
+# - Utility meters show consumption in period (e.g., hourly: 2.3 kWh)
+# - Sensor names ending with _kwh are created automatically by Home Assistant
+# - Example: talon_kokonaiskulutus_tunti → sensor.talon_kokonaiskulutus_tunti_kwh

@@ -1,0 +1,45 @@
+# Tesla Charging Energy Tracking - Riemann Sum Integration
+# Add this to your configuration.yaml
+
+# Riemann Sum Helper - Converts Tesla charging power (kW) to energy (kWh)
+sensor:
+  - platform: integration
+    source: sensor.tesla_charging_power
+    name: "Tesla Charging Energy"
+    unique_id: tesla_charging_energy
+    unit_prefix: k
+    unit_time: h
+    method: left
+    round: 2
+
+# Utility Meters - Track charging energy by time period
+utility_meter:
+  tesla_latausenergia_tunti:
+    source: sensor.tesla_charging_energy
+    cycle: hourly
+    name: "Tesla latausenergia, tunti"
+    unique_id: tesla_charging_energy_hourly
+    
+  tesla_latausenergia_paiva:
+    source: sensor.tesla_charging_energy
+    cycle: daily
+    name: "Tesla latausenergia, päivä"
+    unique_id: tesla_charging_energy_daily
+    
+  tesla_latausenergia_viikko:
+    source: sensor.tesla_charging_energy
+    cycle: weekly
+    name: "Tesla latausenergia, viikko"
+    unique_id: tesla_charging_energy_weekly
+    
+  tesla_latausenergia_kuukausi:
+    source: sensor.tesla_charging_energy
+    cycle: monthly
+    name: "Tesla latausenergia, kuukausi"
+    unique_id: tesla_charging_energy_monthly
+    
+  tesla_latausenergia_vuosi:
+    source: sensor.tesla_charging_energy
+    cycle: yearly
+    name: "Tesla latausenergia, vuosi"
+    unique_id: tesla_charging_energy_yearly
